@@ -1,95 +1,92 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { lineages } from '@/lib/lineages';
-import Placard from '@/components/Placard';
 
 export default function WanderPage() {
-  const [loadingLineage, setLoadingLineage] = useState(null);
-  const [searchInput, setSearchInput] = useState('');
+  const [preview, setPreview] = useState(null);
   const router = useRouter();
 
-  // Updated to handle both the aesthetic Title and the technical Query
-  const handleEntry = (topic, query) => {
-    setLoadingLineage({ title: topic });
-    
-    // Use the specific expert query if it exists, otherwise fallback to topic
-    const finalQuery = query || topic;
+  useEffect(() => {
+    async function loadPreview() {
+      try {
+        const res = await fetch('/manifests/moma.json');
+        if (res.ok) {
+          const data = await res.json();
+          setPreview(data[Math.floor(Math.random() * data.length)]);
+        }
+      } catch (e) {
+        console.error("Failed to load preview:", e);
+      }
+    }
+    loadPreview();
+  }, []);
 
-    setTimeout(() => {
-      router.push(`/gallery?topic=${encodeURIComponent(finalQuery)}`);
-    }, 500);
+  const navigate = (filters) => {
+    const params = new URLSearchParams();
+    if (filters.topic) params.set('topic', filters.topic);
+    if (filters.movement) params.set('movement', filters.movement);
+    if (filters.era) params.set('era', filters.era);
+    if (filters.type) params.set('type', filters.type);
+    router.push(`/gallery?${params.toString()}`);
   };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchInput.trim() === '') return;
-    // For manual search, the input is both the title and the query
-    handleEntry(searchInput.trim(), searchInput.trim());
-  };
-
-  if (loadingLineage) {
-    return (
-      <main className="h-screen w-full bg-[#0a0a0a] flex flex-col items-center justify-center p-12 text-white font-sans animate-in fade-in duration-700">
-        <div className="text-center">
-          <p className="text-[9px] uppercase tracking-[0.5em] opacity-30 mb-8 animate-pulse">
-            Requesting Access to Digital Archives
-          </p>
-          <h2 className="text-4xl font-extralight tracking-tighter uppercase italic opacity-80 animate-bounce">
-            {loadingLineage.title}
-          </h2>
-          <div className="mt-12 h-[1px] w-24 bg-white/20 mx-auto overflow-hidden">
-            <div className="h-full bg-white w-full animate-loading-bar" />
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
-    <main className="h-screen w-full bg-[#fdfdfc] flex flex-col p-12 relative overflow-hidden font-sans">
-      <header className="w-full text-center mt-12 animate-entrance z-20 pointer-events-none">
-        <p className="text-[9px] uppercase tracking-[0.6em] opacity-30 mb-4 italic">
-          The Guided Sequence
-        </p>
-        <h1 className="text-4xl md:text-5xl font-light tracking-tighter text-[#1a1a1a]">
-          Where would you like to begin?
+    <main className="min-h-screen bg-[#f4f4f2] flex flex-col p-6 md:p-12 text-[#1a1a1a]">
+      {/* HEADER SECTION - Static and Clean */}
+      <div className="w-full mb-12">
+        <h1 className="text-5xl md:text-7xl font-bold italic border-b-2 border-black pb-4 uppercase tracking-tighter">
+          THE EXHIBITION ARCHIVE
         </h1>
-      </header>
-
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} className="mt-8 w-full flex justify-center z-20">
-        <input
-          type="text"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search for a topic..."
-          className="px-4 py-2 w-80 border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-black text-black"
-        />
-        <button
-          type="submit"
-          className="ml-2 px-4 py-2 bg-black text-white uppercase tracking-[0.1em] rounded hover:bg-gray-900 transition"
-        >
-          Go
-        </button>
-      </form>
-
-      <div className="flex-1 relative w-full max-w-[1400px] mx-auto mt-10">
-        {lineages.map((item, index) => (
-          <div
-            key={item.id}
-            className={`absolute animate-entrance ${item.pos} z-10 transition-all duration-500 hover:z-30`}
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            {/* Pass both title and query to the click handler */}
-            <Placard item={item} onClick={() => handleEntry(item.title, item.query)} />
-          </div>
-        ))}
       </div>
+      
+      <div className="flex-1 flex flex-col md:flex-row gap-16 items-start">
+        
+        {/* LEFT: NAVIGATION MENU - Boxed style from your earlier screenshot */}
+        <div className="w-full md:w-1/3 flex flex-col border-t border-black">
+          {['1920S AVANT-GARDE', 'SWISS TYPOGRAPHY', 'INDUSTRIAL PHOTOGRAPHY', 'BAUHAUS ARCHIVE', 'MODERNIST VAULT'].map((label, i) => (
+            <button 
+              key={i}
+              onClick={() => navigate({ topic: label.toLowerCase() })} 
+              className="text-left text-xl py-3 px-2 border-b border-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+            >
+              {label}
+            </button>
+          ))}
+          
+          <div className="mt-8">
+            <p className="text-[10px] uppercase font-bold opacity-50 mb-4">SELECT AN ENTRY POINT TO BEGIN INDEXING.</p>
+            <div className="h-px bg-black/20 w-full mb-4"></div>
+            <p className="text-[10px] uppercase tracking-widest font-bold">Status: System_Online</p>
+          </div>
+        </div>
 
-      <footer className="w-full text-center text-[9px] uppercase tracking-[0.4em] opacity-30 pb-4 z-20">
-        Step 1: Choose an influence
-      </footer>
+        {/* RIGHT: THE CLUSTER - This replicates the overlapping look */}
+        <div className="w-full md:w-1/2 relative min-h-[600px] flex items-center justify-center">
+          {preview && (
+            <div className="relative">
+              {/* Main Image - Color, Static, No Hover Transform */}
+              <div className="relative z-10 border border-black p-4 bg-white shadow-xl max-w-lg">
+                <img 
+                  src={preview.imageUrl} 
+                  className="w-full h-auto object-contain block border border-black/10" 
+                  alt="Archive Preview" 
+                />
+                <div className="mt-4 flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] uppercase font-black">{preview.title}</p>
+                    <p className="text-[8px] opacity-40 uppercase">{preview.id}</p>
+                  </div>
+                  <span className="text-[8px] opacity-30 font-mono italic">PREVIEW_NODE_01</span>
+                </div>
+              </div>
+
+              {/* Decorative "Archival" elements to match the reference image cluster style */}
+              <div className="absolute -top-6 -left-6 w-32 h-40 border border-black/10 bg-white/50 -z-10 rotate-3"></div>
+              <div className="absolute -bottom-10 -right-4 w-48 h-12 bg-black/5 -rotate-2 -z-10"></div>
+            </div>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

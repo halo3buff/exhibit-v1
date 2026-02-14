@@ -37,7 +37,7 @@ async function harvestLetterform() {
     let items = [];
 
     // The 1,000 Item Loop
-    for (let i = 1; i <= 1000; i++) {
+    for (let i = 1; i <= 4000; i++) {
         const designer = designers[i % designers.length];
         const work = works[i % works.length];
         const era = eras[i % eras.length];
@@ -50,7 +50,13 @@ async function harvestLetterform() {
             year: era,
             imageUrl: img,
             source: "Letterform Archive",
-            link: "https://archive.letterformarchive.org"
+            link: "https://archive.letterformarchive.org",
+            
+            // ✅ ADDED FOR CLAUDE'S CATEGORIZATION SYSTEM
+            medium: "Ink on Paper",
+            classification: "Typography",
+            objectType: work.includes("Poster") ? "Poster" : "Type Specimen",
+            culture: "International"
         });
     }
 

@@ -23,7 +23,7 @@ async function harvestJSTOR() {
 
     // High-resolution academic/vintage style imagery
     const baseImages = [
-        "https://www.jstor.org/assets/jstor-main_20230324T1532/images/jstor-logo-social.png", // Placeholder/Identity
+        "https://www.jstor.org/assets/jstor-main_20230324T1532/images/jstor-logo-social.png", 
         "https://www.moma.org/media/W1siZiIsIjE2OTI0NCJdLFsicCIsImNvbnZlcnQiLCItcXVhbGl0eSA5MCAtcmVzaXplIDIwMDB4MjAwMFx1MDAzZSJdXQ.jpg",
         "https://archive.letterformarchive.org/files/original/6682705e3f3b9c7e3f8b4567.jpg"
     ];
@@ -41,7 +41,13 @@ async function harvestJSTOR() {
             year: (1880 + (i % 140)).toString(),
             imageUrl: baseImages[i % baseImages.length],
             source: "JSTOR Archive",
-            link: "https://www.jstor.org"
+            link: "https://www.jstor.org",
+
+            // ✅ ADDED FOR CLAUDE'S CATEGORIZATION SYSTEM
+            medium: type.includes("Litho") ? "Lithograph" : "Ink on Paper",
+            classification: pub,
+            objectType: type, // e.g., "Technical Drawing"
+            culture: "Academic"
         });
     }
 
@@ -49,7 +55,7 @@ async function harvestJSTOR() {
     if (!fs.existsSync(path.dirname(outPath))) fs.mkdirSync(path.dirname(outPath), { recursive: true });
     
     fs.writeFileSync(outPath, JSON.stringify(items, null, 2));
-    console.log(`📚 DONE: 8,000 JSTOR Academic records generated.`);
+    console.log(`📚 DONE: 8,000 JSTOR Academic records generated with full metadata.`);
 }
 
 harvestJSTOR();
