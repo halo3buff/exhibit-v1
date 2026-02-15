@@ -3,17 +3,18 @@
  */
 
 const TYPE_KEYWORDS = {
-    photograph: ['photograph', 'photo', 'gelatin silver', 'print'],
-    drawing: ['drawing', 'sketch', 'graphite', 'charcoal', 'pencil', 'study', 'blueprint', 'section'],
-    print: ['print', 'lithograph', 'etching', 'engraving', 'woodcut', 'specimen'],
-    poster: ['poster', 'placard', 'advertisement'],
-    painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas'],
-    sculpture: ['sculpture', 'bronze', 'marble', 'ceramic', 'metalwork'],
-    furniture: ['chair', 'table', 'desk', 'stool', 'cabinet', 'furniture', 'sessel'],
-    textile: ['textile', 'fabric', 'tapestry', 'weaving', 'weave'],
-    architecture: ['architecture', 'building', 'architectural', 'elevation', 'plan'],
-    book: ['book', 'manuscript', 'volume', 'folio', 'periodical'],
-  };
+  typography: ['typography', 'typeface', 'font', 'helvetica', 'type specimen', 'lettering'], // ADD FIRST
+  photograph: ['photograph', 'photo', 'gelatin silver'], // REMOVED 'print'
+  drawing: ['drawing', 'sketch', 'graphite', 'charcoal', 'pencil', 'study', 'blueprint', 'section'],
+  print: ['lithograph', 'etching', 'engraving', 'woodcut'], // REMOVED 'print' and 'specimen' to avoid conflicts
+  poster: ['poster', 'placard', 'advertisement'],
+  painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas'],
+  sculpture: ['sculpture', 'bronze', 'marble', 'ceramic', 'metalwork'],
+  furniture: ['chair', 'table', 'desk', 'stool', 'cabinet', 'furniture', 'sessel'],
+  textile: ['textile', 'fabric', 'tapestry', 'weaving', 'weave'],
+  architecture: ['architecture', 'building', 'architectural', 'elevation', 'plan'],
+  book: ['book', 'manuscript', 'volume', 'folio', 'periodical'],
+};
   
   const MOVEMENT_KEYWORDS = {
     bauhaus: ['bauhaus', 'gropius', 'breuer', 'albers', 'brandt', 'klee', 'kandinsky'],

@@ -32,7 +32,8 @@ export default function GalleryPage() {
       });
   }, [rawTopic]);
 
-  const handleImageError = (itemId) => {
+  const handleImageError = (itemId, imageUrl) => {
+    console.log(`[BROKEN IMAGE] ${itemId}: ${imageUrl}`);
     setBrokenImages(prev => new Set([...prev, itemId]));
   };
 
@@ -80,25 +81,24 @@ export default function GalleryPage() {
 
         {/* MINIMAL GRID - SMALL BOXES, LOTS OF SPACE, ROWS OF 5 */}
         <div 
-          className="grid gap-12"
+          className="grid gap-6"
           style={{ 
-            gridTemplateColumns: 'repeat(5, 160px)',
-            justifyContent: 'start'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))'
           }}
         >
-          {visibleItems.map((item) => (
+          {visibleItems.map((item, idx) => (
             <div
               key={item.id}
               className="cursor-pointer group"
               onClick={() => setSelected(item)}
             >
               {/* SMALL SQUARE BOX */}
-              <div className="w-[160px] h-[160px] border border-black/20 overflow-hidden bg-white">
+              <div className="w-full aspect-square border border-black/20 overflow-hidden bg-white">
                 <img
                   src={item.imageUrl}
                   alt={item.title}
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  loading={idx < 20 ? "eager" : "lazy"}
                   onError={() => handleImageError(item.id)}
                 />
               </div>

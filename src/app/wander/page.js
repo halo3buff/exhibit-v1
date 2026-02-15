@@ -35,12 +35,12 @@ export default function WanderPage() {
   };
 
   const categories = [
-    { title: "SKETCH STUDIES", query: "drawing" },
-    { title: "PHOTOGRAPH ARCHIVE", query: "photograph" },
-    { title: "POSTER VAULT", query: "poster" },
-    { title: "BAUHAUS COLLECTION", query: "bauhaus" },
-    { title: "SWISS TYPOGRAPHY", query: "swiss style" },
-    { title: "MODERNIST DESIGN", query: "1920s" }
+    { title: "PHOTOGRAPHY", query: "photograph", type: "photograph", desc: "01" },
+    { title: "DRAWINGS", query: "drawing sketch", type: "drawing", desc: "02" },
+    { title: "POSTERS", query: "poster", type: "poster", desc: "03" },
+    { title: "PRINTS", query: "print lithograph", type: "print", desc: "04" },
+    { title: "PAINTINGS", query: "painting", type: "painting", desc: "05" },
+    { title: "FURNITURE", query: "furniture chair", type: "furniture", desc: "06" }
   ];
 
   if (loading) return (
@@ -88,7 +88,7 @@ export default function WanderPage() {
           {categories.map((cat, i) => (
             <button 
               key={i} 
-              onClick={() => router.push(`/gallery?topic=${cat.query}`)}
+              onClick={() => router.push(`/gallery?topic=${encodeURIComponent(cat.query)}&type=${cat.type}`)}
               className="appearance-none bg-transparent border-none p-0 m-0 text-left text-[12px] font-black uppercase tracking-tighter hover:opacity-50 transition-opacity"
             >
               {cat.title}

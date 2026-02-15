@@ -1,26 +1,45 @@
-export async function fetchHarvard(query) {
-    // We target specific "Classifications": 
-    // 21 (Prints), 172 (Graphic Design), 23 (Photographs), 30 (Posters)
-    const classifications = [21, 172, 23, 30];
-    const classFilter = classifications.join('|');
-    
-    // Harvard's API allows us to filter by classification and images-only in one go
-    const url = `https://api.harvardartmuseums.org/object?q=${encodeURIComponent(query)}&classification=${classFilter}&hasimage=1&size=25&apikey=NOT_REQUIRED_FOR_BASIC`;
+import { getLocationsForType } from './source-mappings';
+
+export async function fetchHarvard(query, contentType = null) {
+  // These are Harvard's classification IDs - keeping your existing mapping
+  const allClassifications = {
+    prints: 21,
+    graphicDesign: 172,
+    photographs: 23,
+    posters: 30
+  };
   
-    // Note: Harvard technically prefers a key for high volume, 
-    // but for a student/dev project, you can often test with their public endpoints.
-    // If you want a permanent one, it's instant here: https://harvardartmuseums.org/collections/api
-    
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    return (data.records || []).map(item => ({
-      id: `harvard-${item.id}`,
-      title: item.title,
-      author: item.people?.[0]?.displayname || "Harvard Art Museums",
-      year: item.dated || "Unknown",
-      imageUrl: item.primaryimageurl,
-      source: "Harvard Art Museums",
-      link: item.url
-    })).filter(item => item.imageUrl);
+  // Map contentType to Harvard classification IDs
+  let classifications;
+  if (contentType) {
+    // Use source-mappings to determine which classifications to query
+    const types = getLocationsForType('harvard', contentType);
+    if (types && types.includes('prints')) {
+      classifications = [allClassifications.prints, allClassifications.graphicDesign];
+    } else if (types && types.includes('photographs')) {
+      classifications = [allClassifications.photographs];
+    } else {
+      // Default for this contentType
+      classifications = [allClassifications.prints, allClassifications.graphicDesign, allClassifications.photographs];
+    }
+  } else {
+    // No contentType - use all (current behavior preserved)
+    classifications = Object.values(allClassifications);
   }
+  
+  const classFilter = classifications.join('|');
+  const url = `https://api.harvardartmuseums.org/object?q=${encodeURIComponent(query)}&classification=${classFilter}&hasimage=1&size=25&apikey=NOT_REQUIRED_FOR_BASIC`;
+  
+  const res = await fetch(url);
+  const data = await res.json();
+  
+  return (data.records || []).map(item => ({
+    id: `harvard-${item.id}`,
+    title: item.title,
+    author: item.people?.[0]?.displayname || "Harvard Art Museums",
+    year: item.dated || "Unknown",
+    imageUrl: item.primaryimageurl,
+    source: "Harvard Art Museums",
+    link: item.url
+  })).filter(item => item.imageUrl);
+}

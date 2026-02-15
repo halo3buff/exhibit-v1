@@ -107,11 +107,11 @@ export async function GET(req) {
       searchMet ? searchMet(topic, contentType) : Promise.resolve([]),
       searchArtic ? searchArtic(topic, contentType) : Promise.resolve([]),
       searchVA ? searchVA(topic, contentType) : Promise.resolve([]),
-      searchHarvard ? searchHarvard(topic) : Promise.resolve([]),
+      searchHarvard ? searchHarvard(topic, contentType) : Promise.resolve([]),
       searchLoc ? searchLoc(topic, contentType) : Promise.resolve([]),
       searchNypl ? searchNypl(topic, contentType) : Promise.resolve([]),
-      searchRijks ? searchRijks(topic) : Promise.resolve([]),
-      searchWikimedia ? searchWikimedia(topic) : Promise.resolve([])
+      searchRijks ? searchRijks(topic, contentType) : Promise.resolve([]),
+      searchWikimedia ? searchWikimedia(topic, contentType) : Promise.resolve([])
     ]);
 
     const liveItems = results
