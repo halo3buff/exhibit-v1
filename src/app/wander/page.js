@@ -3,89 +3,111 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function WanderPage() {
-  const [preview, setPreview] = useState(null);
+  const [previews, setPreviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    async function loadPreview() {
+    async function loadPreviews() {
       try {
         const res = await fetch('/manifests/moma.json');
         if (res.ok) {
           const data = await res.json();
-          setPreview(data[Math.floor(Math.random() * data.length)]);
+          // FILTER: Only keep items that have a defined imageUrl
+          const validData = data.filter(item => item.imageUrl && item.imageUrl.trim() !== "");
+          const shuffled = validData.sort(() => 0.5 - Math.random());
+          setPreviews(shuffled.slice(0, 3));
         }
-      } catch (e) {
-        console.error("Failed to load preview:", e);
+      } catch (e) { 
+        console.error("Failed to load manifests:", e); 
+      } finally {
+        setLoading(false);
       }
     }
-    loadPreview();
+    loadPreviews();
   }, []);
 
-  const navigate = (filters) => {
-    const params = new URLSearchParams();
-    if (filters.topic) params.set('topic', filters.topic);
-    if (filters.movement) params.set('movement', filters.movement);
-    if (filters.era) params.set('era', filters.era);
-    if (filters.type) params.set('type', filters.type);
-    router.push(`/gallery?${params.toString()}`);
+  // FALLBACK: If an image fails to load, swap to a neutral placeholder
+  const handleImageError = (e) => {
+    e.target.onerror = null; // Prevent infinite loops
+    e.target.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mO8Xw8AAasBRue6YmAAAAAASUVORK5CYII=";
+    e.target.className = "w-full h-full bg-gray-100 object-cover opacity-10";
   };
 
+  const categories = [
+    { title: "SKETCH STUDIES", query: "drawing" },
+    { title: "PHOTOGRAPH ARCHIVE", query: "photograph" },
+    { title: "POSTER VAULT", query: "poster" },
+    { title: "BAUHAUS COLLECTION", query: "bauhaus" },
+    { title: "SWISS TYPOGRAPHY", query: "swiss style" },
+    { title: "MODERNIST DESIGN", query: "1920s" }
+  ];
+
+  if (loading) return (
+    <main className="h-screen bg-white flex items-center justify-center">
+      <p className="font-black uppercase tracking-widest text-[10px] animate-pulse">Initializing Index...</p>
+    </main>
+  );
+
   return (
-    <main className="min-h-screen bg-[#f4f4f2] flex flex-col p-6 md:p-12 text-[#1a1a1a]">
-      {/* HEADER SECTION - Static and Clean */}
-      <div className="w-full mb-12">
-        <h1 className="text-5xl md:text-7xl font-bold italic border-b-2 border-black pb-4 uppercase tracking-tighter">
-          THE EXHIBITION ARCHIVE
-        </h1>
-      </div>
-      
-      <div className="flex-1 flex flex-col md:flex-row gap-16 items-start">
+    <main className="h-screen bg-white overflow-hidden p-12">
+      <div className="relative w-[850px] h-[650px] ml-[5%] mt-[2%]">
         
-        {/* LEFT: NAVIGATION MENU - Boxed style from your earlier screenshot */}
-        <div className="w-full md:w-1/3 flex flex-col border-t border-black">
-          {['1920S AVANT-GARDE', 'SWISS TYPOGRAPHY', 'INDUSTRIAL PHOTOGRAPHY', 'BAUHAUS ARCHIVE', 'MODERNIST VAULT'].map((label, i) => (
-            <button 
-              key={i}
-              onClick={() => navigate({ topic: label.toLowerCase() })} 
-              className="text-left text-xl py-3 px-2 border-b border-black uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-            >
-              {label}
-            </button>
-          ))}
-          
-          <div className="mt-8">
-            <p className="text-[10px] uppercase font-bold opacity-50 mb-4">SELECT AN ENTRY POINT TO BEGIN INDEXING.</p>
-            <div className="h-px bg-black/20 w-full mb-4"></div>
-            <p className="text-[10px] uppercase tracking-widest font-bold">Status: System_Online</p>
-          </div>
+        {/* TITLE SECTION */}
+        <div className="absolute top-0 left-0">
+          <h1 className="text-4xl font-black tracking-tighter leading-none">DIGITAL@SCALE</h1>
+          <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">INDEX SYSTEM</p>
         </div>
 
-        {/* RIGHT: THE CLUSTER - This replicates the overlapping look */}
-        <div className="w-full md:w-1/2 relative min-h-[600px] flex items-center justify-center">
-          {preview && (
-            <div className="relative">
-              {/* Main Image - Color, Static, No Hover Transform */}
-              <div className="relative z-10 border border-black p-4 bg-white shadow-xl max-w-lg">
-                <img 
-                  src={preview.imageUrl} 
-                  className="w-full h-auto object-contain block border border-black/10" 
-                  alt="Archive Preview" 
-                />
-                <div className="mt-4 flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] uppercase font-black">{preview.title}</p>
-                    <p className="text-[8px] opacity-40 uppercase">{preview.id}</p>
-                  </div>
-                  <span className="text-[8px] opacity-30 font-mono italic">PREVIEW_NODE_01</span>
-                </div>
-              </div>
-
-              {/* Decorative "Archival" elements to match the reference image cluster style */}
-              <div className="absolute -top-6 -left-6 w-32 h-40 border border-black/10 bg-white/50 -z-10 rotate-3"></div>
-              <div className="absolute -bottom-10 -right-4 w-48 h-12 bg-black/5 -rotate-2 -z-10"></div>
-            </div>
+        {/* BOX 1: MAIN RECTANGLE */}
+        <div className="absolute top-[100px] left-0 w-[420px] h-[320px] border border-black overflow-hidden bg-gray-50">
+          {previews[0] && (
+            <img 
+              src={previews[0].imageUrl} 
+              onError={handleImageError}
+              className="w-full h-full object-cover grayscale" 
+              alt="preview-1" 
+            />
           )}
         </div>
+
+        {/* BOX 2: TOP RIGHT BOX */}
+        <div className="absolute top-[100px] left-[435px] w-[200px] h-[150px] border border-black overflow-hidden bg-gray-50">
+          {previews[1] && (
+            <img 
+              src={previews[1].imageUrl} 
+              onError={handleImageError}
+              className="w-full h-full object-cover" 
+              alt="preview-2" 
+            />
+          )}
+        </div>
+
+        {/* CATEGORIES MENU: PURE TEXT STRINGS */}
+        <div className="absolute top-[265px] left-[435px] flex flex-col space-y-3">
+          {categories.map((cat, i) => (
+            <button 
+              key={i} 
+              onClick={() => router.push(`/gallery?topic=${cat.query}`)}
+              className="appearance-none bg-transparent border-none p-0 m-0 text-left text-[12px] font-black uppercase tracking-tighter hover:opacity-50 transition-opacity"
+            >
+              {cat.title}
+            </button>
+          ))}
+        </div>
+
+        {/* BOX 3: LONG BOTTOM ANCHOR */}
+        <div className="absolute top-[435px] left-0 w-[530px] h-[100px] border border-black overflow-hidden bg-gray-50">
+          {previews[2] && (
+            <img 
+              src={previews[2].imageUrl} 
+              onError={handleImageError}
+              className="w-full h-full object-cover contrast-125" 
+              alt="preview-3" 
+            />
+          )}
+        </div>
+
       </div>
     </main>
   );

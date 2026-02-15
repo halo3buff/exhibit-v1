@@ -14,8 +14,26 @@ import path from 'path';
 
 const cache = new Map();
 
-function searchLocalManifests(query, filters) {
-  const manifestDir = path.join(process.cwd(), 'public', 'manifests');
+// Detect content type from query
+function detectContentType(query) {
+  const lowerQuery = query.toLowerCase();
+  
+  // Order matters - check most specific first
+  if (lowerQuery.includes('typography') || lowerQuery.includes('typeface') || lowerQuery.includes('font')) return 'typography';
+  if (lowerQuery.includes('sketch') || lowerQuery.includes('drawing')) return 'drawing';
+  if (lowerQuery.includes('photo')) return 'photograph';
+  if (lowerQuery.includes('poster')) return 'poster';
+  if (lowerQuery.includes('print') && !lowerQuery.includes('photo')) return 'print';
+  if (lowerQuery.includes('furniture') || lowerQuery.includes('chair')) return 'furniture';
+  if (lowerQuery.includes('textile') || lowerQuery.includes('fabric')) return 'textile';
+  if (lowerQuery.includes('architect')) return 'architecture';
+  if (lowerQuery.includes('book') || lowerQuery.includes('manuscript')) return 'manuscript';
+  
+  return null; // Use default mappings
+}
+
+function searchLocalManifests(query) {
+  const manifestDir = path.join(process.cwd(), 'public/manifests');
   const files = ['moma.json', 'letterform.json', 'swiss.json', 'bauhaus.json', 'jstor.json'];
   let localResults = [];
 
@@ -26,86 +44,131 @@ function searchLocalManifests(query, filters) {
     if (fs.existsSync(filePath)) {
       try {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        
         const filtered = data.filter(item => {
           const searchContent = `${item.title} ${item.author} ${item.source}`.toLowerCase();
-          const matchesText = keywords.length > 0 ? keywords.some(key => searchContent.includes(key)) : true;
-          const itemCategories = categorizeItem(item);
-          const matchesMetadata = matchesCategories({ ...item, categories: itemCategories }, filters);
-          
-          const hasActiveFilters = Object.values(filters).some(v => v !== null && v !== "");
-          return hasActiveFilters ? matchesMetadata : matchesText;
+          return keywords.some(key => searchContent.includes(key)) || 
+                 item.source.toLowerCase().includes(query.toLowerCase());
         });
+        
+        console.log(`[MANIFEST ${file}] Found ${filtered.length} items`);
         localResults.push(...filtered);
       } catch (e) {
         console.error(`[SEARCH] Error reading ${file}:`, e);
       }
     }
   });
-  return localResults;
+  
+  return localResults.sort((a, b) => {
+    const aText = `${a.title} ${a.author}`.toLowerCase();
+    const bText = `${b.title} ${b.author}`.toLowerCase();
+    const aCount = keywords.filter(k => aText.includes(k)).length;
+    const bCount = keywords.filter(k => bText.includes(k)).length;
+    return bCount - aCount;
+  });
 }
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    // Logic: Use specific topic if provided, else use the first available filter value as the search term
-    const topic = searchParams.get("topic") || searchParams.get("movement") || searchParams.get("type") || "Design";
+    const topic = searchParams.get("topic") || "Design";
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
+    
+    // Detect content type from query
+    const contentType = detectContentType(topic);
+    
     const filters = {
       type: searchParams.get("type"),
+      medium: searchParams.get("medium"),
       movement: searchParams.get("movement"),
       era: searchParams.get("era")
     };
 
-    const cacheKey = `${topic.toLowerCase()}-${JSON.stringify(filters)}`;
-    if (cache.has(cacheKey)) return new Response(JSON.stringify(cache.get(cacheKey)), { status: 200 });
+    console.log(`\n[SEARCH] Query: "${topic}"`);
+    if (contentType) console.log(`[CONTENT TYPE] Detected: ${contentType}`);
+    if (Object.values(filters).some(v => v)) console.log(`[FILTERS]`, filters);
 
-    const localItems = searchLocalManifests(topic, filters);
-    
-    // RESTORED: Full external API calls
+    const cacheKey = `${topic}-${contentType}-${JSON.stringify(filters)}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      console.log(`[CACHE] HIT - Returning ${cached.length} items`);
+      return new Response(JSON.stringify(cached), { 
+        status: 200,
+        headers: { "Content-Type": "application/json", "X-Cache": "HIT" } 
+      });
+    }
+
+    const localItems = searchLocalManifests(topic);
+    console.log(`[MANIFESTS] Total: ${localItems.length} items`);
+
+    // Pass contentType to each source
+    console.log(`[APIs] Querying 8 sources with content-specific locations...`);
     const results = await Promise.allSettled([
-      searchMet(topic),
-      searchArtic(topic),
-      searchVA(topic),
-      searchHarvard(topic),
-      searchLoc(topic),
-      searchNypl(topic),
-      searchRijks(topic),
-      searchWikimedia(topic)
+      searchMet ? searchMet(topic, contentType) : Promise.resolve([]),
+      searchArtic ? searchArtic(topic, contentType) : Promise.resolve([]),
+      searchVA ? searchVA(topic, contentType) : Promise.resolve([]),
+      searchHarvard ? searchHarvard(topic) : Promise.resolve([]),
+      searchLoc ? searchLoc(topic, contentType) : Promise.resolve([]),
+      searchNypl ? searchNypl(topic, contentType) : Promise.resolve([]),
+      searchRijks ? searchRijks(topic) : Promise.resolve([]),
+      searchWikimedia ? searchWikimedia(topic) : Promise.resolve([])
     ]);
 
     const liveItems = results
       .filter(r => r.status === 'fulfilled')
       .flatMap(r => r.value || []);
+    
+    console.log(`[APIs] Total: ${liveItems.length} items`);
 
     const raw = [...localItems, ...liveItems];
+    console.log(`[MERGE] Before dedup: ${raw.length} items`);
+    
     const unique = [];
     const seen = new Set();
     
     for (const item of raw) {
-      if (item?.imageUrl && item.id && !seen.has(item.id)) {
+      if (item && item.id && !seen.has(item.id)) {
         seen.add(item.id);
         unique.push(item);
       }
     }
     
-    const processed = unique
-      .map(item => ({ ...item, categories: categorizeItem(item) }))
-      .filter(item => matchesCategories(item, filters));
+    console.log(`[DEDUP] After dedup: ${unique.length} unique items`);
 
-    let final = processed.slice(0, 400);
+    const withImages = unique.filter(item => item.imageUrl);
+    console.log(`[FILTER] With images: ${withImages.length} items`);
 
-    // Only run AI validation if we have results and a topic that isn't the default
-    if (apiKey && final.length > 0 && searchParams.get("topic")) {
-      const topTier = final.slice(0, 10);
-      const validated = await batchValidate(topTier, topic, apiKey, 10);
-      final = [...validated, ...final.slice(10)];
+    console.log(`[CATEGORIZE] Analyzing items...`);
+    const categorized = withImages.map(item => ({
+      ...item,
+      categories: categorizeItem(item)
+    }));
+
+    const filtered = categorized.filter(item => matchesCategories(item, filters));
+    console.log(`[CATEGORY FILTER] After filtering: ${filtered.length} items`);
+
+    let final = filtered.slice(0, 400);
+    
+    if (apiKey && filtered.length > 0) {
+      console.log(`[AI] Validating top 15 results`);
+      const topTier = filtered.slice(0, 15);
+      const validatedTopTier = await batchValidate(topTier, topic, apiKey, 15);
+      final = [...validatedTopTier, ...filtered.slice(15, 400)];
     }
 
+    console.log(`[FINAL] Returning ${final.length} items\n`);
+
     cache.set(cacheKey, final);
-    return new Response(JSON.stringify(final), { status: 200 });
+
+    return new Response(JSON.stringify(final), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+    });
   } catch (error) {
     console.error("[SEARCH] CRITICAL ERROR:", error);
-    return new Response(JSON.stringify([]), { status: 500 });
+    return new Response(JSON.stringify([]), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }

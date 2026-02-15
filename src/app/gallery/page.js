@@ -1,79 +1,169 @@
 'use client';
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { lineages } from "@/lib/lineages";
 
-function GalleryContent() {
+export default function GalleryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const rawTopic = searchParams.get("topic") || "Design";
+  const displayTitle = lineages?.find(l => l.query === rawTopic)?.title || rawTopic;
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [brokenImages, setBrokenImages] = useState(new Set());
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/search?${searchParams.toString()}`)
+    setBrokenImages(new Set());
+    
+    fetch(`/api/search?topic=${encodeURIComponent(rawTopic)}`)
       .then(res => res.json())
       .then(data => {
+        console.log(`[GALLERY] Received ${data.length} items`);
         setItems(data);
         setLoading(false);
       })
       .catch(err => {
-        console.error("Search error:", err);
+        console.error("[GALLERY] Error:", err);
+        setItems([]);
         setLoading(false);
       });
-  }, [searchParams]);
+  }, [rawTopic]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center font-mono text-xs tracking-widest animate-pulse">
-      INDEXING_ARCHIVE...
-    </div>
-  );
+  const handleImageError = (itemId) => {
+    setBrokenImages(prev => new Set([...prev, itemId]));
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-wider opacity-40 mb-2">Loading</p>
+          <h2 className="text-2xl font-light">{displayTitle}</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+        <p className="text-sm opacity-60 mb-4">No results for "{displayTitle}"</p>
+        <button
+          onClick={() => router.push("/wander")}
+          className="text-xs uppercase tracking-wide opacity-40 hover:opacity-100"
+        >
+          ← Return
+        </button>
+      </div>
+    );
+  }
+
+  const visibleItems = items.filter(item => !brokenImages.has(item.id));
 
   return (
-    <main className="min-h-screen bg-white p-8">
-      <div className="flex justify-between items-center mb-12 border-b border-black pb-4">
-        <button onClick={() => router.push("/wander")} className="text-xs font-bold uppercase tracking-widest">← Return</button>
-        <h1 className="text-2xl font-light italic uppercase tracking-tighter">
-          {searchParams.get("topic") || searchParams.get("movement") || "Archive"}
-        </h1>
-        <p className="text-[10px] opacity-40">{items.length} Records</p>
-      </div>
-
-      <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-        {items.map((item, idx) => (
-          <div 
-            key={idx} 
-            className="break-inside-avoid border border-black/10 p-2 bg-white cursor-crosshair group"
-            onClick={() => setSelected(item)}
+    <>
+      <main className="min-h-screen bg-white p-12">
+        {/* MINIMAL HEADER */}
+        <div className="mb-16 pb-6 border-b border-black/10">
+          <button
+            onClick={() => router.push("/wander")}
+            className="text-[10px] uppercase tracking-wide opacity-40 hover:opacity-100 mb-4 block"
           >
-            <img src={item.imageUrl} className="w-full h-auto grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
-            <div className="mt-4 flex justify-between items-start">
-              <p className="text-[10px] font-bold uppercase max-w-[70%]">{item.title}</p>
-              <p className="text-[10px] opacity-40 font-mono">{item.year}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+            ← RETURN TO INDEX
+          </button>
+          <h1 className="text-3xl font-light tracking-tight">{displayTitle}</h1>
+          <p className="text-xs opacity-40 mt-2">{visibleItems.length} items</p>
+        </div>
 
+        {/* MINIMAL GRID - SMALL BOXES, LOTS OF SPACE, ROWS OF 5 */}
+        <div 
+          className="grid gap-12"
+          style={{ 
+            gridTemplateColumns: 'repeat(5, 160px)',
+            justifyContent: 'start'
+          }}
+        >
+          {visibleItems.map((item) => (
+            <div
+              key={item.id}
+              className="cursor-pointer group"
+              onClick={() => setSelected(item)}
+            >
+              {/* SMALL SQUARE BOX */}
+              <div className="w-[160px] h-[160px] border border-black/20 overflow-hidden bg-white">
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={() => handleImageError(item.id)}
+                />
+              </div>
+
+              {/* MINIMAL INFO */}
+              <p className="text-[9px] uppercase tracking-wide opacity-40 mt-2 truncate">
+                {item.title}
+              </p>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* MODAL */}
       {selected && (
-        <div className="fixed inset-0 z-50 bg-white/95 backdrop-blur-md flex items-center justify-center p-8" onClick={() => setSelected(null)}>
-          <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12" onClick={e => e.stopPropagation()}>
-            <img src={selected.imageUrl} className="w-full h-auto border border-black shadow-2xl" alt="" />
-            <div className="flex flex-col justify-center space-y-6">
-              <h2 className="text-5xl font-light italic tracking-tighter leading-none">{selected.title}</h2>
-              <p className="text-xl opacity-60 font-serif">{selected.author}</p>
-              <p className="text-sm leading-relaxed opacity-80">{selected.source}</p>
-              <div className="pt-8">
-                <a href={selected.link} target="_blank" className="bg-black text-white px-8 py-4 text-xs uppercase font-bold tracking-widest">View Original Source</a>
+        <div
+          className="fixed inset-0 z-50 bg-white/95 flex items-center justify-center p-16"
+          onClick={() => setSelected(null)}
+        >
+          <div 
+            className="max-w-5xl w-full flex gap-16 items-start"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* IMAGE */}
+            <div className="flex-1">
+              <img
+                src={selected.imageUrl}
+                alt={selected.title}
+                className="w-full h-auto object-contain border border-black/10"
+              />
+            </div>
+
+            {/* INFO */}
+            <div className="w-[300px] space-y-6">
+              <div>
+                <h2 className="text-xl font-light mb-2">{selected.title}</h2>
+                <p className="text-sm opacity-60">{selected.author}</p>
+                <p className="text-xs opacity-40 mt-1">{selected.year}</p>
+              </div>
+
+              <div className="pt-4 border-t border-black/10">
+                <p className="text-[9px] uppercase tracking-wide opacity-40 mb-1">Source</p>
+                <p className="text-xs">{selected.source}</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <a
+                  href={selected.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] uppercase tracking-wide px-4 py-2 border border-black/20 hover:bg-black hover:text-white transition"
+                >
+                  View Original
+                </a>
+                <button
+                  onClick={() => setSelected(null)}
+                  className="text-[10px] uppercase tracking-wide px-4 py-2 opacity-40 hover:opacity-100"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
-    </main>
+    </>
   );
-}
-
-export default function GalleryPage() {
-  return <Suspense fallback={null}><GalleryContent /></Suspense>;
 }
