@@ -48,7 +48,7 @@
     photograph: ["PC-12"], // Photography & Media
     drawing: ["PC-14"], // Prints & Drawings
     print: ["PC-14"], // Prints & Drawings
-    painting: ["PC-10"], // European Painting
+    painting: ["PC-1"], // European Painting
     sculpture: ["PC-8"], // Contemporary Art
     architecture: ["PC-2"], // Architecture & Design
     textile: ["PC-15"], // Textiles

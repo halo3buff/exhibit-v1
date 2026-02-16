@@ -19,7 +19,9 @@ export async function fetchVA(query, contentType = null) {
       year: item._primaryDate,
       imageUrl: item._images?._primary_thumbnail,
       source: "V&A Museum",
-      link: `https://collections.vam.ac.uk/item/${item.systemNumber}`
+      link: `https://collections.vam.ac.uk/item/${item.systemNumber}`,
+      classification: item._primaryCategory, // ADD THIS
+      objectType: item._primaryPlace?.name || item._primaryCategory // ADD THIS
     })).filter(item => item.imageUrl);
   } catch (e) {
     console.error('[V&A] Error:', e);

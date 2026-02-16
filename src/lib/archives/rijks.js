@@ -26,6 +26,8 @@ export async function fetchRijks(query, contentType = null) {
     year: item.dating?.presentingDate || "Unknown",
     imageUrl: item.webImage?.url,
     source: "Rijksmuseum",
-    link: item.links?.web || `https://www.rijksmuseum.nl/en/collection/${item.objectNumber}`
+    link: item.links?.web || `https://www.rijksmuseum.nl/en/collection/${item.objectNumber}`,
+    objectType: item.objectTypes?.[0], // ADD THIS
+    medium: item.materials?.[0] // ADD THIS
   })).filter(item => item.imageUrl);
 }

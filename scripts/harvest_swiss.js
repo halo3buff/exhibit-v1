@@ -25,9 +25,9 @@ async function harvestSwiss() {
             link: "https://swissdesignawards.ch/",
             
             // ✅ ADDED FOR CLAUDE'S CATEGORIZATION SYSTEM
-            medium: workType.includes("Photography") ? "Gelatin Silver Print" : "Screenprint",
-            classification: "Swiss Style",
+            medium: "Screenprint",
             objectType: workType.includes("Poster") ? "Poster" : "Graphic Design",
+            classification: "Swiss Style",
             culture: "Swiss"
         });
     }

@@ -50,30 +50,61 @@ function searchLocalManifests(query, contentType = null) {
           
           // If we have a contentType filter, check the item's metadata fields
           if (contentType) {
-            const classificationText = [
-              item.classification || '',
-              item.objectType || '',
-              item.medium || ''
-            ].join(' ').toLowerCase();
+            const objectType = (item.objectType || '').toLowerCase();
+            const classification = (item.classification || '').toLowerCase();
+            const medium = (item.medium || '').toLowerCase();
             
-            // Check if item's native classification matches the requested type
-            const typeMatches = {
-              photograph: ['photograph', 'photo', 'gelatin silver'],
-              drawing: ['drawing', 'sketch', 'graphite', 'charcoal', 'pencil'],
-              print: ['lithograph', 'etching', 'engraving', 'woodcut', 'screenprint'],
+            // Type-specific keywords
+            const typeKeywords = {
+              photograph: ['photograph', 'photo'],
+              drawing: ['drawing', 'sketch'],
+              print: ['print', 'lithograph', 'etching', 'engraving', 'woodcut', 'screenprint'],
               poster: ['poster', 'affiche', 'placard'],
-              painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas'],
+              painting: ['painting'],
               furniture: ['furniture', 'chair', 'table', 'desk', 'sessel'],
               textile: ['textile', 'fabric', 'weave'],
-              typography: ['typography', 'typeface', 'font', 'specimen'],
+              typography: ['typography', 'typeface', 'font', 'specimen', 'graphic design'],
               architecture: ['architecture', 'building', 'architectural'],
-              sculpture: ['sculpture', 'bronze', 'marble', 'ceramic']
+              sculpture: ['sculpture']
             };
             
-            const keywords = typeMatches[contentType] || [];
-            const matchesType = keywords.some(keyword => classificationText.includes(keyword));
+            // Material keywords (for medium field only)
+            const materialKeywords = {
+              photograph: ['gelatin silver', 'daguerreotype', 'albumen'],
+              drawing: ['graphite', 'charcoal', 'pencil', 'ink'],
+              print: ['lithograph', 'etching', 'woodcut'],
+              painting: ['oil', 'acrylic', 'watercolor', 'tempera', 'canvas'],
+              sculpture: ['bronze', 'marble', 'ceramic']
+            };
             
-            if (!matchesType) return false;
+            const keywords = typeKeywords[contentType] || [];
+            const materials = materialKeywords[contentType] || [];
+            
+            // PRIORITY 1: Check objectType (most reliable)
+            if (objectType && keywords.some(k => objectType.includes(k))) {
+              return true;
+            }
+            
+            // PRIORITY 2: Check classification
+            if (classification && keywords.some(k => classification.includes(k))) {
+              return true;
+            }
+            
+            // PRIORITY 3: Check medium with materials ONLY if objectType didn't give a different result
+            // This prevents "Graphic Design" items with "Gelatin Silver" medium from matching photograph
+            if (medium && materials.some(m => medium.includes(m))) {
+              // BUT - if objectType said something else definitive, reject
+              const allTypeKeywords = Object.values(typeKeywords).flat();
+              const objectTypeMatchesOtherType = allTypeKeywords.some(k => objectType.includes(k));
+              
+              if (objectTypeMatchesOtherType) {
+                return false; // objectType said it's NOT this type
+              }
+              
+              return true; // medium matches and objectType was vague
+            }
+            
+            return false;
           }
           
           return true;
@@ -110,15 +141,16 @@ export async function GET(req) {
     if (contentType) console.log(`[CONTENT TYPE] Detected: ${contentType}`);
     if (Object.values(filters).some(v => v)) console.log(`[FILTERS]`, filters);
 
-    const cacheKey = `${topic}-${contentType}-${JSON.stringify(filters)}`;
-    const cached = cache.get(cacheKey);
-    if (cached) {
-      console.log(`[CACHE] HIT - Returning ${cached.length} items`);
-      return new Response(JSON.stringify(cached), { 
-        status: 200,
-        headers: { "Content-Type": "application/json", "X-Cache": "HIT" } 
-      });
-    }
+    // CACHE DISABLED FOR TESTING - RE-ENABLE AFTER VERIFYING FILTERS WORK
+    // const cacheKey = `${topic}-${contentType}-${JSON.stringify(filters)}`;
+    // const cached = cache.get(cacheKey);
+    // if (cached) {
+    //   console.log(`[CACHE] HIT - Returning ${cached.length} items`);
+    //   return new Response(JSON.stringify(cached), { 
+    //     status: 200,
+    //     headers: { "Content-Type": "application/json", "X-Cache": "HIT" } 
+    //   });
+    // }
 
     const localItems = searchLocalManifests(topic, contentType || filters.type);
     console.log(`[MANIFESTS] Total: ${localItems.length} items`);
@@ -180,7 +212,8 @@ export async function GET(req) {
 
     console.log(`[FINAL] Returning ${final.length} items\n`);
 
-    cache.set(cacheKey, final);
+    // CACHE DISABLED - RE-ENABLE AFTER TESTING
+    // cache.set(cacheKey, final);
 
     return new Response(JSON.stringify(final), {
       status: 200,

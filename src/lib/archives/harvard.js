@@ -40,6 +40,9 @@ export async function fetchHarvard(query, contentType = null) {
     year: item.dated || "Unknown",
     imageUrl: item.primaryimageurl,
     source: "Harvard Art Museums",
-    link: item.url
+    link: item.url,
+    classification: item.classification, // ADD THIS
+    medium: item.medium, // ADD THIS
+    objectType: item.objectname // ADD THIS
   })).filter(item => item.imageUrl);
 }

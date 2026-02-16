@@ -1,16 +1,15 @@
 /**
  * UNIFIED CATEGORIZATION SYSTEM
- * Works for BOTH API sources and harvested manifests
- * TRUSTS source classifications instead of keyword matching
+ * Uses ONLY item's native fields - NEVER trusts requestedType
  */
 
 const TYPE_KEYWORDS = {
   typography: ['typography', 'typeface', 'font', 'helvetica', 'specimen', 'lettering'],
-  photograph: ['photograph', 'photo', 'gelatin silver'],
+  photograph: ['photograph', 'photo', 'daguerreotype', 'ambrotype', 'tintype'],
   drawing: ['drawing', 'sketch', 'graphite', 'charcoal', 'pencil', 'study', 'blueprint'],
-  print: ['lithograph', 'etching', 'engraving', 'woodcut', 'screenprint'],
+  print: ['lithograph', 'etching', 'engraving', 'woodcut', 'screenprint', 'serigraph'],
   poster: ['poster', 'placard', 'affiche'],
-  painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas'],
+  painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas', 'tempera'],
   sculpture: ['sculpture', 'bronze', 'marble', 'ceramic', 'metalwork'],
   furniture: ['chair', 'table', 'desk', 'stool', 'cabinet', 'furniture', 'sessel'],
   textile: ['textile', 'fabric', 'tapestry', 'weaving', 'weave'],
@@ -49,31 +48,34 @@ function findMatches(text, keywordMap) {
 }
 
 /**
- * CRITICAL: Determine type from SOURCE CLASSIFICATION first
- * Only use keyword matching as fallback
+ * CRITICAL: Categorize ONLY based on item's OWN fields
+ * NEVER blindly trust requestedType
  */
 export function categorizeItem(item, requestedType = null) {
   let types = [];
   
-  // PRIORITY 1: If item came from a type-filtered query, trust that
-  if (requestedType) {
-    types.push(requestedType);
+  // PRIORITY 1: Check objectType field (most specific)
+  const objectType = (item.objectType || '').toLowerCase();
+  if (objectType) {
+    const objectMatches = findMatches(objectType, TYPE_KEYWORDS);
+    types.push(...objectMatches);
   }
   
-  // PRIORITY 2: Check item's native classification/objectType/medium fields
-  // These come from APIs (Met, ARTIC, etc.) or harvest scripts
-  const classificationText = [
-    item.classification || '',
-    item.objectType || '',
-    item.medium || ''
-  ].join(' ').toLowerCase();
-  
-  if (classificationText) {
-    const classMatches = findMatches(classificationText, TYPE_KEYWORDS);
+  // PRIORITY 2: Check classification field
+  const classification = (item.classification || '').toLowerCase();
+  if (classification && types.length === 0) {
+    const classMatches = findMatches(classification, TYPE_KEYWORDS);
     types.push(...classMatches);
   }
   
-  // PRIORITY 3: Only check title/author if no classification exists
+  // PRIORITY 3: Check medium field ONLY if no type found yet
+  const medium = (item.medium || '').toLowerCase();
+  if (medium && types.length === 0) {
+    const mediumMatches = findMatches(medium, TYPE_KEYWORDS);
+    types.push(...mediumMatches);
+  }
+  
+  // PRIORITY 4: Check title/author as last resort
   if (types.length === 0) {
     const titleText = [
       item.title || '',
@@ -82,6 +84,11 @@ export function categorizeItem(item, requestedType = null) {
     
     const titleMatches = findMatches(titleText, TYPE_KEYWORDS);
     types.push(...titleMatches);
+  }
+  
+  // PRIORITY 5: Use requestedType ONLY if nothing else worked
+  if (types.length === 0 && requestedType) {
+    types.push(requestedType);
   }
   
   // Remove duplicates
@@ -107,17 +114,11 @@ export function categorizeItem(item, requestedType = null) {
   };
 }
 
-/**
- * Check if item matches user's filters
- * Now much more lenient - if item has the type, it matches
- */
 export function matchesCategories(item, filters) {
   if (!filters || Object.keys(filters).length === 0) return true;
   const cats = item.categories || {};
   
-  // If user filtered by type, check if item has that type
   if (filters.type) {
-    // Item matches if it has the type in its types array
     if (!cats.types?.includes(filters.type)) return false;
   }
   
