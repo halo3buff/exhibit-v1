@@ -32,12 +32,10 @@ function detectContentType(query) {
   return null; // Use default mappings
 }
 
-function searchLocalManifests(query) {
+function searchLocalManifests(query, contentType = null) {
   const manifestDir = path.join(process.cwd(), 'public/manifests');
   const files = ['moma.json', 'letterform.json', 'swiss.json', 'bauhaus.json', 'jstor.json'];
   let localResults = [];
-
-  const keywords = query.toLowerCase().split(/[\s&]+/).filter(word => word.length > 2);
 
   files.forEach(file => {
     const filePath = path.join(manifestDir, file);
@@ -45,13 +43,43 @@ function searchLocalManifests(query) {
       try {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         
+        // If contentType is specified, ONLY return items that match by classification/medium/objectType
+        // Do NOT do keyword matching on titles
         const filtered = data.filter(item => {
-          const searchContent = `${item.title} ${item.author} ${item.source}`.toLowerCase();
-          return keywords.some(key => searchContent.includes(key)) || 
-                 item.source.toLowerCase().includes(query.toLowerCase());
+          if (!item.imageUrl) return false;
+          
+          // If we have a contentType filter, check the item's metadata fields
+          if (contentType) {
+            const classificationText = [
+              item.classification || '',
+              item.objectType || '',
+              item.medium || ''
+            ].join(' ').toLowerCase();
+            
+            // Check if item's native classification matches the requested type
+            const typeMatches = {
+              photograph: ['photograph', 'photo', 'gelatin silver'],
+              drawing: ['drawing', 'sketch', 'graphite', 'charcoal', 'pencil'],
+              print: ['lithograph', 'etching', 'engraving', 'woodcut', 'screenprint'],
+              poster: ['poster', 'affiche', 'placard'],
+              painting: ['painting', 'oil', 'acrylic', 'watercolor', 'canvas'],
+              furniture: ['furniture', 'chair', 'table', 'desk', 'sessel'],
+              textile: ['textile', 'fabric', 'weave'],
+              typography: ['typography', 'typeface', 'font', 'specimen'],
+              architecture: ['architecture', 'building', 'architectural'],
+              sculpture: ['sculpture', 'bronze', 'marble', 'ceramic']
+            };
+            
+            const keywords = typeMatches[contentType] || [];
+            const matchesType = keywords.some(keyword => classificationText.includes(keyword));
+            
+            if (!matchesType) return false;
+          }
+          
+          return true;
         });
         
-        console.log(`[MANIFEST ${file}] Found ${filtered.length} items`);
+        console.log(`[MANIFEST ${file}] Found ${filtered.length} items${contentType ? ` (type: ${contentType})` : ''}`);
         localResults.push(...filtered);
       } catch (e) {
         console.error(`[SEARCH] Error reading ${file}:`, e);
@@ -59,13 +87,7 @@ function searchLocalManifests(query) {
     }
   });
   
-  return localResults.sort((a, b) => {
-    const aText = `${a.title} ${a.author}`.toLowerCase();
-    const bText = `${b.title} ${b.author}`.toLowerCase();
-    const aCount = keywords.filter(k => aText.includes(k)).length;
-    const bCount = keywords.filter(k => bText.includes(k)).length;
-    return bCount - aCount;
-  });
+  return localResults;
 }
 
 export async function GET(req) {
@@ -98,7 +120,7 @@ export async function GET(req) {
       });
     }
 
-    const localItems = searchLocalManifests(topic);
+    const localItems = searchLocalManifests(topic, contentType || filters.type);
     console.log(`[MANIFESTS] Total: ${localItems.length} items`);
 
     // Pass contentType to each source
@@ -141,19 +163,19 @@ export async function GET(req) {
     console.log(`[CATEGORIZE] Analyzing items...`);
     const categorized = withImages.map(item => ({
       ...item,
-      categories: categorizeItem(item)
+      categories: categorizeItem(item, contentType || filters.type)
     }));
 
     const filtered = categorized.filter(item => matchesCategories(item, filters));
     console.log(`[CATEGORY FILTER] After filtering: ${filtered.length} items`);
 
-    let final = filtered.slice(0, 400);
+    let final = filtered.slice(0, 1000);
     
     if (apiKey && filtered.length > 0) {
       console.log(`[AI] Validating top 15 results`);
       const topTier = filtered.slice(0, 15);
       const validatedTopTier = await batchValidate(topTier, topic, apiKey, 15);
-      final = [...validatedTopTier, ...filtered.slice(15, 400)];
+      final = [...validatedTopTier, ...filtered.slice(15, 1000)];
     }
 
     console.log(`[FINAL] Returning ${final.length} items\n`);

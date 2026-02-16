@@ -3,23 +3,27 @@
  * Maps content types to specific locations within each archive
  */
 
-export const LOC_MAPPINGS = {
-    photograph: ["fsa", "app"], // Farm Security Admin, American Memory Photos
-    poster: ["pos", "wpapos"], // Posters, WPA Posters
-    drawing: ["cpn"], // Political cartoons/drawings
-    architecture: ["ade"], // Architecture/Design/Engineering
-    map: ["gmd"], // Geography & Map Division
-    manuscript: ["mss"], // Manuscript Division
-    print: ["pos", "rbc"], // Posters, Rare Book Collection
-    theater: ["papr"], // Performing Arts
-    book: ["rbc"], // Rare Book Collection
-    default: ["fsa", "pos", "wpapos", "app", "ade"] // Most visual categories
+  export const LOC_MAPPINGS = {
+    photograph: ["fsa", "app"],
+    poster: ["pos", "wpapos"],
+    drawing: ["cpn"],
+    architecture: ["ade"],
+    map: ["gmd"],
+    manuscript: ["mss"],
+    print: ["pos", "rbc"],
+    painting: ["app"], // ✅ ADD - American Memory has paintings
+    furniture: ["ade"], // ✅ ADD - Design/Engineering
+    theater: ["papr"],
+    book: ["rbc"],
+    default: ["fsa", "pos", "wpapos", "app", "ade"]
   };
   
   export const NYPL_MAPPINGS = {
     photograph: ["Photography"],
     poster: ["Posters"],
     print: ["Prints"],
+    painting: ["Art & Architecture"], // ✅ ADD
+    furniture: ["Art & Architecture"], // ✅ ADD
     map: ["Maps"],
     manuscript: ["Manuscripts"],
     architecture: ["Art & Architecture"],
@@ -71,6 +75,7 @@ export const LOC_MAPPINGS = {
     typography: ["prints"],
     poster: ["prints"],
     painting: ["paintings"],
+    furniture: ["designs"], // ✅ ADD
     sculpture: ["sculptures"],
     default: ["photographs", "prints", "drawings"]
   };
@@ -81,6 +86,8 @@ export const LOC_MAPPINGS = {
     print: ["prent"],
     poster: ["affiche"],
     typography: ["prent"],
+    painting: ["schilderij"], // ✅ ADD - Dutch for painting
+    furniture: ["design"], // ✅ ADD
     book: ["boek"],
     default: ["prent", "tekening", "foto"]
   };
@@ -90,6 +97,8 @@ export const LOC_MAPPINGS = {
     poster: ["Posters"],
     typography: ["Typography", "Graphic_design"],
     print: ["Graphic_design"],
+    painting: ["Paintings"], // ✅ ADD
+    furniture: ["Design"], // ✅ ADD
     map: ["Maps"],
     default: ["Featured_pictures", "Graphic_design"]
   };

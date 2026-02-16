@@ -18,7 +18,19 @@ export default function GalleryPage() {
     setLoading(true);
     setBrokenImages(new Set());
     
-    fetch(`/api/search?topic=${encodeURIComponent(rawTopic)}`)
+    // Build URL with all query params
+    const params = new URLSearchParams();
+    params.set('topic', rawTopic);
+    
+    const typeParam = searchParams.get("type");
+    const movementParam = searchParams.get("movement");
+    const eraParam = searchParams.get("era");
+    
+    if (typeParam) params.set('type', typeParam);
+    if (movementParam) params.set('movement', movementParam);
+    if (eraParam) params.set('era', eraParam);
+    
+    fetch(`/api/search?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         console.log(`[GALLERY] Received ${data.length} items`);
@@ -30,7 +42,7 @@ export default function GalleryPage() {
         setItems([]);
         setLoading(false);
       });
-  }, [rawTopic]);
+  }, [rawTopic, searchParams]);
 
   const handleImageError = (itemId, imageUrl) => {
     console.log(`[BROKEN IMAGE] ${itemId}: ${imageUrl}`);
@@ -98,8 +110,8 @@ export default function GalleryPage() {
                   src={item.imageUrl}
                   alt={item.title}
                   className="w-full h-full object-cover"
-                  loading={idx < 20 ? "eager" : "lazy"}
-                  onError={() => handleImageError(item.id)}
+                  loading={idx < 30 ? "eager" : "lazy"}
+                  onError={() => handleImageError(item.id, item.imageUrl)}
                 />
               </div>
 
