@@ -12,7 +12,12 @@
     "@google/generative-ai": "^0.24.1",
     "@tailwindcss/postcss": "^4.1.18",
     "autoprefixer": "^10.4.24",
+    "axios": "^1.13.5",
+    "better-sqlite3": "^12.6.2",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.3.1",
     "next": "^16.1.6",
+    "puppeteer": "^24.37.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

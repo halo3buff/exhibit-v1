@@ -1,6 +1,6 @@
 /**
  * UNIFIED CATEGORIZATION SYSTEM
- * Uses ONLY item's native fields - NEVER trusts requestedType
+ * When filters.type exists, TRUST the API department - don't re-categorize
  */
 
 const TYPE_KEYWORDS = {
@@ -48,34 +48,39 @@ function findMatches(text, keywordMap) {
 }
 
 /**
- * CRITICAL: Categorize ONLY based on item's OWN fields
- * NEVER blindly trust requestedType
+ * CRITICAL FIX: If requestedType exists, item came from filtered API query
+ * TRUST the department selection - add requestedType FIRST
  */
 export function categorizeItem(item, requestedType = null) {
   let types = [];
   
-  // PRIORITY 1: Check objectType field (most specific)
+  // PRIORITY 1: If user explicitly filtered by type, TRUST the API department
+  if (requestedType) {
+    types.push(requestedType);
+  }
+  
+  // PRIORITY 2: Check objectType field
   const objectType = (item.objectType || '').toLowerCase();
   if (objectType) {
     const objectMatches = findMatches(objectType, TYPE_KEYWORDS);
     types.push(...objectMatches);
   }
   
-  // PRIORITY 2: Check classification field
+  // PRIORITY 3: Check classification field
   const classification = (item.classification || '').toLowerCase();
-  if (classification && types.length === 0) {
+  if (classification && types.length <= 1) { // Only if we just have requestedType or nothing
     const classMatches = findMatches(classification, TYPE_KEYWORDS);
     types.push(...classMatches);
   }
   
-  // PRIORITY 3: Check medium field ONLY if no type found yet
+  // PRIORITY 4: Check medium field
   const medium = (item.medium || '').toLowerCase();
-  if (medium && types.length === 0) {
+  if (medium && types.length <= 1) {
     const mediumMatches = findMatches(medium, TYPE_KEYWORDS);
     types.push(...mediumMatches);
   }
   
-  // PRIORITY 4: Check title/author as last resort
+  // PRIORITY 5: Check title/author as last resort
   if (types.length === 0) {
     const titleText = [
       item.title || '',
@@ -84,11 +89,6 @@ export function categorizeItem(item, requestedType = null) {
     
     const titleMatches = findMatches(titleText, TYPE_KEYWORDS);
     types.push(...titleMatches);
-  }
-  
-  // PRIORITY 5: Use requestedType ONLY if nothing else worked
-  if (types.length === 0 && requestedType) {
-    types.push(requestedType);
   }
   
   // Remove duplicates

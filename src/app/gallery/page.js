@@ -1,13 +1,12 @@
 'use client';
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { lineages } from "@/lib/lineages";
 
 export default function GalleryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const rawTopic = searchParams.get("topic") || "Design";
-  const displayTitle = lineages?.find(l => l.query === rawTopic)?.title || rawTopic;
+  const typeParam = searchParams.get("type");
+  const displayTitle = typeParam || "Gallery";
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,22 +14,15 @@ export default function GalleryPage() {
   const [brokenImages, setBrokenImages] = useState(new Set());
 
   useEffect(() => {
+    if (!typeParam) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setBrokenImages(new Set());
     
-    // Build URL with all query params
-    const params = new URLSearchParams();
-    params.set('topic', rawTopic);
-    
-    const typeParam = searchParams.get("type");
-    const movementParam = searchParams.get("movement");
-    const eraParam = searchParams.get("era");
-    
-    if (typeParam) params.set('type', typeParam);
-    if (movementParam) params.set('movement', movementParam);
-    if (eraParam) params.set('era', eraParam);
-    
-    fetch(`/api/search?${params.toString()}`)
+    fetch(`/api/search?type=${encodeURIComponent(typeParam)}`)
       .then(res => res.json())
       .then(data => {
         console.log(`[GALLERY] Received ${data.length} items`);
@@ -42,7 +34,7 @@ export default function GalleryPage() {
         setItems([]);
         setLoading(false);
       });
-  }, [rawTopic, searchParams]);
+  }, [typeParam]);
 
   const handleImageError = (itemId, imageUrl) => {
     console.log(`[BROKEN IMAGE] ${itemId}: ${imageUrl}`);
@@ -79,7 +71,6 @@ export default function GalleryPage() {
   return (
     <>
       <main className="min-h-screen bg-white p-12">
-        {/* MINIMAL HEADER */}
         <div className="mb-16 pb-6 border-b border-black/10">
           <button
             onClick={() => router.push("/wander")}
@@ -91,7 +82,6 @@ export default function GalleryPage() {
           <p className="text-xs opacity-40 mt-2">{visibleItems.length} items</p>
         </div>
 
-        {/* MINIMAL GRID - SMALL BOXES, LOTS OF SPACE, ROWS OF 5 */}
         <div 
           className="grid gap-6"
           style={{ 
@@ -104,7 +94,6 @@ export default function GalleryPage() {
               className="cursor-pointer group"
               onClick={() => setSelected(item)}
             >
-              {/* SMALL SQUARE BOX */}
               <div className="w-full aspect-square border border-black/20 overflow-hidden bg-white">
                 <img
                   src={item.imageUrl}
@@ -115,7 +104,6 @@ export default function GalleryPage() {
                 />
               </div>
 
-              {/* MINIMAL INFO */}
               <p className="text-[9px] uppercase tracking-wide opacity-40 mt-2 truncate">
                 {item.title}
               </p>
@@ -124,7 +112,6 @@ export default function GalleryPage() {
         </div>
       </main>
 
-      {/* MODAL */}
       {selected && (
         <div
           className="fixed inset-0 z-50 bg-white/95 flex items-center justify-center p-16"
@@ -134,7 +121,6 @@ export default function GalleryPage() {
             className="max-w-5xl w-full flex gap-16 items-start"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* IMAGE */}
             <div className="flex-1">
               <img
                 src={selected.imageUrl}
@@ -143,7 +129,6 @@ export default function GalleryPage() {
               />
             </div>
 
-            {/* INFO */}
             <div className="w-[300px] space-y-6">
               <div>
                 <h2 className="text-xl font-light mb-2">{selected.title}</h2>
