@@ -1,0 +1,1402 @@
+{
+  "classifications": [
+    [
+      "design",
+      6028
+    ],
+    [
+      "architecture",
+      862
+    ],
+    [
+      "illustrated book",
+      862
+    ],
+    [
+      "print",
+      566
+    ],
+    [
+      "photographs",
+      517
+    ],
+    [
+      "drawing",
+      511
+    ],
+    [
+      "japanese magazine",
+      420
+    ],
+    [
+      "painting",
+      361
+    ],
+    [
+      "poster",
+      197
+    ],
+    [
+      "game magazine",
+      134
+    ],
+    [
+      "paintings",
+      104
+    ],
+    [
+      "pen and ink drawings",
+      83
+    ],
+    [
+      "drawings (visual works)",
+      82
+    ],
+    [
+      "mies van der rohe archive",
+      73
+    ],
+    [
+      "photography",
+      67
+    ],
+    [
+      "woodblock print",
+      59
+    ],
+    [
+      "oil on canvas",
+      57
+    ],
+    [
+      "sculpture",
+      56
+    ],
+    [
+      "archival material",
+      42
+    ],
+    [
+      "periodical",
+      41
+    ],
+    [
+      "photograph",
+      40
+    ],
+    [
+      "prints and drawing",
+      33
+    ],
+    [
+      "sidewall",
+      33
+    ],
+    [
+      "music magazine",
+      33
+    ],
+    [
+      "bound print",
+      28
+    ],
+    [
+      "miniature painting",
+      26
+    ],
+    [
+      "drawings",
+      25
+    ],
+    [
+      "design drawing",
+      25
+    ],
+    [
+      "sculpture-bronze",
+      22
+    ],
+    [
+      "japanese game art",
+      20
+    ],
+    [
+      "prints",
+      19
+    ],
+    [
+      "miniature",
+      19
+    ],
+    [
+      "architectural drawing",
+      18
+    ],
+    [
+      "medals and plaquettes",
+      15
+    ],
+    [
+      "tdr / wipeout",
+      13
+    ],
+    [
+      "internal dye diffusion transfer print",
+      12
+    ],
+    [
+      "graphite",
+      10
+    ],
+    [
+      "lithograph",
+      10
+    ],
+    [
+      "vessel",
+      10
+    ],
+    [
+      "border",
+      10
+    ],
+    [
+      "textile",
+      9
+    ],
+    [
+      "acrylic paintings (visual works)",
+      9
+    ],
+    [
+      "printed textile",
+      8
+    ],
+    [
+      "albums",
+      7
+    ],
+    [
+      "collage",
+      6
+    ],
+    [
+      "ceramics-porcelain",
+      6
+    ],
+    [
+      "etching",
+      6
+    ],
+    [
+      "color photograph",
+      6
+    ],
+    [
+      "ceiling paper",
+      6
+    ],
+    [
+      "frieze",
+      6
+    ],
+    [
+      "architectural fragment",
+      5
+    ],
+    [
+      "books",
+      4
+    ],
+    [
+      "negatives",
+      4
+    ],
+    [
+      "sculpture-miniature",
+      4
+    ],
+    [
+      "oil paintings (visual works)",
+      4
+    ],
+    [
+      "ceramics",
+      4
+    ],
+    [
+      "installation",
+      4
+    ],
+    [
+      "portrait",
+      4
+    ],
+    [
+      "woodblock",
+      4
+    ],
+    [
+      "watercolor",
+      4
+    ],
+    [
+      "sketchbook",
+      4
+    ],
+    [
+      "lapidary work-gems",
+      3
+    ],
+    [
+      "ceramics-pottery",
+      3
+    ],
+    [
+      "gelatin silver (developing-out-paper) pr",
+      3
+    ],
+    [
+      "time-based works",
+      3
+    ],
+    [
+      "charcoal",
+      3
+    ],
+    [
+      "colored pencil",
+      3
+    ],
+    [
+      "basketry",
+      3
+    ],
+    [
+      "sidewall - fragment",
+      3
+    ],
+    [
+      "multiple",
+      2
+    ],
+    [
+      "sculpture-architectural",
+      2
+    ],
+    [
+      "furniture",
+      2
+    ],
+    [
+      "textiles-woven",
+      2
+    ],
+    [
+      "glass",
+      2
+    ],
+    [
+      "screentone",
+      2
+    ],
+    [
+      "cotton",
+      2
+    ],
+    [
+      "bronze",
+      2
+    ],
+    [
+      "aquatint",
+      2
+    ],
+    [
+      "wood",
+      2
+    ],
+    [
+      "silver-dye bleach print",
+      2
+    ],
+    [
+      "european painting",
+      2
+    ],
+    [
+      "screenprint",
+      2
+    ],
+    [
+      "personal grooming / hygiene / cosmetic container",
+      2
+    ],
+    [
+      "book",
+      2
+    ],
+    [
+      "graphic design",
+      2
+    ],
+    [
+      "woodcut",
+      2
+    ],
+    [
+      "art of the americas",
+      2
+    ],
+    [
+      "weaving - printed",
+      2
+    ],
+    [
+      "statuette",
+      2
+    ],
+    [
+      "linocut",
+      2
+    ],
+    [
+      "dolls (figurines)",
+      2
+    ],
+    [
+      "mixed media/collage",
+      2
+    ],
+    [
+      "sidewall and border",
+      2
+    ],
+    [
+      "samples",
+      2
+    ],
+    [
+      "sample",
+      2
+    ],
+    [
+      "[object object]",
+      2
+    ],
+    [
+      "drawing?",
+      2
+    ],
+    [
+      "poster announcement",
+      2
+    ],
+    [
+      "tech culture",
+      2
+    ],
+    [
+      "transparencies",
+      1
+    ],
+    [
+      "manuscript materials",
+      1
+    ],
+    [
+      "periodicals",
+      1
+    ],
+    [
+      "miniatures",
+      1
+    ],
+    [
+      "enamels",
+      1
+    ],
+    [
+      "textiles-embroidered",
+      1
+    ],
+    [
+      "lapidary work",
+      1
+    ],
+    [
+      "metalwork-silver",
+      1
+    ],
+    [
+      "metalwork-gilt bronze",
+      1
+    ],
+    [
+      "lighting",
+      1
+    ],
+    [
+      "metalwork",
+      1
+    ],
+    [
+      "jewelry",
+      1
+    ],
+    [
+      "needlework (visual works)",
+      1
+    ],
+    [
+      "musical instrument",
+      1
+    ],
+    [
+      "architectural detail",
+      1
+    ],
+    [
+      "wool",
+      1
+    ],
+    [
+      "wallpaper",
+      1
+    ],
+    [
+      "earthenware",
+      1
+    ],
+    [
+      "headdress - misc",
+      1
+    ],
+    [
+      "black-and-white photography",
+      1
+    ],
+    [
+      "inkjet print",
+      1
+    ],
+    [
+      "ink on paper",
+      1
+    ],
+    [
+      "nigerian",
+      1
+    ],
+    [
+      "case furniture",
+      1
+    ],
+    [
+      "sport equipment",
+      1
+    ],
+    [
+      "relief etching",
+      1
+    ],
+    [
+      "mixed media",
+      1
+    ],
+    [
+      "stained glass/leaded glass",
+      1
+    ],
+    [
+      "pastel",
+      1
+    ],
+    [
+      "albumen silver print",
+      1
+    ],
+    [
+      "gelatin silver printing-out-paper print",
+      1
+    ],
+    [
+      "vase",
+      1
+    ],
+    [
+      "oil on panel",
+      1
+    ],
+    [
+      "teapot",
+      1
+    ],
+    [
+      "offset lithograph",
+      1
+    ],
+    [
+      "albumen print from collodion negative",
+      1
+    ],
+    [
+      "zincograph",
+      1
+    ],
+    [
+      "ritual objects",
+      1
+    ],
+    [
+      "time based media",
+      1
+    ],
+    [
+      "photo lithograph",
+      1
+    ],
+    [
+      "stoneware",
+      1
+    ],
+    [
+      "weaving",
+      1
+    ],
+    [
+      "fiber-tipped pen",
+      1
+    ],
+    [
+      "crayon",
+      1
+    ],
+    [
+      "oil on board",
+      1
+    ],
+    [
+      "decorative arts",
+      1
+    ],
+    [
+      "stelae",
+      1
+    ],
+    [
+      "jars",
+      1
+    ],
+    [
+      "amulet",
+      1
+    ],
+    [
+      "palladium print",
+      1
+    ],
+    [
+      "sound installation",
+      1
+    ],
+    [
+      "ball-point pen",
+      1
+    ],
+    [
+      "video art",
+      1
+    ],
+    [
+      "gouache",
+      1
+    ],
+    [
+      "mirror",
+      1
+    ],
+    [
+      "stone",
+      1
+    ],
+    [
+      "presentation drawing",
+      1
+    ],
+    [
+      "photographic process",
+      1
+    ],
+    [
+      "record sleeve",
+      1
+    ],
+    [
+      "borders",
+      1
+    ],
+    [
+      "border, cut-out",
+      1
+    ],
+    [
+      "sidewall/border",
+      1
+    ],
+    [
+      "sidewall sample",
+      1
+    ],
+    [
+      "prototype for canape spreader",
+      1
+    ],
+    [
+      "printer's sample book",
+      1
+    ],
+    [
+      "ceiling border",
+      1
+    ],
+    [
+      "model for dinner knife, unidentified",
+      1
+    ],
+    [
+      "ceiling",
+      1
+    ],
+    [
+      "book cover",
+      1
+    ],
+    [
+      "dado",
+      1
+    ],
+    [
+      "1991 inv. not located",
+      1
+    ],
+    [
+      "pitcher",
+      1
+    ],
+    [
+      "textile fragment",
+      1
+    ],
+    [
+      "bandbox",
+      1
+    ],
+    [
+      "stationery",
+      1
+    ],
+    [
+      "bandbox and lid",
+      1
+    ],
+    [
+      "peep-show print",
+      1
+    ],
+    [
+      "mural",
+      1
+    ],
+    [
+      "scenic - panel",
+      1
+    ],
+    [
+      "chromolithograph print",
+      1
+    ],
+    [
+      "sidewall and borders",
+      1
+    ],
+    [
+      "sidewall - sample",
+      1
+    ],
+    [
+      "calendar",
+      1
+    ],
+    [
+      "imitation leather",
+      1
+    ],
+    [
+      "embroidery: mughal type",
+      1
+    ],
+    [
+      "daguerreotype",
+      1
+    ],
+    [
+      "album page",
+      1
+    ],
+    [
+      "drawing: moorish arch",
+      1
+    ],
+    [
+      "coat rack prototype",
+      1
+    ],
+    [
+      "envelope",
+      1
+    ],
+    [
+      "pen",
+      1
+    ],
+    [
+      "brochure",
+      1
+    ],
+    [
+      "computer monitor",
+      1
+    ],
+    [
+      "cd graphics",
+      1
+    ],
+    [
+      "prototype",
+      1
+    ]
+  ],
+  "objectTypes": [
+    [
+      "photograph",
+      1155
+    ],
+    [
+      "drawing",
+      816
+    ],
+    [
+      "poster",
+      811
+    ],
+    [
+      "print",
+      655
+    ],
+    [
+      "magezine",
+      622
+    ],
+    [
+      "painting",
+      98
+    ],
+    [
+      "carte-de-visite",
+      64
+    ],
+    [
+      "block print",
+      62
+    ],
+    [
+      "screenprint",
+      31
+    ],
+    [
+      "photographs",
+      27
+    ],
+    [
+      "furnishing fabric",
+      22
+    ],
+    [
+      "carte-de-visite; photocollage; collage",
+      19
+    ],
+    [
+      "mugshot",
+      18
+    ],
+    [
+      "album",
+      18
+    ],
+    [
+      "statuette",
+      16
+    ],
+    [
+      "lithographs",
+      15
+    ],
+    [
+      "medal",
+      11
+    ],
+    [
+      "bust",
+      9
+    ],
+    [
+      "photogram",
+      7
+    ],
+    [
+      "sculpture",
+      7
+    ],
+    [
+      "dress",
+      7
+    ],
+    [
+      "medallion",
+      6
+    ],
+    [
+      "headdress",
+      6
+    ],
+    [
+      "evening dress",
+      6
+    ],
+    [
+      "stereographs",
+      5
+    ],
+    [
+      "stereograph",
+      5
+    ],
+    [
+      "photographically illustrated book",
+      5
+    ],
+    [
+      "plate",
+      5
+    ],
+    [
+      "daguerreotype",
+      4
+    ],
+    [
+      "vase",
+      4
+    ],
+    [
+      "ensemble",
+      4
+    ],
+    [
+      "photograph; carte-de-visite",
+      3
+    ],
+    [
+      "plaquette",
+      3
+    ],
+    [
+      "statue",
+      3
+    ],
+    [
+      "statuette group",
+      3
+    ],
+    [
+      "cameo",
+      3
+    ],
+    [
+      "robe à l'anglaise",
+      3
+    ],
+    [
+      "pouch",
+      3
+    ],
+    [
+      "robe à la française",
+      3
+    ],
+    [
+      "wallpaper",
+      3
+    ],
+    [
+      "cabinet card",
+      2
+    ],
+    [
+      "tintype",
+      2
+    ],
+    [
+      "negative; photograph",
+      2
+    ],
+    [
+      "relief",
+      2
+    ],
+    [
+      "figure",
+      2
+    ],
+    [
+      "tondo",
+      2
+    ],
+    [
+      "apron",
+      2
+    ],
+    [
+      "ball gown",
+      2
+    ],
+    [
+      "textile",
+      2
+    ],
+    [
+      "dinner dress",
+      2
+    ],
+    [
+      "afternoon dress",
+      2
+    ],
+    [
+      "habit à la disposition",
+      2
+    ],
+    [
+      "evening vest",
+      2
+    ],
+    [
+      "textile sample",
+      2
+    ],
+    [
+      "contract drawing",
+      2
+    ],
+    [
+      "oil painting",
+      2
+    ],
+    [
+      "scarf",
+      2
+    ],
+    [
+      "panorama",
+      1
+    ],
+    [
+      "photomontage; cabinet card",
+      1
+    ],
+    [
+      "autochrome",
+      1
+    ],
+    [
+      "ambrotype",
+      1
+    ],
+    [
+      "paper negative",
+      1
+    ],
+    [
+      "negatives; photographs",
+      1
+    ],
+    [
+      "letter; correspondence",
+      1
+    ],
+    [
+      "photograph; album",
+      1
+    ],
+    [
+      "album; photographs",
+      1
+    ],
+    [
+      "photograph; copy print",
+      1
+    ],
+    [
+      "photomechanical print",
+      1
+    ],
+    [
+      "photographs; collage",
+      1
+    ],
+    [
+      "painting, predella panel",
+      1
+    ],
+    [
+      "painting, ceiling decoration",
+      1
+    ],
+    [
+      "painting, miniature",
+      1
+    ],
+    [
+      "painting, overdoor",
+      1
+    ],
+    [
+      "painting, grisaille overdoor",
+      1
+    ],
+    [
+      "painting, wings of an altarpiece",
+      1
+    ],
+    [
+      "painting, sketch for a ceiling decoration",
+      1
+    ],
+    [
+      "papal arms",
+      1
+    ],
+    [
+      "mask",
+      1
+    ],
+    [
+      "andiron",
+      1
+    ],
+    [
+      "plaque",
+      1
+    ],
+    [
+      "candlestick",
+      1
+    ],
+    [
+      "fountain statuette",
+      1
+    ],
+    [
+      "crucifix",
+      1
+    ],
+    [
+      "group",
+      1
+    ],
+    [
+      "wall fountain",
+      1
+    ],
+    [
+      "fire screen panel",
+      1
+    ],
+    [
+      "intaglio",
+      1
+    ],
+    [
+      "frieze",
+      1
+    ],
+    [
+      "hanukkah lamp",
+      1
+    ],
+    [
+      "cast",
+      1
+    ],
+    [
+      "tazza",
+      1
+    ],
+    [
+      "head",
+      1
+    ],
+    [
+      "portrait medallion",
+      1
+    ],
+    [
+      "round gown",
+      1
+    ],
+    [
+      "textile panel",
+      1
+    ],
+    [
+      "evening coat",
+      1
+    ],
+    [
+      "hat",
+      1
+    ],
+    [
+      "hair accessory",
+      1
+    ],
+    [
+      "coat",
+      1
+    ],
+    [
+      "wedding veil",
+      1
+    ],
+    [
+      "shawl",
+      1
+    ],
+    [
+      "evening shawl",
+      1
+    ],
+    [
+      "dolman",
+      1
+    ],
+    [
+      "tea gown",
+      1
+    ],
+    [
+      "wedding headdress",
+      1
+    ],
+    [
+      "evening cloak",
+      1
+    ],
+    [
+      "suit",
+      1
+    ],
+    [
+      "table lamp",
+      1
+    ],
+    [
+      "armchair",
+      1
+    ],
+    [
+      "cup",
+      1
+    ],
+    [
+      "cabinet",
+      1
+    ],
+    [
+      "jardinière",
+      1
+    ],
+    [
+      "fire screen",
+      1
+    ],
+    [
+      "brooch",
+      1
+    ],
+    [
+      "digital inkjet print",
+      1
+    ],
+    [
+      "screen print",
+      1
+    ],
+    [
+      "wood engraving",
+      1
+    ],
+    [
+      "song sheet",
+      1
+    ],
+    [
+      "etching",
+      1
+    ],
+    [
+      "etching plate",
+      1
+    ],
+    [
+      "leaflet",
+      1
+    ],
+    [
+      "satirical etching",
+      1
+    ],
+    [
+      "lithograph",
+      1
+    ],
+    [
+      "tinsel print",
+      1
+    ]
+  ],
+  "departments": [
+    [
+      "architecture & design",
+      6963
+    ],
+    [
+      "drawings & prints",
+      1037
+    ],
+    [
+      "photographs",
+      550
+    ],
+    [
+      "european paintings",
+      100
+    ],
+    [
+      "european sculpture and decorative arts",
+      80
+    ],
+    [
+      "costume institute",
+      60
+    ],
+    [
+      "modern and contemporary art",
+      56
+    ]
+  ],
+  "mediumKeywords": [
+    [
+      "paper",
+      4057
+    ],
+    [
+      "lithograph",
+      3453
+    ],
+    [
+      "photograph",
+      929
+    ],
+    [
+      "silver",
+      638
+    ],
+    [
+      "graphite",
+      612
+    ],
+    [
+      "oil",
+      559
+    ],
+    [
+      "canvas",
+      428
+    ],
+    [
+      "etching",
+      414
+    ],
+    [
+      "screenprint",
+      252
+    ],
+    [
+      "woodcut",
+      192
+    ],
+    [
+      "gelatin",
+      176
+    ],
+    [
+      "watercolor",
+      176
+    ],
+    [
+      "charcoal",
+      117
+    ],
+    [
+      "acrylic",
+      101
+    ],
+    [
+      "bronze",
+      77
+    ],
+    [
+      "fabric",
+      41
+    ],
+    [
+      "ceramic",
+      39
+    ],
+    [
+      "marble",
+      20
+    ],
+    [
+      "textile",
+      7
+    ],
+    [
+      "clay",
+      3
+    ]
+  ],
+  "mainCategories": [
+    "photograph",
+    "print",
+    "drawing",
+    "poster",
+    "painting",
+    "sculpture",
+    "architecture",
+    "textile",
+    "furniture",
+    "design"
+  ]
+}
