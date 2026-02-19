@@ -1,154 +1,94 @@
-import { fetchMet as searchMet } from "@/lib/archives/met";
-import { fetchArtic as searchArtic } from "@/lib/archives/artic";
-import { fetchVA as searchVA } from "@/lib/archives/va";
-import { fetchHarvard as searchHarvard } from "@/lib/archives/harvard";
-import { fetchLOC as searchLoc } from "@/lib/archives/loc";
-import { fetchNYPL as searchNypl } from "@/lib/archives/nypl";
-import { fetchRijks as searchRijks } from "@/lib/archives/rijks";
-import { fetchWikimedia as searchWikimedia } from "@/lib/archives/wikimedia";
-import { mapItemToCanonicalType } from "@/lib/source-mappers";
+/**
+ * API ROUTE: /api/search
+ * Queries artworks.db (SQLite) instead of live APIs
+ */
 
-import fs from 'fs';
+import Database from 'better-sqlite3';
 import path from 'path';
 
-const cache = new Map();
+let _db = null;
 
-/**
- * Search local manifest files (harvest JSONs)
- * Currently only includes MoMA - add more as you get real data
- */
-function searchLocalManifests(contentType = null) {
-  const manifestDir = path.join(process.cwd(), 'public/manifests');
+function getDb() {
+  if (_db) return _db;
   
-  // ONLY include manifests with real data
-  const files = [
-    'moma.json'  // Real data from moma_raw.json
-    // Add more as you get real data:
-    // 'letterform.json',
-    // 'bauhaus.json',
-    // etc.
-  ];
+  const DB_PATH = path.join(process.cwd(), 'artworks.db');
   
-  let localResults = [];
-
-  files.forEach(file => {
-    const filePath = path.join(manifestDir, file);
-    if (fs.existsSync(filePath)) {
-      try {
-        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        
-        const items = data
-          .map(item => {
-            // Use source mapper to get canonical category
-            const canonicalType = mapItemToCanonicalType(item);
-            
-            return {
-              ...item,
-              _computedType: canonicalType
-            };
-          })
-          .filter(item => {
-            const hasImage = item.imageUrl && item.imageUrl.trim() !== "";
-            const hasType = item._computedType !== null;
-            const matchesType = contentType ? item._computedType === contentType : true;
-            return hasImage && hasType && matchesType;
-          })
-          .map(item => {
-            // Remove temporary computed type
-            const { _computedType, ...originalItem } = item;
-            return originalItem;
-          });
-
-        localResults = [...localResults, ...items];
-      } catch (e) {
-        console.error(`[API] Error reading ${file}:`, e);
-      }
-    }
-  });
-
-  return localResults;
+  try {
+    _db = new Database(DB_PATH, { readonly: true });
+    _db.pragma('journal_mode = WAL');
+    return _db;
+  } catch (e) {
+    console.error('[API] Could not open artworks.db:', e.message);
+    console.error('[API] Run: node scripts/build-database.js');
+    return null;
+  }
 }
+
+const cache = new Map();
+const CACHE_TTL = 1000 * 60 * 10; // 10 minutes
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q") || "design";
-  const contentType = searchParams.get("type");
+  const contentType = searchParams.get('type');
+  const limit = parseInt(searchParams.get('limit') || '500');
+  const offset = parseInt(searchParams.get('offset') || '0');
 
-  console.log(`[API] Searching for type: ${contentType || 'ALL'}, query: ${query}`);
+  console.log(`[API] type=${contentType || 'ALL'} limit=${limit} offset=${offset}`);
 
   // Check cache
-  const cacheKey = `${query}-${contentType}`;
+  const cacheKey = `${contentType}-${limit}-${offset}`;
   if (cache.has(cacheKey)) {
-    const cachedData = cache.get(cacheKey);
-    if (Date.now() - cachedData.timestamp < 300000) { // 5 min cache
-      console.log(`[API] Cache hit: ${cachedData.data.length} items`);
-      return new Response(JSON.stringify(cachedData.data), { status: 200 });
+    const cached = cache.get(cacheKey);
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`[API] Cache hit: ${cached.data.length} items`);
+      return Response.json(cached.data);
     }
   }
 
-  // Search local manifests (harvest JSONs)
-  const localItems = searchLocalManifests(contentType);
-  console.log(`[API] Local manifests: ${localItems.length} items`);
-
-  // Search live APIs
-  const apiPromises = [
-    searchMet(query, contentType),
-    searchArtic(query, contentType),
-    searchVA(query, contentType),
-    searchHarvard(query, contentType),
-    searchLoc(query, contentType),
-    searchNypl(query, contentType),
-    searchRijks(query, contentType),
-    searchWikimedia(query, contentType)
-  ];
-
-  const apiResults = await Promise.allSettled(apiPromises);
-  
-  const liveItems = apiResults
-    .filter(r => r.status === 'fulfilled')
-    .flatMap(r => r.value || [])
-    .map(item => {
-      // Use source mapper to get canonical category
-      const canonicalType = mapItemToCanonicalType(item);
-      
-      return {
-        ...item,
-        _computedType: canonicalType
-      };
-    })
-    .filter(item => item.imageUrl)
-    .filter(item => item._computedType !== null) // Exclude unmapped items
-    .filter(item => (contentType ? item._computedType === contentType : true))
-    .map(item => {
-      // Remove temporary computed type
-      const { _computedType, ...originalItem } = item;
-      return originalItem;
-    });
-
-  console.log(`[API] Live APIs: ${liveItems.length} items`);
-
-  // Combine and deduplicate
-  const raw = [...localItems, ...liveItems];
-  const unique = [];
-  const seen = new Set();
-  
-  for (const item of raw) {
-    if (item && item.id && !seen.has(item.id)) {
-      seen.add(item.id);
-      unique.push(item);
-    }
+  // Open database
+  const db = getDb();
+  if (!db) {
+    return Response.json(
+      { error: 'Database not found. Run: node scripts/build-database.js' },
+      { status: 500 }
+    );
   }
 
-  // Shuffle and limit
-  const final = unique.sort(() => 0.5 - Math.random()).slice(0, 100);
+  try {
+    let results;
 
-  console.log(`[API] Final results: ${final.length} items (${unique.length} unique before limiting to 100)`);
+    if (contentType) {
+      results = db.prepare(`
+        SELECT id, title, author, year, imageUrl, source, link,
+               type, classification, objectType, medium
+        FROM artworks
+        WHERE type = ?
+          AND imageUrl IS NOT NULL
+          AND imageUrl != ''
+        ORDER BY RANDOM()
+        LIMIT ? OFFSET ?
+      `).all(contentType, limit, offset);
+    } else {
+      results = db.prepare(`
+        SELECT id, title, author, year, imageUrl, source, link,
+               type, classification, objectType, medium
+        FROM artworks
+        WHERE imageUrl IS NOT NULL
+          AND imageUrl != ''
+        ORDER BY RANDOM()
+        LIMIT ? OFFSET ?
+      `).all(limit, offset);
+    }
 
-  // Cache results
-  cache.set(cacheKey, { data: final, timestamp: Date.now() });
+    console.log(`[API] Returned ${results.length} items`);
 
-  return new Response(JSON.stringify(final), {
-    status: 200,
-    headers: { "Content-Type": "application/json" }
-  });
+    // Cache results
+    cache.set(cacheKey, { data: results, timestamp: Date.now() });
+
+    return Response.json(results);
+
+  } catch (e) {
+    console.error('[API] Query error:', e.message);
+    return Response.json({ error: e.message }, { status: 500 });
+  }
 }
