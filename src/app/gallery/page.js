@@ -12,6 +12,7 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [brokenImages, setBrokenImages] = useState(new Set());
+  const [hoveredItem, setHoveredItem] = useState(null);
 
   useEffect(() => {
     if (!typeParam) {
@@ -91,8 +92,10 @@ export default function GalleryPage() {
           {visibleItems.map((item, idx) => (
             <div
               key={item.id}
-              className="cursor-pointer group"
+              className="cursor-pointer group relative"
               onClick={() => setSelected(item)}
+              onMouseEnter={() => setHoveredItem(item.id)}
+              onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="w-full aspect-square border border-black/20 overflow-hidden bg-white">
                 <img
@@ -107,6 +110,18 @@ export default function GalleryPage() {
               <p className="text-[9px] uppercase tracking-wide opacity-40 mt-2 truncate">
                 {item.title}
               </p>
+
+              {/* HOVER TOOLTIP */}
+              {hoveredItem === item.id && (
+                <div className="absolute left-0 bottom-full mb-2 z-10 w-64 bg-white border border-black/20 shadow-lg p-3 pointer-events-none">
+                  <p className="text-xs font-medium mb-1 line-clamp-2">{item.title}</p>
+                  <p className="text-[10px] opacity-60 mb-1">{item.author}</p>
+                  <p className="text-[9px] opacity-40">{item.year}</p>
+                  <div className="mt-2 pt-2 border-t border-black/10">
+                    <p className="text-[8px] uppercase tracking-wide opacity-40">{item.source}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
