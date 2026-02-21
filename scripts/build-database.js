@@ -1,122 +1,160 @@
+/**
+ * MUSEUM-GRADE ARCHIVE ENGINE v5.0 - SOURCE-AWARE
+ * -----------------------------------------------------------------------------
+ * Target Categories: 
+ * 1. Painting | 2. Sculpture | 3. Works on Paper | 4. Photography 
+ * 5. Architecture | 6. Decorative Art
+ * -----------------------------------------------------------------------------
+ */
+
 const fs = require('fs');
 const path = require('path');
-const Database = require('better-sqlite3');
-const { classifyArtwork } = require('./category-rules');
+const sqlite3 = require('sqlite3').verbose();
 
-const manifestDir = path.join(__dirname, '../public/manifests');
-const manifests = ['moma.json', 'met.json', 'artic.json', 'va.json', 'cooperhewitt.json', 'zurich.json'];
-const dbPath = path.join(__dirname, '../artworks.db');
+const dbPath = path.join(process.cwd(), 'artworks.db');
+const MANIFEST_DIR = path.join(process.cwd(), 'public', 'manifests');
+const HARVEST_FILES = ['artic.json', 'cooperhewitt.json', 'met.json', 'moma.json', 'va.json', 'zurich.json'];
 
 if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
-const db = new Database(dbPath);
+const db = new sqlite3.Database(dbPath);
 
-// Updated schema with main_category and sub_category
-db.exec(`
-  CREATE TABLE artworks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    source TEXT,
-    sourceId TEXT,
-    title TEXT,
-    author TEXT,
-    year TEXT,
-    medium TEXT,
-    imageUrl TEXT,
-    link TEXT,
-    main_category TEXT,
-    sub_category TEXT,
-    classification TEXT,
-    objectType TEXT,
-    department TEXT
-  );
-  
-  CREATE INDEX idx_main ON artworks(main_category);
-  CREATE INDEX idx_sub ON artworks(sub_category);
-  CREATE INDEX idx_both ON artworks(main_category, sub_category);
-`);
+const normalize = (val) => String(val || "").toLowerCase().trim();
 
-const insert = db.prepare(`
-  INSERT INTO artworks (source, sourceId, title, author, year, medium, imageUrl, link, 
-                        main_category, sub_category, classification, objectType, department)
-  VALUES (@source, @sourceId, @title, @author, @year, @medium, @imageUrl, @link,
-          @main_category, @sub_category, @classification, @objectType, @department)
-`);
+/**
+ * SOURCE-AWARE CATEGORY RESOLUTION
+ * Uses specific priority fields identified for each museum manifest.
+ */
+function resolveMainCategory(item, source) {
+    // --- 1. ZURICH GLOBAL OVERRIDE ---
+    if (source === 'zurich.json') return "Works on Paper";
 
-const insertMany = db.transaction((items) => {
-  for (const item of items) insert.run(item);
-});
+    // Extract key fields
+    const classification = normalize(item.classification || item.Classification);
+    const department = normalize(item.department || item.Department);
+    const objType = normalize(item.objectType || item.category);
+    const medium = normalize(item.medium || item.Medium);
+    const title = normalize(item.title);
 
-function safe(val) { return val ? String(val).trim() : null; }
+    let bestGuess = null;
 
-console.log('═══════════════════════════════════════════════════');
-console.log('  Building Database (Industry Standard Categories)');
-console.log('═══════════════════════════════════════════════════\n');
+    // --- 2. SOURCE-SPECIFIC PRIORITY LOGIC ---
 
-for (const file of manifests) {
-  const filePath = path.join(manifestDir, file);
-  if (!fs.existsSync(filePath)) {
-    console.log(`  ⚠️  Skipping ${file}`);
-    continue;
-  }
+    if (source === 'artic.json') {
+        // Priority: Classification
+        if (/painting/i.test(classification)) bestGuess = "Painting";
+        else if (/photograph/i.test(classification)) bestGuess = "Photography";
+        else if (/drawing|print|lithograph|etching/i.test(classification)) bestGuess = "Works on Paper";
+        else if (/architecture|fragment/i.test(classification)) bestGuess = "Architecture";
+    } 
 
-  const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  const processed = raw.map(item => {
-    const entry = {
-      source: safe(file.replace('.json', '')),
-      sourceId: safe(item.id || item.objectID),
-      title: safe(item.title),
-      author: safe(item.author || item.artistDisplayName || item.artist),
-      year: safe(item.year || item.objectDate || item.date),
-      medium: safe(item.medium || item.Medium),
-      imageUrl: safe(item.imageUrl),
-      link: safe(item.link),
-      classification: safe(item.classification || item.Classification),
-      objectType: safe(item.objectType),
-      department: safe(item.department || item.Department)
-    };
-    
-    // Get main + sub category
-    const result = classifyArtwork(entry);
-    entry.main_category = result.main;
-    entry.sub_category = result.sub;
-    
-    return entry;
-  });
+    else if (source === 'met.json') {
+        // Priority: Classification -> then Department
+        if (/drawings|prints/i.test(classification)) bestGuess = "Works on Paper";
+        else if (/photographs/i.test(department)) bestGuess = "Photography";
+        else if (/paintings/i.test(department)) bestGuess = "Painting";
+        else if (/sculpture/i.test(department)) bestGuess = "Sculpture";
+    }
 
-  insertMany(processed);
-  console.log(`  ✓ ${file.padEnd(20)} ${processed.length} items`);
+    else if (source === 'moma.json') {
+        // SURGICAL FIX: Strict keyword ordering to stop "Architecture & Design" from defaulting to Decorative Art
+        const context = `${classification} ${title} ${medium}`;
+        if (/elevation|plan|architectural|building|model/i.test(context)) bestGuess = "Architecture";
+        else if (/photograph/i.test(classification)) bestGuess = "Photography";
+        else if (/print|drawing|illustrated book|lithograph|poster|etching|woodcut|letterpress|silkscreen/i.test(context)) bestGuess = "Works on Paper";
+        else if (/design/i.test(classification)) bestGuess = "Decorative Art";
+    }
+
+    else if (source === 'va.json') {
+        // Priority: ObjectType
+        if (/drawing|poster|print/i.test(objType)) bestGuess = "Works on Paper";
+        else if (/photograph/i.test(objType)) bestGuess = "Photography";
+    }
+
+    else if (source === 'cooperhewitt.json') {
+        // Priority: Category -> then Classification
+        if (/print|typography|illustration/i.test(objType)) bestGuess = "Works on Paper";
+        else if (/sidewall|wallpaper/i.test(classification)) bestGuess = "Decorative Art";
+    }
+
+    // --- 3. WATERTIGHT KEYWORD FALLBACK (If source-specific check failed) ---
+    if (!bestGuess) {
+        const fullContext = `${classification} ${department} ${objType} ${medium} ${title}`;
+        
+        // SURGICAL FIX: Fine Arts keywords MUST come before generic "Design" or "Department" keywords
+        if (/photograph|silver print|albumen|negative/i.test(fullContext)) return "Photography";
+        if (/painting|oil on/i.test(fullContext)) return "Painting";
+        if (/sculpture|bronze|statue|bust/i.test(fullContext)) return "Sculpture";
+        if (/drawing|print|etching|lithograph|poster|book|magazine|paper|ink on/i.test(fullContext)) return "Works on Paper";
+        if (/architecture|elevation|plan|blueprint|construction/i.test(fullContext)) return "Architecture";
+        
+        // Only if none of the above match do we check for Decorative Art specifics
+        if (/furniture|textile|ceramic|glass|vase|teapot|pitcher|mirror|jewelry|metalwork|lighting|stoneware|earthenware|basketry|vessel|sidewall/i.test(fullContext)) return "Decorative Art";
+        
+        // Final fallback: If it mentions "design" and hasn't been caught by paper/architecture yet
+        if (/design/i.test(fullContext)) return "Decorative Art";
+
+        return "Works on Paper"; 
+    }
+
+    return bestGuess;
 }
 
-// Stats
-const mainStats = db.prepare(`
-  SELECT main_category, COUNT(*) as count 
-  FROM artworks 
-  GROUP BY main_category 
-  ORDER BY count DESC
-`).all();
+/**
+ * EXECUTION BLOCK
+ */
+async function run() {
+    console.log("🏛️  STARTING EXPLICIT SOURCE-AWARE BUILD...");
 
-const subStats = db.prepare(`
-  SELECT main_category, sub_category, COUNT(*) as count 
-  FROM artworks 
-  WHERE sub_category IS NOT NULL
-  GROUP BY main_category, sub_category 
-  ORDER BY main_category, count DESC
-`).all();
+    db.serialize(() => {
+        db.run(`CREATE TABLE artworks (
+            id TEXT PRIMARY KEY,
+            title TEXT,
+            author TEXT,
+            year TEXT,
+            main_category TEXT,
+            source TEXT,
+            imageUrl TEXT,
+            link TEXT,
+            classification TEXT,
+            medium TEXT,
+            sub_category TEXT
+        )`);
 
-console.log('\n═══════════════════════════════════════════════════');
-console.log('  MAIN CATEGORIES');
-console.log('═══════════════════════════════════════════════════');
-mainStats.forEach(({ main_category, count }) => {
-  const bar = '█'.repeat(Math.min(40, Math.floor(count / mainStats[0].count * 40)));
-  console.log(`  ${(main_category || 'null').padEnd(25)} ${String(count).padStart(5)}  ${bar}`);
-});
+        const stmt = db.prepare(`INSERT OR REPLACE INTO artworks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
-console.log('\n═══════════════════════════════════════════════════');
-console.log('  SUBCATEGORIES (top 20)');
-console.log('═══════════════════════════════════════════════════');
-subStats.slice(0, 20).forEach(({ main_category, sub_category, count }) => {
-  console.log(`  ${main_category} → ${sub_category}`.padEnd(50) + count);
-});
+        for (const file of HARVEST_FILES) {
+            const filePath = path.join(MANIFEST_DIR, file);
+            if (!fs.existsSync(filePath)) continue;
 
-db.close();
+            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            console.log(`🔍 Processing ${file} using targeted field priority...`);
 
-console.log('\n✅ Database build complete\n');
+            data.forEach(item => {
+                const finalCat = resolveMainCategory(item, file);
+                stmt.run([
+                    `${file.split('.')[0]}-${item.id}`,
+                    item.title || "Untitled",
+                    item.author || "Unknown",
+                    item.year || "n.d.",
+                    finalCat,
+                    file,
+                    item.imageUrl || "",
+                    item.link || "",
+                    item.classification || item.Classification || "",
+                    item.medium || item.Medium || "",
+                    item.department || item.Department || ""
+                ]);
+            });
+        }
+
+        stmt.finalize(() => {
+            console.log("\n📊 BUILD COMPLETE. CROSS-REFERENCE AUDIT:");
+            db.all(`SELECT main_category, COUNT(*) as count FROM artworks GROUP BY main_category ORDER BY count DESC`, (err, rows) => {
+                console.table(rows);
+                db.close();
+            });
+        });
+    });
+}
+
+run();

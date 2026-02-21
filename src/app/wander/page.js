@@ -35,15 +35,12 @@ export default function WanderPage() {
   // NECESSARY CHANGE: Update these "type" strings to match the new database labels.
   // This ensures the "Wander" page links actually point to populated database tables.
   const categories = [
-    { title: "DECORATIVE ARTS", type: "decorative-arts", desc: "01" },
-    { title: "PRINTS", type: "prints", desc: "02" },
-    { title: "DRAWINGS", type: "drawings", desc: "03" },
-    { title: "BOOKS & MSS", type: "books-manuscripts", desc: "04" },
-    { title: "PHOTOGRAPHY", type: "photographs", desc: "05" },
-    { title: "ARCHITECTURE", type: "architecture", desc: "06" },
-    { title: "PAINTINGS", type: "paintings", desc: "07" },
-    { title: "TEXTILES", type: "textiles", desc: "08" },
-    { title: "SCULPTURE", type: "sculpture", desc: "09" }
+    { title: "PAINTINGS", type: "Painting", desc: "01" },
+    { title: "SCULPTURE", type: "Sculpture", desc: "02" },
+    { title: "WORKS ON PAPER", type: "Works on Paper", desc: "03" },
+    { title: "PHOTOGRAPHY", type: "Photography", desc: "04" },
+    { title: "ARCHITECTURE", type: "Architecture", desc: "05" },
+    { title: "DECORATIVE ART", type: "Decorative Art", desc: "06" }
   ];
 
   if (loading) return (
