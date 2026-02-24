@@ -1,160 +1,385 @@
 /**
- * MUSEUM-GRADE ARCHIVE ENGINE v5.0 - SOURCE-AWARE
- * -----------------------------------------------------------------------------
- * Target Categories: 
- * 1. Painting | 2. Sculpture | 3. Works on Paper | 4. Photography 
- * 5. Architecture | 6. Decorative Art
- * -----------------------------------------------------------------------------
+ * EXHIBIT ARCHIVE ENGINE v6.0
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHAT'S NEW IN v6:
+ *   1. sub_category: real browsable sub-types (Lithograph, Drawing, Poster…)
+ *      instead of department names
+ *   2. year_sort: clean INTEGER column for timeline sorting / filtering
+ *   3. Skips items with blank imageUrl (MoMA architecture drawings, etc.)
+ *   4. Source-aware category resolution preserved from v5 — it's working well
+ *   5. source field is now clean ("moma" not "moma.json")
+ *   6. Indexes on main_category, sub_category, year_sort for fast queries
+ *
+ * CATEGORIES:
+ *   Main:  Painting | Sculpture | Works on Paper | Photography | Architecture
+ *          | Decorative Art | Design
+ *   Sub:   see resolveSubCategory() — designed for sidebar filter UI
+ *
+ * YEAR SORT RULES:
+ *   "1914"          → 1914
+ *   "ca. 1930"      → 1930  (earliest 4-digit year found)
+ *   "1880–82"       → 1880  (earliest year in range)
+ *   "1900–1920"     → 1900
+ *   "late 1930s"    → 1930
+ *   "18th century"  → 1750  (century midpoint)
+ *   "2375 BCE"      → -2375
+ *   "Unknown"       → NULL
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs      = require('fs');
+const path    = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
-const dbPath = path.join(process.cwd(), 'artworks.db');
+const dbPath       = path.join(process.cwd(), 'artworks.db');
 const MANIFEST_DIR = path.join(process.cwd(), 'public', 'manifests');
-const HARVEST_FILES = ['artic.json', 'cooperhewitt.json', 'met.json', 'moma.json', 'va.json', 'zurich.json'];
+const HARVEST_FILES = [
+  'artic.json',
+  'cooperhewitt.json',
+  'met.json',
+  'moma.json',
+  'va.json',
+  'zurich.json',
+  // Graphic design archives
+  'ds.json',
+  'letterform.json',
+  'loc.json',
+  'rijks.json',
+  'arabic.json',
+];
 
 if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
 const db = new sqlite3.Database(dbPath);
 
-const normalize = (val) => String(val || "").toLowerCase().trim();
+const normalize = (val) => String(val || '').toLowerCase().trim();
 
-/**
- * SOURCE-AWARE CATEGORY RESOLUTION
- * Uses specific priority fields identified for each museum manifest.
- */
-function resolveMainCategory(item, source) {
-    // --- 1. ZURICH GLOBAL OVERRIDE ---
-    if (source === 'zurich.json') return "Works on Paper";
+// ─────────────────────────────────────────────────────────────────────────────
+// YEAR SORT: extract the earliest integer year from any museum date string
+// ─────────────────────────────────────────────────────────────────────────────
+function extractYearSort(rawYear) {
+  if (!rawYear) return null;
+  const s = String(rawYear).toLowerCase().trim();
+  if (!s || s === 'n.d.' || s === 'unknown' || s === 'nd') return null;
 
-    // Extract key fields
-    const classification = normalize(item.classification || item.Classification);
-    const department = normalize(item.department || item.Department);
-    const objType = normalize(item.objectType || item.category);
-    const medium = normalize(item.medium || item.Medium);
-    const title = normalize(item.title);
+  // BCE  e.g. "about 2375 BCE"
+  const bceMatch = s.match(/(\d{1,4})\s*b\.?c\.?e?\.?/);
+  if (bceMatch) return -parseInt(bceMatch[1]);
 
-    let bestGuess = null;
+  // "18th century" / "early 19th century"
+  const centuryMatch = s.match(/(\d{1,2})(?:st|nd|rd|th)\s+century/);
+  if (centuryMatch) {
+    const c   = parseInt(centuryMatch[1]);
+    const mod = s.includes('early') ? 10 : s.includes('late') ? 80 : 50;
+    return (c - 1) * 100 + mod;
+  }
 
-    // --- 2. SOURCE-SPECIFIC PRIORITY LOGIC ---
+  // "1930s", "late 1930s"
+  const decadeMatch = s.match(/\b(1[0-9]{3})s\b/);
+  if (decadeMatch) return parseInt(decadeMatch[1]);
 
-    if (source === 'artic.json') {
-        // Priority: Classification
-        if (/painting/i.test(classification)) bestGuess = "Painting";
-        else if (/photograph/i.test(classification)) bestGuess = "Photography";
-        else if (/drawing|print|lithograph|etching/i.test(classification)) bestGuess = "Works on Paper";
-        else if (/architecture|fragment/i.test(classification)) bestGuess = "Architecture";
-    } 
+  // Any 4-digit year — pick the earliest
+  const all4 = [...s.matchAll(/\b(1[0-9]{3}|20[0-2][0-9])\b/g)].map(m => parseInt(m[1]));
+  if (all4.length) return Math.min(...all4);
 
-    else if (source === 'met.json') {
-        // Priority: Classification -> then Department
-        if (/drawings|prints/i.test(classification)) bestGuess = "Works on Paper";
-        else if (/photographs/i.test(department)) bestGuess = "Photography";
-        else if (/paintings/i.test(department)) bestGuess = "Painting";
-        else if (/sculpture/i.test(department)) bestGuess = "Sculpture";
-    }
-
-    else if (source === 'moma.json') {
-        // SURGICAL FIX: Strict keyword ordering to stop "Architecture & Design" from defaulting to Decorative Art
-        const context = `${classification} ${title} ${medium}`;
-        if (/elevation|plan|architectural|building|model/i.test(context)) bestGuess = "Architecture";
-        else if (/photograph/i.test(classification)) bestGuess = "Photography";
-        else if (/print|drawing|illustrated book|lithograph|poster|etching|woodcut|letterpress|silkscreen/i.test(context)) bestGuess = "Works on Paper";
-        else if (/design/i.test(classification)) bestGuess = "Decorative Art";
-    }
-
-    else if (source === 'va.json') {
-        // Priority: ObjectType
-        if (/drawing|poster|print/i.test(objType)) bestGuess = "Works on Paper";
-        else if (/photograph/i.test(objType)) bestGuess = "Photography";
-    }
-
-    else if (source === 'cooperhewitt.json') {
-        // Priority: Category -> then Classification
-        if (/print|typography|illustration/i.test(objType)) bestGuess = "Works on Paper";
-        else if (/sidewall|wallpaper/i.test(classification)) bestGuess = "Decorative Art";
-    }
-
-    // --- 3. WATERTIGHT KEYWORD FALLBACK (If source-specific check failed) ---
-    if (!bestGuess) {
-        const fullContext = `${classification} ${department} ${objType} ${medium} ${title}`;
-        
-        // SURGICAL FIX: Fine Arts keywords MUST come before generic "Design" or "Department" keywords
-        if (/photograph|silver print|albumen|negative/i.test(fullContext)) return "Photography";
-        if (/painting|oil on/i.test(fullContext)) return "Painting";
-        if (/sculpture|bronze|statue|bust/i.test(fullContext)) return "Sculpture";
-        if (/drawing|print|etching|lithograph|poster|book|magazine|paper|ink on/i.test(fullContext)) return "Works on Paper";
-        if (/architecture|elevation|plan|blueprint|construction/i.test(fullContext)) return "Architecture";
-        
-        // Only if none of the above match do we check for Decorative Art specifics
-        if (/furniture|textile|ceramic|glass|vase|teapot|pitcher|mirror|jewelry|metalwork|lighting|stoneware|earthenware|basketry|vessel|sidewall/i.test(fullContext)) return "Decorative Art";
-        
-        // Final fallback: If it mentions "design" and hasn't been caught by paper/architecture yet
-        if (/design/i.test(fullContext)) return "Decorative Art";
-
-        return "Works on Paper"; 
-    }
-
-    return bestGuess;
+  return null;
 }
 
-/**
- * EXECUTION BLOCK
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB_CATEGORY RESOLVER
+// ─────────────────────────────────────────────────────────────────────────────
+function resolveSubCategory(item, source, mainCategory) {
+  const cls    = normalize(item.classification || item.Classification);
+  const medium = normalize(item.medium || item.Medium);
+  const obj    = normalize(item.objectType || item.category);
+  const title  = normalize(item.title);
+
+  if (mainCategory === 'Works on Paper') {
+    // Magazine / Periodical
+    if (/magazine|periodical|journal/i.test(cls))  return 'Magazine';
+    if (/magazine|periodical/i.test(obj))           return 'Magazine';
+
+    // Illustrated Book
+    if (/illustrated book|illuminated|album/i.test(cls)) return 'Illustrated Book';
+
+    // Poster (check classification before medium — "poster" in medium can be noise)
+    if (/^poster/i.test(cls) || /^poster/i.test(obj))    return 'Poster';
+    if (/\bprinted poster\b/i.test(medium))               return 'Poster';
+
+    // Print techniques — medium first (most reliable), then classification
+    if (/lithograph|litho(?:graphy)?/i.test(medium))            return 'Lithograph';
+    if (/letterpress/i.test(medium))                            return 'Letterpress';
+    if (/silkscreen|screenprint|serigraph/i.test(medium))       return 'Screenprint';
+    if (/woodcut|woodblock|wood.?cut/i.test(medium))            return 'Woodcut';
+    if (/photolithograph|photo.?litho/i.test(medium))           return 'Lithograph';
+    if (/etching|aquatint|drypoint|mezzotint/i.test(medium))    return 'Etching';
+    if (/engraving|gravure|intaglio/i.test(medium))             return 'Engraving';
+    if (/linocut|linoleum/i.test(medium))                       return 'Print';
+
+    if (/lithograph/i.test(cls))                         return 'Lithograph';
+    if (/woodcut|woodblock/i.test(cls))                  return 'Woodcut';
+    if (/screenprint|silkscreen/i.test(cls))             return 'Screenprint';
+    if (/etching|aquatint|drypoint/i.test(cls))          return 'Etching';
+    if (/engraving|gravure/i.test(cls))                  return 'Engraving';
+    if (/^print/i.test(cls) || /^print/i.test(obj))     return 'Print';
+
+    // Drawing
+    if (/\b(pencil|graphite|charcoal|chalk|pastel|crayon)\b/i.test(medium))  return 'Drawing';
+    if (/\b(pen and ink|ink and wash|brush and ink|wash drawing)\b/i.test(medium)) return 'Drawing';
+    if (/drawing/i.test(cls) || /drawing/i.test(obj))   return 'Drawing';
+
+    return 'Print';
+  }
+
+  if (mainCategory === 'Decorative Art') {
+    if (/textile|weaving|woven|embroidery|needlework|lace/i.test(cls))       return 'Textile';
+    if (/sidewall|wallpaper/i.test(cls))                                      return 'Textile';
+    if (/ceramic|porcelain|earthenware|stoneware|pottery|faience/i.test(cls)) return 'Ceramics';
+    if (/glass/i.test(cls))                                                   return 'Glass';
+    if (/furniture|chair|cabinet|table|mirror/i.test(cls))                    return 'Furniture';
+    if (/jewelry|jewellery|lapidary|brooch|ring|necklace/i.test(cls))         return 'Jewelry';
+    if (/metalwork|silver(?!screen)|bronze|pewter|iron/i.test(cls))           return 'Metalwork';
+    if (/vessel|vase|teapot|pitcher|jug|cup|bowl/i.test(cls))                 return 'Vessel';
+    if (/lighting|lamp|chandelier|candelabr/i.test(cls))                      return 'Lighting';
+    if (/\bmodel\b/i.test(cls + obj + title))                                  return 'Model';
+    // Medium fallbacks
+    if (/porcelain|earthenware|stoneware/i.test(medium))  return 'Ceramics';
+    if (/\bglass\b/i.test(medium))                        return 'Glass';
+    if (/silver|pewter|bronze|iron|steel/i.test(medium))  return 'Metalwork';
+    if (/woven|tapestry|embroidery/i.test(medium))        return 'Textile';
+    return 'Object';
+  }
+
+  if (mainCategory === 'Photography') {
+    if (/daguerreotype/i.test(medium + cls))               return 'Daguerreotype';
+    if (/albumen/i.test(medium + cls))                     return 'Albumen Print';
+    if (/gelatin silver/i.test(medium + cls))              return 'Gelatin Silver';
+    if (/chromogenic|c.?print|dye transfer/i.test(medium + cls)) return 'Color Print';
+    if (/cyanotype/i.test(medium + cls))                   return 'Cyanotype';
+    if (/silver print/i.test(medium + cls))                return 'Silver Print';
+    return 'Photograph';
+  }
+
+  if (mainCategory === 'Painting') {
+    if (/oil on/i.test(medium + cls))              return 'Oil';
+    if (/watercolou?r/i.test(medium + cls))        return 'Watercolor';
+    if (/gouache/i.test(medium + cls))             return 'Gouache';
+    if (/acrylic/i.test(medium + cls))             return 'Acrylic';
+    if (/tempera/i.test(medium + cls))             return 'Tempera';
+    if (/miniature/i.test(cls))                    return 'Miniature';
+    return 'Painting';
+  }
+
+  if (mainCategory === 'Architecture') {
+    if (/elevation/i.test(title))                  return 'Elevation';
+    if (/\b(plan|section)\b/i.test(title))         return 'Plan';
+    if (/render/i.test(title))                     return 'Rendering';
+    if (/photograph/i.test(title))                 return 'Photograph';
+    return 'Drawing';
+  }
+
+  if (mainCategory === 'Design') {
+    if (/poster|affiche|plakat/i.test(cls + medium + obj))               return 'Poster';
+    if (/magazine|periodical|journal/i.test(cls + medium + obj))         return 'Magazine';
+    if (/\bbook\b|illustrated\s*book/i.test(cls + medium + obj))       return 'Book';
+    if (/type\s*specimen|specimen/i.test(cls + medium + obj))            return 'Type Specimen';
+    if (/brochure|pamphlet|leaflet/i.test(cls + medium + obj))           return 'Brochure';
+    if (/record\s*cover|vinyl|album\s*cover/i.test(cls + medium + obj)) return 'Record Cover';
+    if (/packaging|label/i.test(cls + medium + obj))                     return 'Packaging';
+    if (/stamp/i.test(cls + medium + obj))                               return 'Stamp';
+    if (/calligraph|kufic/i.test(cls + medium + obj))                    return 'Calligraphy';
+    if (/typography|lettering/i.test(cls + medium + obj))                return 'Typography';
+    if (/lithograph/i.test(medium + cls))                                return 'Lithograph';
+    if (/screenprint|silkscreen/i.test(medium + cls))                    return 'Screenprint';
+    if (/\bprint\b/i.test(cls + medium + obj))                          return 'Print';
+    return 'Graphic Design';
+  }
+
+  if (mainCategory === 'Sculpture') {
+    if (/bronze/i.test(medium + cls))              return 'Bronze';
+    if (/marble/i.test(medium + cls))              return 'Marble';
+    if (/\bwood\b/i.test(medium + cls))            return 'Wood';
+    if (/ceramic/i.test(medium + cls))             return 'Ceramic';
+    if (/medal|plaquette/i.test(cls))              return 'Medal';
+    return 'Sculpture';
+  }
+
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN CATEGORY RESOLVER (source-aware, preserved from v5)
+// ─────────────────────────────────────────────────────────────────────────────
+function resolveMainCategory(item, source) {
+  // New graphic design archives → Design category
+  if (['ds.json', 'arabic.json'].includes(source)) return 'Design';
+  if (source === 'letterform.json') {
+    const cls2 = normalize(item.classification || '');
+    if (/^poster/.test(cls2)) return 'Works on Paper';
+    if (/^print/.test(cls2) || cls2 === 'original artwork') return 'Works on Paper';
+    if (/^book|^magazine|^illustrated/.test(cls2)) return 'Design';
+    return 'Design';
+  }
+  if (source === 'loc.json') {
+    // LOC items are posters → Works on Paper
+    return 'Works on Paper';
+  }
+  if (source === 'rijks.json') {
+    const cls2 = normalize(item.classification || '');
+    if (/poster|print|lithograph|etching|woodcut|engraving/.test(cls2)) return 'Works on Paper';
+    if (/photograph/.test(cls2)) return 'Photography';
+    if (/painting/.test(cls2)) return 'Painting';
+    if (/decorative|ceramic|glass|furniture|textile|vessel/.test(cls2)) return 'Decorative Art';
+    if (/sculpture/.test(cls2)) return 'Sculpture';
+    return 'Design';
+  }
+  if (source === 'zurich.json') return 'Works on Paper';
+
+  const classification = normalize(item.classification || item.Classification);
+  const department     = normalize(item.department || item.Department);
+  const objType        = normalize(item.objectType || item.category);
+  const medium         = normalize(item.medium || item.Medium);
+  const title          = normalize(item.title);
+
+  let bestGuess = null;
+
+  if (source === 'artic.json') {
+    if (/painting/i.test(classification))                              bestGuess = 'Painting';
+    else if (/photograph/i.test(classification))                       bestGuess = 'Photography';
+    else if (/drawing|print|lithograph|etching/i.test(classification)) bestGuess = 'Works on Paper';
+    else if (/architecture|fragment/i.test(classification))            bestGuess = 'Architecture';
+  }
+  else if (source === 'met.json') {
+    if (/drawings|prints/i.test(classification))                       bestGuess = 'Works on Paper';
+    else if (/photographs/i.test(department))                          bestGuess = 'Photography';
+    else if (/paintings/i.test(department))                            bestGuess = 'Painting';
+    else if (/sculpture/i.test(department))                            bestGuess = 'Sculpture';
+  }
+  else if (source === 'moma.json') {
+    const context = `${classification} ${title} ${medium}`;
+    // NOTE: "model" intentionally excluded — architectural models → Decorative Art
+    if (/elevation|plan|architectural|building/i.test(context)) bestGuess = 'Architecture';
+    else if (/photograph/i.test(classification))                       bestGuess = 'Photography';
+    else if (/print|drawing|illustrated book|lithograph|poster|etching|woodcut|letterpress|silkscreen/i.test(context)) bestGuess = 'Works on Paper';
+    else if (/design/i.test(classification))                           bestGuess = 'Decorative Art';
+  }
+  else if (source === 'va.json') {
+    if (/drawing|poster|print/i.test(objType))                         bestGuess = 'Works on Paper';
+    else if (/photograph/i.test(objType))                              bestGuess = 'Photography';
+  }
+  else if (source === 'cooperhewitt.json') {
+    if (/print|typography|illustration/i.test(objType))                bestGuess = 'Works on Paper';
+    else if (/sidewall|wallpaper/i.test(classification))               bestGuess = 'Decorative Art';
+  }
+
+  if (!bestGuess) {
+    const ctx = `${classification} ${department} ${objType} ${medium} ${title}`;
+    if (/photograph|silver print|albumen|negative/i.test(ctx))          return 'Photography';
+    if (/painting|oil on/i.test(ctx))                                   return 'Painting';
+    if (/sculpture|bronze|statue|bust/i.test(ctx))                      return 'Sculpture';
+    if (/drawing|print|etching|lithograph|poster|book|magazine|paper|ink on/i.test(ctx)) return 'Works on Paper';
+    if (/architecture|elevation|plan|blueprint|construction/i.test(ctx)) return 'Architecture';
+    if (/furniture|textile|ceramic|glass|vase|teapot|pitcher|mirror|jewelry|metalwork|lighting|stoneware|earthenware|basketry|vessel|sidewall/i.test(ctx)) return 'Decorative Art';
+    if (/design/i.test(ctx))                                             return 'Decorative Art';
+    return 'Works on Paper';
+  }
+
+  return bestGuess;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD
+// ─────────────────────────────────────────────────────────────────────────────
 async function run() {
-    console.log("🏛️  STARTING EXPLICIT SOURCE-AWARE BUILD...");
+  console.log('🏛️  EXHIBIT ARCHIVE ENGINE v6.0\n');
 
-    db.serialize(() => {
-        db.run(`CREATE TABLE artworks (
-            id TEXT PRIMARY KEY,
-            title TEXT,
-            author TEXT,
-            year TEXT,
-            main_category TEXT,
-            source TEXT,
-            imageUrl TEXT,
-            link TEXT,
-            classification TEXT,
-            medium TEXT,
-            sub_category TEXT
-        )`);
+  db.serialize(() => {
+    db.run(`CREATE TABLE artworks (
+      id             TEXT PRIMARY KEY,
+      title          TEXT,
+      author         TEXT,
+      year           TEXT,
+      year_sort      INTEGER,
+      main_category  TEXT,
+      sub_category   TEXT,
+      source         TEXT,
+      imageUrl       TEXT,
+      link           TEXT,
+      classification TEXT,
+      medium         TEXT,
+      department     TEXT
+    )`);
 
-        const stmt = db.prepare(`INSERT OR REPLACE INTO artworks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    db.run(`CREATE INDEX idx_main ON artworks(main_category)`);
+    db.run(`CREATE INDEX idx_sub  ON artworks(sub_category)`);
+    db.run(`CREATE INDEX idx_year ON artworks(year_sort)`);
+    db.run(`CREATE INDEX idx_src  ON artworks(source)`);
 
-        for (const file of HARVEST_FILES) {
-            const filePath = path.join(MANIFEST_DIR, file);
-            if (!fs.existsSync(filePath)) continue;
+    const stmt = db.prepare(
+      `INSERT OR REPLACE INTO artworks VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    );
 
-            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            console.log(`🔍 Processing ${file} using targeted field priority...`);
+    let total   = 0;
+    let skipped = 0;
 
-            data.forEach(item => {
-                const finalCat = resolveMainCategory(item, file);
-                stmt.run([
-                    `${file.split('.')[0]}-${item.id}`,
-                    item.title || "Untitled",
-                    item.author || "Unknown",
-                    item.year || "n.d.",
-                    finalCat,
-                    file,
-                    item.imageUrl || "",
-                    item.link || "",
-                    item.classification || item.Classification || "",
-                    item.medium || item.Medium || "",
-                    item.department || item.Department || ""
-                ]);
-            });
-        }
+    for (const file of HARVEST_FILES) {
+      const filePath = path.join(MANIFEST_DIR, file);
+      if (!fs.existsSync(filePath)) {
+        console.log(`  ⚠️  ${file} not found`);
+        continue;
+      }
 
-        stmt.finalize(() => {
-            console.log("\n📊 BUILD COMPLETE. CROSS-REFERENCE AUDIT:");
-            db.all(`SELECT main_category, COUNT(*) as count FROM artworks GROUP BY main_category ORDER BY count DESC`, (err, rows) => {
-                console.table(rows);
-                db.close();
-            });
-        });
+      const data      = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const srcName   = file.split('.')[0];
+      let fileCount   = 0;
+      let fileSkipped = 0;
+
+      data.forEach(item => {
+        // Skip anything without an image URL
+        const imageUrl = (item.imageUrl || '').trim();
+        if (!imageUrl) { fileSkipped++; skipped++; return; }
+
+        const mainCat = resolveMainCategory(item, file);
+        const subCat  = resolveSubCategory(item, file, mainCat);
+        const yrSort  = extractYearSort(item.year);
+
+        stmt.run([
+          `${srcName}-${item.id}`,
+          item.title  || 'Untitled',
+          item.author || 'Unknown',
+          item.year   || 'n.d.',
+          yrSort,
+          mainCat,
+          subCat,
+          srcName,
+          imageUrl,
+          item.link || '',
+          item.classification || item.Classification || '',
+          item.medium || item.Medium || '',
+          item.department || item.Department || '',
+        ]);
+        fileCount++;
+        total++;
+      });
+
+      console.log(`  ✓  ${file.padEnd(22)} ${String(fileCount).padStart(5)} items   (${fileSkipped} skipped)`);
+    }
+
+    stmt.finalize(() => {
+      console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`TOTAL: ${total} items  |  skipped (no image): ${skipped}\n`);
+
+      db.all(`SELECT main_category, COUNT(*) c FROM artworks GROUP BY main_category ORDER BY c DESC`, (e, rows) => {
+        console.log('MAIN CATEGORIES:');
+        rows.forEach(r => console.log(`  ${r.main_category.padEnd(22)} ${r.c}`));
+        console.log('');
+      });
+
+      db.all(`SELECT sub_category, COUNT(*) c FROM artworks GROUP BY sub_category ORDER BY c DESC`, (e, rows) => {
+        console.log('SUB-CATEGORIES:');
+        rows.forEach(r => console.log(`  ${(r.sub_category || '—').padEnd(22)} ${r.c}`));
+        db.close();
+      });
     });
+  });
 }
 
 run();
