@@ -2,11 +2,13 @@
   "name": "exhibit",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "harvest": "node --loader ts-node/esm src/harvester/run.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -22,10 +24,13 @@
     "puppeteer": "^24.37.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "@types/node": "^20.0.0"
   }
 }

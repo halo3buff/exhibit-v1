@@ -1,0 +1,973 @@
+[
+  {
+    "id": "ch-18200749",
+    "title": "Drawing, Landscapes between Golling and Abtenau, August 5, 1868",
+    "author": "Frederic Edwin Church",
+    "year": "August 5, 1868",
+    "imageUrl": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18200749/",
+    "department": "Design",
+    "classification": "Drawing",
+    "medium": "Unknown",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18200749",
+      "tms:id": "23473",
+      "accession_number": "1917-4-689-a",
+      "title": "Drawing, Landscapes between Golling and Abtenau, August 5, 1868",
+      "title_raw": "Landscapes between Golling and Abtenau",
+      "url": "https://collection.cooperhewitt.org/objects/18200749/",
+      "has_no_known_copyright": "1",
+      "department_id": "35347493",
+      "period_id": "35417175",
+      "media_id": "35371135",
+      "type_id": "35237093",
+      "date": "August 5, 1868",
+      "year_start": null,
+      "year_end": null,
+      "year_acquired": "1917",
+      "decade": null,
+      "woe:country_id": "23424977",
+      "medium": null,
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": "Gift of Louis P. Church",
+      "description": null,
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424977",
+      "type": "Drawing",
+      "images": [
+        {
+          "x": {
+            "url": "https://images.collection.cooperhewitt.org/116361_dac8880aebfe1673_x.jpg",
+            "width": 4096,
+            "height": 2816,
+            "is_primary": "1",
+            "image_id": "116361"
+          },
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_b.jpg",
+            "width": 1024,
+            "height": 704,
+            "is_primary": "1",
+            "image_id": "116361"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_z.jpg",
+            "width": 640,
+            "height": 440,
+            "is_primary": "1",
+            "image_id": "116361"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_n.jpg",
+            "width": 320,
+            "height": 220,
+            "is_primary": "1",
+            "image_id": "116361"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_d.gif",
+            "width": 320,
+            "height": 220,
+            "is_primary": "1",
+            "image_id": "116361"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/116361_ffab4058e6862267_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "116361"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18041941",
+          "role_id": "35236565",
+          "person_name": "Frederic Edwin Church",
+          "person_date": "American, 1826–1900",
+          "role_name": "Artist",
+          "role_display_name": "",
+          "person_url": "https://collection.cooperhewitt.org/people/18041941/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35236565/"
+        },
+        {
+          "person_id": "18051625",
+          "role_id": "35351535",
+          "person_name": "Louis P. Church",
+          "person_date": "American, 1870–1943",
+          "role_name": "Donor",
+          "role_display_name": "Donated by",
+          "person_url": "https://collection.cooperhewitt.org/people/18051625/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35351535/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Drawing, Landscapes between Golling and Abtenau, August 5, 1868;  Frederic Edwin Church (American, 1826–1900); USA; Gift of Louis P. Church; 1917-4-689-a"
+      },
+      "colors": [
+        {
+          "color": "#ffffff",
+          "closest_crayola": "#ffffff",
+          "closest_css3": "#ffffff",
+          "closest_css4": "#ffffff"
+        }
+      ],
+      "woe:country_name": "United States",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18253607",
+    "title": "Print (France)",
+    "author": "Advisory Council",
+    "year": "n.d.",
+    "imageUrl": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18253607/",
+    "department": "Design",
+    "classification": "Print",
+    "medium": "Unknown",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18253607",
+      "tms:id": "31634",
+      "accession_number": "1921-6-331-33",
+      "title": "Print (France)",
+      "title_raw": null,
+      "url": "https://collection.cooperhewitt.org/objects/18253607/",
+      "has_no_known_copyright": "1",
+      "department_id": "35347493",
+      "period_id": null,
+      "media_id": "35371135",
+      "type_id": "35236873",
+      "date": null,
+      "year_start": null,
+      "year_end": null,
+      "year_acquired": "1921",
+      "decade": null,
+      "woe:country_id": "23424819",
+      "medium": null,
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": "Purchased for the Museum by the Advisory Council",
+      "description": null,
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424819",
+      "type": "Print",
+      "images": [
+        {
+          "x": {
+            "url": "https://images.collection.cooperhewitt.org/274363_61d7fe0c77babd75_x.jpg",
+            "width": 3000,
+            "height": 1922,
+            "is_primary": "1",
+            "image_id": "274363"
+          },
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_b.jpg",
+            "width": 1024,
+            "height": 656,
+            "is_primary": "1",
+            "image_id": "274363"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_z.jpg",
+            "width": 640,
+            "height": 410,
+            "is_primary": "1",
+            "image_id": "274363"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_n.jpg",
+            "width": 320,
+            "height": 205,
+            "is_primary": "1",
+            "image_id": "274363"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_d.gif",
+            "width": 320,
+            "height": 205,
+            "is_primary": "1",
+            "image_id": "274363"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/274363_50a27d865e5fe60b_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "274363"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18049621",
+          "role_id": "35351535",
+          "person_name": "Advisory Council",
+          "person_date": "Founded 1907",
+          "role_name": "Donor",
+          "role_display_name": "Donated by",
+          "person_url": "https://collection.cooperhewitt.org/people/18049621/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35351535/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Print (France); Purchased for the Museum by the Advisory Council; 1921-6-331-33"
+      },
+      "colors": [],
+      "woe:country_name": "France",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18202791",
+    "title": "Drawing, Study of Side of a Valley, May 4, 1868",
+    "author": "Frederic Edwin Church",
+    "year": "May 4, 1868",
+    "imageUrl": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18202791/",
+    "department": "Design",
+    "classification": "Drawing",
+    "medium": "Unknown",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18202791",
+      "tms:id": "23775",
+      "accession_number": "1917-4-907",
+      "title": "Drawing, Study of Side of a Valley, May 4, 1868",
+      "title_raw": "Study of Side of a Valley",
+      "url": "https://collection.cooperhewitt.org/objects/18202791/",
+      "has_no_known_copyright": "1",
+      "department_id": "35347493",
+      "period_id": null,
+      "media_id": "35371135",
+      "type_id": "35237093",
+      "date": "May 4, 1868",
+      "year_start": null,
+      "year_end": null,
+      "year_acquired": "1917",
+      "decade": null,
+      "woe:country_id": "23424977",
+      "medium": null,
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": "Gift of Louis P. Church",
+      "description": "Verso: Ragged mountainside",
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424977",
+      "type": "Drawing",
+      "images": [
+        {
+          "x": {
+            "url": "https://images.collection.cooperhewitt.org/133719_b0220b5b38cdb4fc_x.jpg",
+            "width": 3740,
+            "height": 2209,
+            "is_primary": "1",
+            "image_id": "133719"
+          },
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_b.jpg",
+            "width": 1024,
+            "height": 605,
+            "is_primary": "1",
+            "image_id": "133719"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_z.jpg",
+            "width": 640,
+            "height": 378,
+            "is_primary": "1",
+            "image_id": "133719"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_n.jpg",
+            "width": 320,
+            "height": 189,
+            "is_primary": "1",
+            "image_id": "133719"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_d.gif",
+            "width": 320,
+            "height": 189,
+            "is_primary": "1",
+            "image_id": "133719"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/133719_cad627cb59368316_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "133719"
+          }
+        },
+        {
+          "x": {
+            "url": "https://images.collection.cooperhewitt.org/134612_527ca84b63e23f74_x.jpg",
+            "width": 3740,
+            "height": 2209,
+            "is_primary": "0",
+            "image_id": "134612"
+          },
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/134612_68fd8ae1b8229a81_b.jpg",
+            "width": 1024,
+            "height": 605,
+            "is_primary": "0",
+            "image_id": "134612"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/134612_68fd8ae1b8229a81_z.jpg",
+            "width": 640,
+            "height": 378,
+            "is_primary": "0",
+            "image_id": "134612"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/134612_68fd8ae1b8229a81_n.jpg",
+            "width": 320,
+            "height": 189,
+            "is_primary": "0",
+            "image_id": "134612"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/134612_68fd8ae1b8229a81_d.gif",
+            "width": 320,
+            "height": 189,
+            "is_primary": "0",
+            "image_id": "134612"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/134612_68fd8ae1b8229a81_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "0",
+            "image_id": "134612"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18041941",
+          "role_id": "35236565",
+          "person_name": "Frederic Edwin Church",
+          "person_date": "American, 1826–1900",
+          "role_name": "Artist",
+          "role_display_name": "",
+          "person_url": "https://collection.cooperhewitt.org/people/18041941/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35236565/"
+        },
+        {
+          "person_id": "18051625",
+          "role_id": "35351535",
+          "person_name": "Louis P. Church",
+          "person_date": "American, 1870–1943",
+          "role_name": "Donor",
+          "role_display_name": "Donated by",
+          "person_url": "https://collection.cooperhewitt.org/people/18051625/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35351535/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Drawing, Study of Side of a Valley, May 4, 1868;  Frederic Edwin Church (American, 1826–1900); USA; Gift of Louis P. Church; 1917-4-907"
+      },
+      "colors": [
+        {
+          "color": "#90908a",
+          "closest_crayola": "#95918c",
+          "closest_css3": "#808080",
+          "closest_css4": "#808080"
+        }
+      ],
+      "woe:country_name": "United States",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18427223",
+    "title": "Photograph, Cartoon for Memorial Window: Courage, Oberlin College, early 20th century",
+    "author": "Unknown",
+    "year": "early 20th century",
+    "imageUrl": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18427223/",
+    "department": "Design",
+    "classification": "photograph",
+    "medium": "photograph mounted on gray board",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18427223",
+      "tms:id": "123996",
+      "accession_number": "1959-69-140",
+      "title": "Photograph, Cartoon for Memorial Window: Courage, Oberlin College, early 20th century",
+      "title_raw": "Cartoon for Memorial Window: Courage, Oberlin College",
+      "url": "https://collection.cooperhewitt.org/objects/18427223/",
+      "has_no_known_copyright": "1",
+      "department_id": "35347493",
+      "period_id": null,
+      "media_id": "51865775",
+      "type_id": "35247381",
+      "date": "early 20th century",
+      "year_start": 1901,
+      "year_end": 1910,
+      "year_acquired": "1959",
+      "decade": "1900",
+      "woe:country_id": "23424977",
+      "medium": "photograph mounted on gray board",
+      "markings": "recto, at bottom left: 102 (in black ink pasted to board)\nverso, stamped: 37942",
+      "signed": null,
+      "inscribed": "Inscribed in black, lower right: Return to Kenyon Cox / 145 West 55th St. / New York. Verso, in graphite: Courage - Cartoon for Memorial Window - Oberlin, OH / by Kenyon Cox / 145 W. 55th St., New York; (inscribed in circle): 10905; in blue pencil: 8\" high",
+      "provenance": "1959: acquired by Museum",
+      "dimensions": "35.5 x 14 cm (14 in. x 5 1/2 in.)",
+      "dimensions_raw": {
+        "height": [
+          "35.50",
+          "centimeters"
+        ],
+        "width": [
+          "14.00",
+          "centimeters"
+        ]
+      },
+      "creditline": null,
+      "description": "Photograph of a decoration: a Classical soldier wearing robe, holding shield and sword; above, text: COVRAGE; below: IN MEM ORY OF / JACOB DOLSON / COX 1828-1900.",
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424977",
+      "type": "photograph",
+      "images": [
+        {
+          "x": {
+            "url": "https://images.collection.cooperhewitt.org/211497_2bf5a1fa8a1e0feb_x.jpg",
+            "width": 1701,
+            "height": 4041,
+            "is_primary": "0",
+            "image_id": "211497"
+          },
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_b.jpg",
+            "width": 431,
+            "height": 1024,
+            "is_primary": "0",
+            "image_id": "211497"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_z.jpg",
+            "width": 269,
+            "height": 640,
+            "is_primary": "0",
+            "image_id": "211497"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_n.jpg",
+            "width": 135,
+            "height": 320,
+            "is_primary": "0",
+            "image_id": "211497"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_d.gif",
+            "width": 135,
+            "height": 320,
+            "is_primary": "0",
+            "image_id": "211497"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/211497_8b42b99dad2939b3_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "0",
+            "image_id": "211497"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18042681",
+          "role_id": "35236631",
+          "person_name": "Unknown",
+          "person_date": "",
+          "role_name": "Photographer",
+          "role_display_name": "Photographed by",
+          "person_url": "https://collection.cooperhewitt.org/people/18042681/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35236631/"
+        },
+        {
+          "person_id": "18041921",
+          "role_id": "35236655",
+          "person_name": "Kenyon Cox",
+          "person_date": "1856–1919",
+          "role_name": "Designer",
+          "role_display_name": "Designed by",
+          "person_url": "https://collection.cooperhewitt.org/people/18041921/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35236655/"
+        },
+        {
+          "person_id": "18536881",
+          "role_id": "35351535",
+          "person_name": "Allyn Cox",
+          "person_date": "",
+          "role_name": "Donor",
+          "role_display_name": "Donated by",
+          "person_url": "https://collection.cooperhewitt.org/people/18536881/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35351535/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Photograph, Cartoon for Memorial Window: Courage, Oberlin College, early 20th century; Designed by Kenyon Cox (1856–1919); USA; photograph mounted on gray board; 35.5 x 14 cm (14 in. x 5 1/2 in.); 1959-69-140"
+      },
+      "colors": [],
+      "woe:country_name": "United States",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18389867",
+    "title": "Print, Hunger",
+    "author": "Paul Piech",
+    "year": "n.d.",
+    "imageUrl": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18389867/",
+    "department": "Design",
+    "classification": "Print",
+    "medium": "Unknown",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18389867",
+      "tms:id": "105078",
+      "accession_number": "1951-95-2",
+      "title": "Print, Hunger",
+      "title_raw": "Hunger",
+      "url": "https://collection.cooperhewitt.org/objects/18389867/",
+      "has_no_known_copyright": null,
+      "department_id": "35347493",
+      "period_id": null,
+      "media_id": "35371135",
+      "type_id": "35236873",
+      "date": null,
+      "year_start": null,
+      "year_end": null,
+      "year_acquired": "1951",
+      "decade": null,
+      "woe:country_id": "23424977",
+      "medium": null,
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": null,
+      "description": null,
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424977",
+      "type": "Print",
+      "images": [
+        {
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_b.jpg",
+            "width": 506,
+            "height": 1024,
+            "is_primary": "1",
+            "image_id": "251640"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_z.jpg",
+            "width": 316,
+            "height": 640,
+            "is_primary": "1",
+            "image_id": "251640"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_n.jpg",
+            "width": 158,
+            "height": 320,
+            "is_primary": "1",
+            "image_id": "251640"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_d.gif",
+            "width": 158,
+            "height": 320,
+            "is_primary": "1",
+            "image_id": "251640"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/251640_3d0b38177a48f284_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "251640"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18535971",
+          "role_id": "35236685",
+          "person_name": "Paul Piech",
+          "person_date": "",
+          "role_name": "Maker",
+          "role_display_name": "Made by",
+          "person_url": "https://collection.cooperhewitt.org/people/18535971/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35236685/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Print, Hunger; Made by Paul Piech ; USA; 1951-95-2"
+      },
+      "colors": [],
+      "woe:country_name": "United States",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18806139",
+    "title": "Drawing (England)",
+    "author": "Unknown",
+    "year": "n.d.",
+    "imageUrl": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18806139/",
+    "department": "Design",
+    "classification": "Drawing",
+    "medium": "Unknown",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18806139",
+      "tms:id": "183370",
+      "accession_number": "1986-110-17",
+      "title": "Drawing (England)",
+      "title_raw": null,
+      "url": "https://collection.cooperhewitt.org/objects/18806139/",
+      "department_id": "35347493",
+      "period_id": null,
+      "media_id": "35371135",
+      "type_id": "35237093",
+      "date": null,
+      "year_start": null,
+      "year_end": null,
+      "year_acquired": "1986",
+      "decade": null,
+      "woe:country_id": "23424975",
+      "medium": null,
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": null,
+      "description": null,
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424975",
+      "type": "Drawing",
+      "images": [
+        {
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_b.jpg",
+            "width": 1024,
+            "height": 685,
+            "is_primary": "1",
+            "image_id": "162006"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_z.jpg",
+            "width": 640,
+            "height": 428,
+            "is_primary": "1",
+            "image_id": "162006"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_n.jpg",
+            "width": 320,
+            "height": 214,
+            "is_primary": "1",
+            "image_id": "162006"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_d.gif",
+            "width": 320,
+            "height": 214,
+            "is_primary": "1",
+            "image_id": "162006"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/162006_237b1126e8b32a17_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "162006"
+          }
+        }
+      ],
+      "participants": [],
+      "tombstone": {
+        "epitaph": "Drawing (England). 1986-110-17."
+      },
+      "colors": [
+        {
+          "color": "#787a6d",
+          "closest_crayola": "#757575",
+          "closest_css3": "#808080",
+          "closest_css4": "#808080"
+        },
+        {
+          "color": "#5c584b",
+          "closest_crayola": "#6e5160",
+          "closest_css3": "#556b2f",
+          "closest_css4": "#556b2f"
+        },
+        {
+          "color": "#44696e",
+          "closest_crayola": "#4a646c",
+          "closest_css3": "#696969",
+          "closest_css4": "#696969"
+        },
+        {
+          "color": "#3b403e",
+          "closest_crayola": "#414a4c",
+          "closest_css3": "#2f4f4f",
+          "closest_css4": "#2f4f4f"
+        },
+        {
+          "color": "#978867",
+          "closest_crayola": "#9f8170",
+          "closest_css3": "#808080",
+          "closest_css4": "#808080"
+        }
+      ],
+      "woe:country_name": "United Kingdom",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "ch-18351709",
+    "title": "Lady's Stocking (France), 20th century",
+    "author": "Norvin Hewitt Green",
+    "year": "20th century",
+    "imageUrl": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_b.jpg",
+    "source": "Cooper Hewitt Smithsonian Design Museum",
+    "link": "https://collection.cooperhewitt.org/objects/18351709/",
+    "department": "Design",
+    "classification": "Lady's stocking",
+    "medium": "lisle",
+    "culture": "Unknown",
+    "_raw": {
+      "id": "18351709",
+      "tms:id": "59331",
+      "accession_number": "1938-58-1157",
+      "title": "Lady's Stocking (France), 20th century",
+      "title_raw": null,
+      "url": "https://collection.cooperhewitt.org/objects/18351709/",
+      "has_no_known_copyright": null,
+      "department_id": "35347501",
+      "period_id": null,
+      "media_id": "35374897",
+      "type_id": "35288177",
+      "date": "20th century",
+      "year_start": 1901,
+      "year_end": 1938,
+      "year_acquired": "1938",
+      "decade": "1900",
+      "woe:country_id": "23424819",
+      "medium": "lisle",
+      "markings": null,
+      "signed": null,
+      "inscribed": null,
+      "provenance": null,
+      "dimensions": null,
+      "dimensions_raw": null,
+      "creditline": "Gift of Norvin Hewitt Green",
+      "description": "white stocking with clock worked in weave - letter M woven in at top and 3000.",
+      "justification": null,
+      "gallery_text": null,
+      "label_text": null,
+      "videos": null,
+      "on_display": null,
+      "woe:country": "23424819",
+      "type": "Lady's stocking",
+      "images": [
+        {
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_b.jpg",
+            "width": 1024,
+            "height": 301,
+            "is_primary": "1",
+            "image_id": "204999"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_z.jpg",
+            "width": 640,
+            "height": 188,
+            "is_primary": "1",
+            "image_id": "204999"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_n.jpg",
+            "width": 320,
+            "height": 94,
+            "is_primary": "1",
+            "image_id": "204999"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_d.gif",
+            "width": 320,
+            "height": 94,
+            "is_primary": "1",
+            "image_id": "204999"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/204999_f6160b668b2bce3b_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "1",
+            "image_id": "204999"
+          }
+        },
+        {
+          "b": {
+            "url": "https://images.collection.cooperhewitt.org/70159_aebe0684131ae64d_b.jpg",
+            "width": 1024,
+            "height": 553,
+            "is_primary": "0",
+            "image_id": "70159"
+          },
+          "z": {
+            "url": "https://images.collection.cooperhewitt.org/70159_aebe0684131ae64d_z.jpg",
+            "width": 640,
+            "height": 346,
+            "is_primary": "0",
+            "image_id": "70159"
+          },
+          "n": {
+            "url": "https://images.collection.cooperhewitt.org/70159_aebe0684131ae64d_n.jpg",
+            "width": 320,
+            "height": 173,
+            "is_primary": "0",
+            "image_id": "70159"
+          },
+          "d": {
+            "url": "https://images.collection.cooperhewitt.org/70159_aebe0684131ae64d_d.gif",
+            "width": 320,
+            "height": 173,
+            "is_primary": "0",
+            "image_id": "70159"
+          },
+          "sq": {
+            "url": "https://images.collection.cooperhewitt.org/70159_aebe0684131ae64d_sq.jpg",
+            "width": 300,
+            "height": 300,
+            "is_primary": "0",
+            "image_id": "70159"
+          }
+        }
+      ],
+      "participants": [
+        {
+          "person_id": "18056845",
+          "role_id": "35351535",
+          "person_name": "Norvin Hewitt Green",
+          "person_date": "American, 1893–1955",
+          "role_name": "Donor",
+          "role_display_name": "Donated by",
+          "person_url": "https://collection.cooperhewitt.org/people/18056845/",
+          "role_url": "https://collection.cooperhewitt.org/roles/35351535/"
+        }
+      ],
+      "tombstone": {
+        "epitaph": "Lady's Stocking (France), 20th century; lisle; Gift of Norvin Hewitt Green; 1938-58-1157"
+      },
+      "colors": [
+        {
+          "color": "#b9a553",
+          "closest_crayola": "#bab86c",
+          "closest_css3": "#bdb76b",
+          "closest_css4": "#bdb76b"
+        },
+        {
+          "color": "#92791e",
+          "closest_crayola": "#9c7c38",
+          "closest_css3": "#808000",
+          "closest_css4": "#808000"
+        },
+        {
+          "color": "#93927a",
+          "closest_crayola": "#95918c",
+          "closest_css3": "#808080",
+          "closest_css4": "#808080"
+        },
+        {
+          "color": "#48513b",
+          "closest_crayola": "#414a4c",
+          "closest_css3": "#556b2f",
+          "closest_css4": "#556b2f"
+        },
+        {
+          "color": "#b9b4a1",
+          "closest_crayola": "#b0b7c6",
+          "closest_css3": "#a9a9a9",
+          "closest_css4": "#a9a9a9"
+        }
+      ],
+      "woe:country_name": "France",
+      "is_loan_object": 0
+    }
+  },
+  {
+    "id": "dr-",
+    "title": "",
+    "author": "Various",
+    "year": "n.d.",
+    "imageUrl": "",
+    "source": "Design Reviewed",
+    "link": "https://designreviewed.com",
+    "department": "Graphic Design",
+    "classification": "Modernist Print",
+    "medium": "Unknown",
+    "culture": "Global / Modernist",
+    "_raw": {}
+  }
+]
