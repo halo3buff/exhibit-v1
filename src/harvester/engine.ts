@@ -66,13 +66,11 @@ export async function runHarvest(category: string) {
       const cleanData: ArchiveItem[] = rawDataArray
         .map((item: any) => {
           try { return adapter(item); }
-          catch (e: any) {
-            console.warn(`   adapter err on one item: ${e.message}`);
-            return null;
-          }
+          catch (e: any) { return null; }
         })
-        .filter((item): item is ArchiveItem => item !== null && !!item.imageUrl);
-
+        .filter((item): item is ArchiveItem => item !== null && !!item.imageUrl)
+        .map(({ _raw, ...rest }) => rest as ArchiveItem); // strip _raw
+      
       const filtered = rawDataArray.length - cleanData.length;
       globalManifest = [...globalManifest, ...cleanData];
 

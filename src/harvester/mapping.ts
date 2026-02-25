@@ -28,7 +28,7 @@ export const CategoryMap: Record<string, SourceConfig[]> = {
     { source: 'wikimedia',      filterId: 'Posters',       filterType: 'category' },
     { source: 'wellcome',       filterId: 'k',             filterType: 'workType' },       // k = poster in Wellcome workType
     { source: 'ia',             filterId: 'posters',       filterType: 'subject' },
-    { source: 'rave',           filterId: 'rave-flyers',   filterType: 'collection' },     // routes to IA rave-flyers collection
+    { source: 'rave',           filterId: 'rave flyer',    filterType: 'subject' },     // routes to IA rave-flyers collection
     { source: 'designreviewed', filterId: 'graphic-design',filterType: 'category' },
     { source: 'letterform',     filterId: 'all',           filterType: 'all' },
     // ⚠️ NEEDS KEY: EUROPEANA_API_KEY (free)

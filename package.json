@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "harvest": "node --loader ts-node/esm src/harvester/run.ts"
+    "harvest": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
