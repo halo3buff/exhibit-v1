@@ -1,13 +1,4 @@
-// ─── types.ts ────────────────────────────────────────────────────────────────
-// Core types for the Exhibit harvester system.
-//
-// MAIN CATEGORIES (the 5 run targets):
-//   GRAPHIC_DESIGN | PHOTOGRAPHY | PAINTING | PRINTS_AND_DRAWINGS | DECORATIVE_ARTS
-//
-// Each ArchiveItem carries both its mainCategory (which harvest run produced it)
-// and a subCategory (the precise classification within that category).
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ─── Main Categories ──────────────────────────────────────────────────────────
 export type MainCategory =
   | 'GRAPHIC_DESIGN'
   | 'PHOTOGRAPHY'
@@ -15,22 +6,50 @@ export type MainCategory =
   | 'PRINTS_AND_DRAWINGS'
   | 'DECORATIVE_ARTS';
 
+// ─── Sub-Categories ───────────────────────────────────────────────────────────
+// Every subCategoryHint string in mapping.ts must be one of these.
 export type SubCategory =
-  // Graphic Design
-  | 'Poster' | 'Advertising' | 'Typography' | 'Identity & Branding'
-  | 'Editorial' | 'Packaging' | 'Graphic Design'
-  // Photography
-  | 'Fine Art Photography' | 'Documentary' | 'Portraiture'
-  | 'Experimental' | 'Photojournalism' | 'Photography'
-  // Painting
-  | 'Oil' | 'Watercolor' | 'Acrylic' | 'Tempera' | 'Gouache' | 'Fresco' | 'Painting'
-  // Prints & Drawings
-  | 'Etching' | 'Woodcut' | 'Engraving' | 'Screenprint' | 'Lithograph'
-  | 'Drawing' | 'Collage' | 'Monotype' | 'Print'
-  // Decorative Arts
-  | 'Ceramics & Glass' | 'Furniture' | 'Textiles & Fashion'
-  | 'Metalwork & Jewelry' | 'Decorative Arts';
+  // GRAPHIC_DESIGN
+  | 'Poster'
+  | 'Advertising'
+  | 'Typography'
+  | 'Editorial'
+  | 'Packaging'
+  | 'Identity & Branding'
+  | 'Graphic Design'       // catch-all for undifferentiated graphic design
+  // PHOTOGRAPHY
+  | 'Fine Art Photography'
+  | 'Documentary'
+  | 'Portraiture'
+  | 'Photojournalism'
+  | 'Experimental Photography'
+  | 'Photography'          // catch-all
+  // PAINTING
+  | 'Oil'
+  | 'Watercolor'
+  | 'Tempera'
+  | 'Gouache'
+  | 'Acrylic'
+  | 'Fresco'
+  | 'Painting'             // catch-all
+  // PRINTS_AND_DRAWINGS
+  | 'Etching'
+  | 'Engraving'
+  | 'Woodcut'
+  | 'Lithograph'
+  | 'Screenprint'
+  | 'Monotype'
+  | 'Print'                // catch-all for undifferentiated print
+  | 'Drawing'
+  | 'Collage'
+  // DECORATIVE_ARTS
+  | 'Ceramics & Glass'
+  | 'Furniture'
+  | 'Textiles & Fashion'
+  | 'Metalwork & Jewelry'
+  | 'Decorative Arts';     // catch-all
 
+// ─── SourceConfig ─────────────────────────────────────────────────────────────
 export interface SourceConfig {
   source:           string;
   params:           Record<string, any>;
@@ -38,6 +57,7 @@ export interface SourceConfig {
   subCategoryHint?: SubCategory;
 }
 
+// ─── ArchiveItem ──────────────────────────────────────────────────────────────
 export interface ArchiveItem {
   id:             string;
   title:          string;
@@ -46,11 +66,11 @@ export interface ArchiveItem {
   imageUrl:       string;
   source:         string;
   link:           string;
-  mainCategory:   MainCategory;
-  subCategory:    SubCategory;
   department:     string;
   classification: string;
   medium:         string;
   culture:        string;
+  mainCategory?:  MainCategory;
+  subCategory?:   SubCategory;
   _raw?:          any;
 }

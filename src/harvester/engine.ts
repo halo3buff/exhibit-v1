@@ -3,120 +3,94 @@ import path from 'path';
 import { CategoryMap } from './mapping.js';
 import { fetchSourceData } from './fetcher.js';
 import { Adapters } from './adapters/index.js';
-import { ArchiveItem, MainCategory, SubCategory } from './types.js';
-
-// Source key → prefix used in item IDs (for resume/dedup logic)
-const SOURCE_ID_PREFIX: Record<string, string> = {
-  met:            'met',
-  artic:          'artic',
-  va:             'va',
-  loc:            'loc',
-  rijks:          'rijks',
-  harvard:        'harvard',
-  europeana:      'europeana',
-  wellcome:       'wellcome',
-  ia:             'ia',
-  rave:           'rave',
-  cooper:         'ch',
-  wikimedia:      'wiki',
-  designreviewed: 'dr',
-  letterform:     'lfa',
-  smithsonian:    'si',
-  nga:            'nga',
-  nypl:           'nypl',
-  aif:            'aif',
-  harvardme:      'harvard-me',
-  jstor:          'jstor',
-  palarchive:     'pal',
-  ada:            'ada',
-  auc:            'auc',
-  translatio:     'trans',
-};
+import { ArchiveItem, SourceConfig, MainCategory, SubCategory } from './types.js';
 
 export async function runHarvest(category: string) {
   const configs = CategoryMap[category as keyof typeof CategoryMap];
   if (!configs) {
-    const available = Object.keys(CategoryMap).join(', ');
-    console.error(`❌ Unknown category "${category}". Available: ${available}`);
-    return;
+    console.error(`❌ Unknown category "${category}". Valid: ${Object.keys(CategoryMap).join(', ')}`);
+    process.exit(1);
   }
 
-  const mainCat = category as MainCategory;
-  const outputPath = path.join(
-    process.cwd(), 'public', 'manifests', `${category.toLowerCase()}.json`
+  const mainCategory = category as MainCategory;
+  const outputPath   = path.join(process.cwd(), 'public', 'manifests', `${category.toLowerCase()}.json`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+  // Progress sidecar — tracks which source+params configs are done so we can resume
+  const progressPath = outputPath.replace('.json', '.progress.json');
+  const completedKeys = new Set<string>(
+    fs.existsSync(progressPath) ? JSON.parse(fs.readFileSync(progressPath, 'utf8')) : []
   );
-  if (!fs.existsSync(path.dirname(outputPath))) {
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  }
 
-  // Build a set of already-collected item IDs for dedup across all runs
-  let manifest: ArchiveItem[] = [];
-  const seenIds = new Set<string>();
+  let manifest: ArchiveItem[] = fs.existsSync(outputPath)
+    ? JSON.parse(fs.readFileSync(outputPath, 'utf8'))
+    : [];
 
-  if (fs.existsSync(outputPath)) {
-    try {
-      const existing = JSON.parse(fs.readFileSync(outputPath, 'utf8')) as ArchiveItem[];
-      manifest = existing;
-      for (const item of existing) seenIds.add(item.id);
-      console.log(`\n▶ Resuming — ${existing.length} items already in manifest`);
-    } catch {
-      console.log('Starting fresh.');
-    }
-  }
+  if (manifest.length) console.log(`▶ Resuming — ${manifest.length} items already in manifest`);
+
+  const configKey = (c: SourceConfig) => `${c.source}::${JSON.stringify(c.params)}`;
+  const saveProgress = () => fs.writeFileSync(progressPath, JSON.stringify([...completedKeys]));
 
   console.log(`\n${'═'.repeat(60)}`);
-  console.log(`  HARVEST: ${category}  (${configs.length} source configs)`);
+  console.log(`  HARVEST: ${category}  (${configs.length} source-configs)`);
   console.log(`${'═'.repeat(60)}\n`);
 
   for (const config of configs) {
-    const adapter = Adapters[config.source];
-    if (!adapter) {
-      console.warn(`⚠️  No adapter for "${config.source}" — skipping`);
+    const key   = configKey(config);
+    const label = `${config.source.toUpperCase()} [${config.subCategoryHint || config.source}]`;
+
+    if (completedKeys.has(key)) {
+      console.log(`⏭  ${label} — already done`);
       continue;
     }
 
-    const hint = config.subCategoryHint;
-    console.log(`\n📡 ${config.source.toUpperCase()}${hint ? ` [${hint}]` : ''}`);
+    const adapter = Adapters[config.source];
+    if (!adapter) { console.warn(`⚠️  No adapter for "${config.source}"`); continue; }
+
+    console.log(`\n📡 ${label}`);
 
     try {
       const raw = await fetchSourceData(config.source, config);
+
       if (!raw.length) {
         console.log(`   → 0 items returned`);
+        completedKeys.add(key);
+        saveProgress();
         continue;
       }
 
-      const clean: ArchiveItem[] = [];
-      for (const item of raw) {
-        let adapted: ArchiveItem | null = null;
-        try {
-          adapted = adapter(item, mainCat, hint);
-        } catch {
-          // ignore adapter errors
-        }
-        if (!adapted || !adapted.imageUrl) continue;
-        if (seenIds.has(adapted.id)) continue; // global dedup
-        seenIds.add(adapted.id);
-        // Always enforce mainCategory from the run.
-        // subCategoryHint always wins — it's the mapping-level research for
-        // this exact source × params combination. Adapter derivation is only
-        // a fallback when no hint is present.
-        adapted.mainCategory = mainCat;
-        if (hint) adapted.subCategory = hint;
-        clean.push(adapted);
-      }
+      const clean: ArchiveItem[] = raw
+        .map((item: any) => {
+          try {
+            // Pass mainCategory and subCategoryHint to every adapter
+            const mapped = adapter(item, mainCategory, config.subCategoryHint as SubCategory);
+            if (!mapped) return null;
+            // Belt-and-suspenders: stamp both fields from config
+            mapped.mainCategory = mainCategory;
+            if (config.subCategoryHint) mapped.subCategory = config.subCategoryHint as SubCategory;
+            return mapped;
+          } catch { return null; }
+        })
+        .filter((item): item is ArchiveItem => !!item?.imageUrl);
 
       manifest = [...manifest, ...clean];
       const filtered = raw.length - clean.length;
-      console.log(`   ✅ ${clean.length} items (${filtered} filtered/duped)`);
+
+      console.log(`   ✅ ${clean.length} items  (${filtered} filtered — no image / adapter error)`);
+
       fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
-      console.log(`   💾 Checkpoint (${manifest.length} total)`);
+      completedKeys.add(key);
+      saveProgress();
+      console.log(`   💾 Checkpoint: ${manifest.length} total`);
+
     } catch (err: any) {
       console.error(`   ❌ ${config.source}: ${err.message}`);
     }
   }
 
   fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
+
   console.log(`\n${'═'.repeat(60)}`);
-  console.log(`  ✅ DONE: ${manifest.length} items → ${outputPath}`);
+  console.log(`  ✅ DONE: ${manifest.length} items → ${path.basename(outputPath)}`);
   console.log(`${'═'.repeat(60)}\n`);
 }
