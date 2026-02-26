@@ -75,9 +75,8 @@ function getJsonWithHeaders(url: string): Promise<{ body: any; headers: Record<s
 
 // ─── COOPER HEWITT ────────────────────────────────────────────────────────────
 // No API key. Weighted ID probing against the GitHub raw collection dump.
-// GRAPHIC DESIGN: dept 35347493 = "Drawings, Prints & Graphic Design"
-// We filter AFTER fetch to keep only graphic design classifications and
-// explicitly exclude textiles, ceramics, furniture, jewelry.
+// dept 35347493 = "Drawings, Prints & Graphic Design"
+// We filter AFTER fetch — without this you get textiles and ceramics mixed in.
 
 function getCooperWeightedId(): number {
   const r = Math.random();
@@ -117,15 +116,13 @@ async function fetchCooper(config: any): Promise<any[]> {
       const key = `ch-${obj.id}`;
       if (seen.has(key)) continue;
 
-      // ── Graphic design filter ──────────────────────────────────────────
-      // Cooper's collection is huge. Without this, you get textiles,
-      // ceramics, furniture, and silverware alongside the posters and prints.
       const type           = String(obj.type           || '').toLowerCase();
       const classification = String(obj.classification || '').toLowerCase();
       const department     = String(obj.department     || '').toLowerCase();
       const medium         = String(obj.medium         || '').toLowerCase();
       const title          = String(obj.title          || '').toLowerCase();
 
+      // Must match at least one graphic design signal
       const isGraphic =
         classification.includes('poster') ||
         classification.includes('drawing, print') ||
@@ -151,6 +148,7 @@ async function fetchCooper(config: any): Promise<any[]> {
         title.includes('type specimen') ||
         title.includes('broadside');
 
+      // Must NOT be decorative arts
       const isDecorative =
         classification.includes('textile') ||
         classification.includes('ceramic') ||
@@ -169,7 +167,6 @@ async function fetchCooper(config: any): Promise<any[]> {
         type.includes('bowl');
 
       if (!isGraphic || isDecorative) continue;
-      // ──────────────────────────────────────────────────────────────────
 
       seen.add(key);
       results.push(obj);
@@ -185,7 +182,7 @@ async function fetchCooper(config: any): Promise<any[]> {
 
 // ─── MET ──────────────────────────────────────────────────────────────────────
 // GRAPHIC DESIGN: dept 19 = Drawings and Prints.
-// Optional subFilter narrows by search term (e.g. "Photographs" for photo harvest).
+// Optional subFilter narrows by search term.
 
 async function fetchMet(config: any): Promise<any[]> {
   const { filterId, filterType, subFilter } = config;
@@ -217,13 +214,39 @@ async function fetchMet(config: any): Promise<any[]> {
 }
 
 // ─── ART INSTITUTE OF CHICAGO ─────────────────────────────────────────────────
-// GRAPHIC DESIGN: classification_id PC-2 = Prints and Drawings.
-// CRITICAL: must use query[term][is_public_domain]=true (Elasticsearch syntax).
-// Plain is_public_domain=true is silently ignored — images come back as
-// placeholder grey boxes. The two query[term] params are separate, not nested.
+// GRAPHIC DESIGN: classification PC-2 = Prints and Drawings.
+//
+// CRITICAL FIX: Must use /artworks (list endpoint), NOT /artworks/search.
+// The /search endpoint only supports a simple `q=` text param in the URL.
+// Compound query[term] params only work on the /artworks list endpoint.
+//
+// We fetch broadly with is_public_domain=true and filter by classification_title
+// in code — same approach as the old working harvest_artic.js.
+//
+// classification_id → classification_title filter map:
+//   PC-2  → print | drawing          (Prints and Drawings)
+//   PC-12 → photograph               (Photography)
+//   PC-1  → painting                 (Painting)
+//   PC-15 → textile                  (Textiles)
+//   PC-10 → print | drawing          (Prints and Drawings, alt dept)
+
+const ARTIC_FILTERS: Record<string, (item: any) => boolean> = {
+  'PC-2':  (i) => {
+    const c = (i.classification_title || '').toLowerCase();
+    const t = (i.artwork_type_title   || '').toLowerCase();
+    return c.includes('print') || c.includes('drawing') || t.includes('print') || t.includes('drawing');
+  },
+  'PC-10': (i) => {
+    const c = (i.classification_title || '').toLowerCase();
+    return c.includes('print') || c.includes('drawing');
+  },
+  'PC-12': (i) => (i.classification_title || '').toLowerCase().includes('photograph'),
+  'PC-1':  (i) => (i.classification_title || '').toLowerCase().includes('painting'),
+  'PC-15': (i) => (i.classification_title || '').toLowerCase().includes('textile'),
+};
 
 async function fetchArtic(config: any): Promise<any[]> {
-  const { filterId, filterType } = config;
+  const { filterId } = config;
   const TARGET = config.limit || 200;
   const FIELDS = [
     'id', 'title', 'image_id', 'artist_display', 'date_display',
@@ -231,16 +254,20 @@ async function fetchArtic(config: any): Promise<any[]> {
     'style_title', 'place_of_origin', 'department_title',
   ].join(',');
 
+  // Code-based filter — falls back to accepting everything if filterId unknown
+  const matchFilter = ARTIC_FILTERS[filterId] || (() => true);
+
   const results: any[] = [];
   let page = 1;
 
   while (results.length < TARGET && page <= 40) {
     await sleep(800);
-    // Two separate query[term] params — NOT nested under [bool][must][0]
+
+    // Use /artworks (list endpoint) — NOT /artworks/search
+    // query[term] params work here; they do NOT work on the search endpoint
     const url =
-      `https://api.artic.edu/api/v1/artworks/search` +
+      `https://api.artic.edu/api/v1/artworks` +
       `?query[term][is_public_domain]=true` +
-      `&query[term][${filterType}]=${filterId}` +
       `&fields=${FIELDS}&limit=100&page=${page}`;
 
     const data = await getJson(url);
@@ -249,6 +276,7 @@ async function fetchArtic(config: any): Promise<any[]> {
     for (const item of data.data) {
       if (results.length >= TARGET) break;
       if (!item.image_id) continue;
+      if (!matchFilter(item)) continue;
       results.push(item);
     }
 
@@ -261,9 +289,10 @@ async function fetchArtic(config: any): Promise<any[]> {
 }
 
 // ─── RIJKSMUSEUM ──────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: type=prent (prints/engravings) — the Rijks graphic design core.
-// Demo key works fine; set RIJKS_API_KEY in .env for your own higher-rate key.
-// imgonly must be lowercase 'true' — the API is case sensitive on this param.
+// GRAPHIC DESIGN: type=prent (prints/engravings).
+// CRITICAL: q=* wildcard is required — without any q= param the API returns
+// 0 results even when type= and imgonly= are set correctly.
+// imgonly=true (lowercase) — the API is case-sensitive here.
 
 async function fetchRijks(config: any): Promise<any[]> {
   const key = process.env.RIJKS_API_KEY || '0fiuZFh4';
@@ -274,11 +303,23 @@ async function fetchRijks(config: any): Promise<any[]> {
 
   while (results.length < TARGET && page <= 20) {
     await sleep(500);
+    // q=* wildcard is REQUIRED — Rijks returns 0 results without any q= param
     const url =
       `https://www.rijksmuseum.nl/api/en/collection?key=${key}` +
-      `&type=${filterId}&imgonly=true&ps=100&p=${page}`;  // lowercase true — case sensitive!
+      `&q=*&type=${encodeURIComponent(filterId)}&imgonly=true&ps=100&p=${page}`;
+
     const data = await getJson(url);
-    if (!data?.artObjects?.length) break;
+
+    if (!data) {
+      console.warn(`  Rijks: null response on page ${page}`);
+      break;
+    }
+    if (!data.artObjects) {
+      console.warn(`  Rijks: no artObjects in response — keys: ${Object.keys(data).join(', ')}`);
+      break;
+    }
+    if (!data.artObjects.length) break;
+
     results.push(...data.artObjects.slice(0, TARGET - results.length));
     process.stdout.write(`  Rijks: ${results.length}/${TARGET}\r`);
     page++;
@@ -289,8 +330,8 @@ async function fetchRijks(config: any): Promise<any[]> {
 }
 
 // ─── HARVARD ART MUSEUMS ──────────────────────────────────────────────────────
-// GRAPHIC DESIGN: classification_id 21 = Prints; also catches drawings and posters.
-// Free key from harvardartmuseums.org/collections/api (instant email delivery).
+// GRAPHIC DESIGN: classification_id 21 = Prints.
+// Free key from harvardartmuseums.org/collections/api
 
 async function fetchHarvard(config: any): Promise<any[]> {
   const key = process.env.HARVARD_API_KEY;
@@ -326,8 +367,7 @@ async function fetchHarvard(config: any): Promise<any[]> {
 
 // ─── V&A MUSEUM ───────────────────────────────────────────────────────────────
 // GRAPHIC DESIGN: THES48956 = V&A thesaurus ID for Graphic Design category.
-// Two-step fetch: search list → detail per item. The detail call is mandatory
-// to get categories[0].name for real classification. No key required.
+// Two-step: search list → detail per item (detail gives real classification).
 
 async function fetchVA(config: any): Promise<any[]> {
   const { filterId } = config;
@@ -371,7 +411,6 @@ async function fetchVA(config: any): Promise<any[]> {
           { ...searchItem, ...detail, systemNumber: searchItem.systemNumber }
         );
       }
-
       await sleep(500);
     }
 
@@ -384,9 +423,19 @@ async function fetchVA(config: any): Promise<any[]> {
 }
 
 // ─── LIBRARY OF CONGRESS ──────────────────────────────────────────────────────
-// GRAPHIC DESIGN: fa=original-format:poster — LOC has 6,000+ public domain posters.
-// WPA posters, WWI/WWII propaganda, travel, theatre, political — all free.
-// CRITICAL: &at=results,pagination must be in URL or response is nearly empty.
+// GRAPHIC DESIGN: fa=original-format:poster — 6,000+ public domain posters.
+// WPA, WWI/WWII propaganda, travel, theatre, political — all free.
+//
+// CRITICAL FIX 1: Do NOT encode the colon in fa= value.
+//   Wrong: fa=original-format%3Aposter  (LOC rejects this)
+//   Right: fa=original-format:poster    (unencoded colon required)
+//
+// CRITICAL FIX 2: totalPages must be computed from data.pagination.total,
+//   not data.pagination.total_pages — that field doesn't exist in LOC's response.
+//
+// CRITICAL FIX 3: &at=results,pagination is REQUIRED in the URL.
+//   Without it, the response contains almost nothing useful.
+//
 // Image upgrade: _150px → _1024px on cdn.loc.gov URLs.
 
 function upgradeLocImage(raw: string): string {
@@ -395,33 +444,37 @@ function upgradeLocImage(raw: string): string {
   url = url.split('?')[0];
   return url
     .replace(/_150px\.(jpg|jpeg|png)/i, '_1024px.$1')
-    .replace(/_75px\.(jpg|jpeg|png)/i, '_1024px.$1');
+    .replace(/_75px\.(jpg|jpeg|png)/i,  '_1024px.$1');
 }
 
 async function fetchLOC(config: any): Promise<any[]> {
   const { filterId } = config;
   const TARGET   = config.limit || 300;
   const PER_PAGE = 150;
+
+  // Map filterId → LOC fa= facet value
+  // CRITICAL: the colon must NOT be encoded — build the full fa value here
   const FA_MAP: Record<string, string> = {
     pos: 'original-format:poster',
     pho: 'original-format:photograph',
     app: 'original-format:print',
     ser: 'original-format:periodical',
   };
-  const fa = FA_MAP[filterId] || `original-format:${filterId}`;
+  const faValue = FA_MAP[filterId] || `original-format:${filterId}`;
 
   const results: any[] = [];
   const seen = new Set<string>();
   let page = 1;
-  let totalPages = 1;
+  let totalPages = 999; // Will be set from first response
 
   while (results.length < TARGET && page <= totalPages) {
     await sleep(2000 + Math.random() * 1000);
 
-    // &at=results,pagination is REQUIRED — without it the response is nearly empty
+    // Build URL with unencoded colon in fa= — LOC requires this
+    // &at=results,pagination is REQUIRED or response is nearly empty
     const url =
       `https://www.loc.gov/search/?fo=json` +
-      `&fa=${encodeURIComponent(fa)}&c=${PER_PAGE}&sp=${page}` +
+      `&fa=${faValue}&c=${PER_PAGE}&sp=${page}` +
       `&at=results,pagination`;
 
     const data = await getJson(url);
@@ -434,8 +487,13 @@ async function fetchLOC(config: any): Promise<any[]> {
     }
 
     if (page === 1) {
-      totalPages = Math.min(data.pagination?.total_pages || 1, Math.ceil(TARGET / PER_PAGE) + 1);
-      console.log(`  LOC: ${data.pagination?.total || 0} total results, ${totalPages} pages`);
+      const total = data.pagination?.total || 0;
+      // CRITICAL: compute pages from total count, not total_pages (doesn't exist)
+      totalPages = Math.min(
+        Math.ceil(total / PER_PAGE),
+        Math.ceil(TARGET / PER_PAGE) + 1
+      );
+      console.log(`  LOC: ${total} total results, ${totalPages} pages`);
     }
 
     for (const result of (data.results || [])) {
@@ -448,7 +506,6 @@ async function fetchLOC(config: any): Promise<any[]> {
       if (seen.has(itemId)) continue;
       seen.add(itemId);
 
-      // Upgrade image URL from 150px thumbnail to 1024px
       const upgraded = upgradeLocImage(result.image_url[0]);
       if (!upgraded) continue;
       results.push({ ...result, _upgradedImageUrl: upgraded });
@@ -463,8 +520,7 @@ async function fetchLOC(config: any): Promise<any[]> {
 }
 
 // ─── WIKIMEDIA COMMONS ────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: Category:Posters — broad, high quality, no key needed.
-// Two-step: list category members → fetch imageinfo per batch of page IDs.
+// GRAPHIC DESIGN: Category:Posters — broad, high quality, no key.
 
 async function fetchWikimedia(config: any): Promise<any[]> {
   const { filterId } = config;
@@ -496,7 +552,6 @@ async function fetchWikimedia(config: any): Promise<any[]> {
       if (results.length >= TARGET) break;
       const ii = pg.imageinfo?.[0];
       if (!ii?.url) continue;
-      // Skip tiny images (icons, logos)
       if ((ii.width || 0) < 200 || (ii.height || 0) < 200) continue;
       results.push({ pageid: pg.pageid, title: pg.title, imageinfo: [ii] });
     }
@@ -514,7 +569,7 @@ async function fetchWikimedia(config: any): Promise<any[]> {
 }
 
 // ─── EUROPEANA ────────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: query for poster + graphic design, TYPE:IMAGE, open reuse only.
+// GRAPHIC DESIGN: search for poster + graphic design, images only, open license.
 // Cursor-based pagination. Free key from api.europeana.eu.
 
 async function fetchEuropeana(config: any): Promise<any[]> {
@@ -531,12 +586,9 @@ async function fetchEuropeana(config: any): Promise<any[]> {
 
   while (results.length < TARGET) {
     await sleep(500);
-    // Search for graphic design content: posters, prints, graphic design objects
-    // qf=TYPE:IMAGE narrows to image records only
-    // reusability=open ensures we only get openly licensed items
     const url =
       `https://api.europeana.eu/record/v2/search.json?wskey=${key}` +
-      `&query=poster+OR+%22graphic+design%22+OR+%22affiche%22+OR+lithograph` +
+      `&query=poster+OR+%22graphic+design%22+OR+affiche+OR+lithograph` +
       `&qf=TYPE:IMAGE&reusability=open&media=true&rows=100` +
       `&cursor=${encodeURIComponent(cursor)}`;
 
@@ -555,8 +607,7 @@ async function fetchEuropeana(config: any): Promise<any[]> {
 }
 
 // ─── WELLCOME COLLECTION ──────────────────────────────────────────────────────
-// GRAPHIC DESIGN: workType=k (Pictures/Visual Works) + query="poster" to narrow
-// to actual posters and graphic works rather than all visual material.
+// GRAPHIC DESIGN: workType=k (Pictures) + query=poster to focus on graphic works.
 
 async function fetchWellcome(config: any): Promise<any[]> {
   const { filterId } = config;
@@ -566,7 +617,6 @@ async function fetchWellcome(config: any): Promise<any[]> {
 
   while (results.length < TARGET && page <= 15) {
     await sleep(600);
-    // query=poster focuses on graphic design works specifically
     const url =
       `https://api.wellcomecollection.org/catalogue/v2/works` +
       `?workType=${encodeURIComponent(filterId)}&query=poster&pageSize=100&page=${page}` +
@@ -590,8 +640,7 @@ async function fetchWellcome(config: any): Promise<any[]> {
 }
 
 // ─── INTERNET ARCHIVE ─────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: subject or collection query against the IA Solr index.
-// services/img/{identifier} generates cover thumbnails on the fly — always works.
+// Used for both generic IA queries (subject/collection) and rave flyers.
 
 async function fetchIA(config: any): Promise<any[]> {
   const { filterId, filterType } = config;
@@ -631,8 +680,7 @@ async function fetchIA(config: any): Promise<any[]> {
 
 // ─── DESIGN REVIEWED ──────────────────────────────────────────────────────────
 // GRAPHIC DESIGN: This entire site IS graphic design — Swiss modernism, books,
-// magazines, stamps, record covers, type specimens. WP REST API, no scraping.
-// _embed=true brings taxonomy terms and featured media in one call.
+// magazines, stamps, type specimens, record covers. WP REST API.
 
 async function fetchDesignReviewed(config: any): Promise<any[]> {
   const TARGET = config.limit || 500;
@@ -672,41 +720,74 @@ async function fetchDesignReviewed(config: any): Promise<any[]> {
 }
 
 // ─── LETTERFORM ARCHIVE ───────────────────────────────────────────────────────
-// GRAPHIC DESIGN: The entire LFA collection is graphic design by definition —
-// posters, books, magazines, ephemera, original artwork, type specimens.
+// GRAPHIC DESIGN: The entire LFA collection is graphic design by definition.
 // Source: Mastodon bot on typo.social, paginated by max_id.
-// exclude_replies + exclude_reblogs is critical — without them the 40-item
-// limit fills with noise and returns nothing useful.
+//
+// CRITICAL FIX: Account IDs must be resolved dynamically via the lookup API.
+// The hardcoded ID approach fails when accounts move or IDs change.
+// We look up both 'Lfaimagebot' and 'letterformarchive' accounts.
+//
+// exclude_replies + exclude_reblogs is REQUIRED — without them the 40-item
+// page limit fills with noise and nothing useful is returned.
+
+async function resolveTypoSocialId(acct: string): Promise<string | null> {
+  const data = await getJson(`https://typo.social/api/v1/accounts/lookup?acct=${encodeURIComponent(acct)}`);
+  return data?.id || null;
+}
 
 async function fetchLetterform(config: any): Promise<any[]> {
-  const ACCOUNT_ID = '109303745934337359'; // LFA bot on typo.social (confirmed)
   const TARGET = config.limit || 800;
-  const results: any[] = [];
-  let maxId = '';
 
-  while (results.length < TARGET) {
-    await sleep(2000);
-    const continueParam = maxId ? `&max_id=${maxId}` : '';
-    // exclude_replies and exclude_reblogs REQUIRED — otherwise 40-item page
-    // fills with replies/boosts that have no workID and parse to nothing
-    const url =
-      `https://typo.social/api/v1/accounts/${ACCOUNT_ID}/statuses` +
-      `?limit=40&exclude_replies=true&exclude_reblogs=true${continueParam}`;
+  // Resolve account IDs dynamically — these are the two LFA bots on typo.social
+  const ACCTS = ['Lfaimagebot', 'letterformarchive'];
+  const accountIds: string[] = [];
 
-    const data = await getJson(url);
-    if (!Array.isArray(data) || !data.length) break;
-
-    results.push(...data);
-    maxId = data[data.length - 1].id;
-    process.stdout.write(`  Letterform: ${results.length} statuses fetched\r`);
+  for (const acct of ACCTS) {
+    const id = await resolveTypoSocialId(acct);
+    if (id) {
+      accountIds.push(id);
+      console.log(`  Letterform: resolved @${acct} → ID ${id}`);
+    } else {
+      console.warn(`  Letterform: could not resolve @${acct}`);
+    }
+    await sleep(500);
   }
 
-  console.log(`\n  Letterform: ✓ ${results.length} raw statuses (adapter will filter)`);
-  return results;
+  if (!accountIds.length) {
+    console.warn('  Letterform: no accounts resolved — skipping');
+    return [];
+  }
+
+  const allResults: any[] = [];
+
+  for (const accountId of accountIds) {
+    const results: any[] = [];
+    let maxId = '';
+
+    while (results.length < Math.ceil(TARGET / accountIds.length)) {
+      await sleep(2000);
+      const continueParam = maxId ? `&max_id=${maxId}` : '';
+      // exclude_replies and exclude_reblogs REQUIRED
+      const url =
+        `https://typo.social/api/v1/accounts/${accountId}/statuses` +
+        `?limit=40&exclude_replies=true&exclude_reblogs=true${continueParam}`;
+
+      const data = await getJson(url);
+      if (!Array.isArray(data) || !data.length) break;
+
+      results.push(...data);
+      maxId = data[data.length - 1].id;
+      process.stdout.write(`  Letterform: ${allResults.length + results.length} statuses fetched\r`);
+    }
+
+    allResults.push(...results);
+  }
+
+  console.log(`\n  Letterform: ✓ ${allResults.length} raw statuses (adapter will filter)`);
+  return allResults;
 }
 
 // ─── NYPL ─────────────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: search for "poster" in NYPL Digital Collections.
 // Free token from digitalcollections.nypl.org/help/api
 
 async function fetchNYPL(config: any): Promise<any[]> {
@@ -744,7 +825,6 @@ async function fetchNYPL(config: any): Promise<any[]> {
 }
 
 // ─── SMITHSONIAN ──────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: search for "poster" in Smithsonian Open Access.
 // Works without a key; SMITHSONIAN_API_KEY gives higher rate limits.
 
 async function fetchSmithsonian(config: any): Promise<any[]> {
@@ -775,7 +855,7 @@ async function fetchSmithsonian(config: any): Promise<any[]> {
 }
 
 // ─── NGA ──────────────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: classification=Prints. NGA Open Access, no key.
+// NGA Open Access REST API. Free, no key.
 
 async function fetchNGA(config: any): Promise<any[]> {
   const { filterId } = config;
@@ -806,7 +886,7 @@ async function fetchNGA(config: any): Promise<any[]> {
 }
 
 // ─── GETTY ────────────────────────────────────────────────────────────────────
-// GRAPHIC DESIGN: search for prints/drawings via Linked Art API.
+// Getty Open Content via Linked Art. Detail call per item for IIIF image URL.
 
 async function fetchGetty(config: any): Promise<any[]> {
   const { filterId } = config;
@@ -829,7 +909,6 @@ async function fetchGetty(config: any): Promise<any[]> {
     page++;
   }
 
-  // Enrich: fetch full Linked Art record for IIIF image URL
   console.log(`\n  Getty: enriching ${results.length} items...`);
   const enriched: any[] = [];
   for (const item of results) {
