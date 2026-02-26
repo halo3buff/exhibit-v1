@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "harvest": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts"
+    "harvest": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts",
+    "harvest:graphic-design": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts GRAPHIC_DESIGN",
+    "harvest:photography": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts PHOTOGRAPHY",
+    "harvest:painting": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts PAINTING",
+    "harvest:prints": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts PRINTS_AND_DRAWINGS",
+    "harvest:decorative-arts": "node --env-file=.env.local --loader ts-node/esm src/harvester/run.ts DECORATIVE_ARTS"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

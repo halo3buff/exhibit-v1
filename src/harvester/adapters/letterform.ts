@@ -1,38 +1,55 @@
-import { ArchiveItem } from '../types.js';
+// ─── letterform.ts ────────────────────────────────────────────────────────────
+// Letterform Archive (Mastodon / typo.social) adapter.
+//
+// The entire LFA account is graphic design — posters, books, type specimens,
+// magazines, ephemera, identity, packaging. Tag-based sub-classification.
+//
+// Tag → SubCategory mapping:
+//   poster, print     → Poster
+//   book, pamphlet    → Editorial
+//   magazine, zine    → Editorial
+//   typespecimen      → Typography
+//   collateral, label → Advertising
+//   packaging         → Packaging
+//   brochure          → Editorial
+// ─────────────────────────────────────────────────────────────────────────────
+import { ArchiveItem, MainCategory, SubCategory } from '../types.js';
 
-const TAG_CLASSIFICATION: Record<string, string> = {
+const TAG_SUB_MAP: Record<string, SubCategory> = {
   'poster':          'Poster',
-  'print':           'Print',
-  'originalartwork': 'Original Artwork',
+  'print':           'Poster',
+  'originalartwork': 'Poster',
+  'book':            'Editorial',
+  'booklet':         'Editorial',
+  'pamphlet':        'Editorial',
+  'looseleaf':       'Editorial',
+  'periodical':      'Editorial',
+  'magazine':        'Editorial',
+  'zine':            'Editorial',
+  'journal':         'Editorial',
+  'brochure':        'Editorial',
+  'typespecimen':    'Typography',
+  'typeephemera':    'Typography',
   'collateral':      'Advertising',
-  'brochure':        'Brochure',
-  'leaflet':         'Ephemera',
-  'announcement':    'Ephemera',
-  'ephemera':        'Ephemera',
-  'tradecard':       'Ephemera',
-  'calendar':        'Ephemera',
-  'luggagelabel':    'Ephemera',
-  'matchbook':       'Ephemera',
-  'sticker':         'Ephemera',
-  'book':            'Book',
-  'periodical':      'Magazine',
-  'magazine':        'Magazine',
-  'zine':            'Magazine',
-  'journal':         'Magazine',
-  'booklet':         'Book',
-  'pamphlet':        'Book',
-  'looseleaf':       'Book',
+  'announcement':    'Advertising',
+  'ephemera':        'Advertising',
+  'tradecard':       'Advertising',
+  'calendar':        'Advertising',
+  'luggagelabel':    'Advertising',
+  'matchbook':       'Advertising',
+  'sticker':         'Advertising',
+  'leaflet':         'Advertising',
+  'packaging':       'Packaging',
+  'record':          'Packaging',
   'ukiyoe':          'Print',
 };
-
-const REJECT_TAGS = new Set([
-  'typespecimen', 'typeephemera', 'boundspecimen',
-  'calligraphy', 'penmanship', 'handwriting',
-]);
 
 const REJECT_PREFIXES = [
   'lfa_writingmanuals', 'lfa_calligraphy', 'lfa_tholenaar', 'lfa_linotype',
 ];
+const REJECT_TAGS = new Set([
+  'calligraphy', 'penmanship', 'handwriting', 'boundspecimen',
+]);
 
 function stripHtml(s: string): string {
   return (s || '')
@@ -43,63 +60,54 @@ function stripHtml(s: string): string {
 }
 
 function cleanTitle(text: string): string {
-  // Raw LFA title format: "Emigre Magazine Rudy VanderLans Item date: 1984. Courtesy of..."
-  // Strip everything from "Item date:" onwards
   let t = text.split(/\s+Item date:/i)[0].trim();
-  // Also strip "Courtesy of..." if it appears standalone
   t = t.split(/\s+Courtesy\s+of/i)[0].trim();
-  // Take only the first 200 chars
   return t.slice(0, 200) || 'Untitled';
 }
 
-export const letterformAdapter = (raw: any): ArchiveItem | null => {
-  const text = stripHtml(raw.content || '');
-
+export const letterformAdapter = (raw: any, mainCategory?: MainCategory, hint?: SubCategory): ArchiveItem | null => {
+  const text       = stripHtml(raw.content || '');
   const workIDMatch = text.match(/workID=(lfa_[a-zA-Z0-9_]+)/);
   if (!workIDMatch) return null;
-  const workID = workIDMatch[1];
-
+  const workID     = workIDMatch[1];
   if (REJECT_PREFIXES.some(p => workID.startsWith(p))) return null;
 
   const tags: string[] = (raw.tags || []).map((t: any) =>
     (t.name || '').toLowerCase().replace(/\s+/g, '')
   );
-
   if (tags.some(t => REJECT_TAGS.has(t))) return null;
 
   const imageUrl = raw.media_attachments?.[0]?.url || '';
   if (!imageUrl) return null;
 
-  const title = cleanTitle(text.split(/\s+#/)[0].split('https://')[0].trim());
-
+  const title     = cleanTitle(text.split(/\s+#/)[0].split('https://')[0].trim());
   const yearMatch = text.match(/\b(1[789]\d{2}|20[012]\d)\b/);
-  const year = yearMatch?.[1] || 'n.d.';
+  const year      = yearMatch?.[1] || 'n.d.';
 
-  const classification = tags.reduce<string>((acc, tag) => {
-    return acc === 'Graphic Design' && TAG_CLASSIFICATION[tag]
-      ? TAG_CLASSIFICATION[tag]
-      : acc;
-  }, 'Graphic Design');
+  // Derive sub-category from tags
+  let subCategory: SubCategory = hint || 'Graphic Design';
+  for (const tag of tags) {
+    if (TAG_SUB_MAP[tag]) { subCategory = TAG_SUB_MAP[tag]; break; }
+  }
 
-  // Medium: just the meaningful content tags, no "letterformarchive" or "graphicdesign" noise
   const NOISE_TAGS = new Set(['letterformarchive', 'graphicdesign', 'lfa', 'lfaimagebot']);
   const mediumTags = tags
     .filter(t => !REJECT_TAGS.has(t) && !NOISE_TAGS.has(t))
-    .map(t => TAG_CLASSIFICATION[t] || t)
-    .filter((v, i, a) => a.indexOf(v) === i) // dedupe
     .slice(0, 2);
 
   return {
-    id: `lfa-${workID}`,
+    id:             `lfa-${workID}`,
     title,
-    author: 'Letterform Archive',
+    author:         'Letterform Archive',
     year,
     imageUrl,
-    source: 'Letterform Archive',
-    link: `https://oa.letterformarchive.org/item?workID=${workID}`,
-    department: 'Letterform Archive',
-    classification,
-    medium: mediumTags.join(', ') || 'Print',
-    culture: 'Unknown',
+    source:         'Letterform Archive',
+    link:           `https://oa.letterformarchive.org/item?workID=${workID}`,
+    mainCategory:   mainCategory || 'GRAPHIC_DESIGN',
+    subCategory,
+    department:     'Letterform Archive',
+    classification: subCategory,
+    medium:         mediumTags.join(', ') || 'Print',
+    culture:        'Unknown',
   };
 };

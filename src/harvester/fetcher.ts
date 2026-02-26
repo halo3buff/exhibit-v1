@@ -89,7 +89,9 @@ async function fetchMet(config: any): Promise<any[]> {
   let searchUrl: string;
 
   if (params.q) {
-    searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=${encodeURIComponent(params.q)}`;
+    // Free text search — add departmentId constraint if present
+    const deptParam = params.departmentId ? `&departmentId=${params.departmentId}` : '';
+    searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=${encodeURIComponent(params.q)}${deptParam}`;
   } else if (params.departmentId) {
     searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/objects?departmentIds=${params.departmentId}`;
   } else {
@@ -103,11 +105,25 @@ async function fetchMet(config: any): Promise<any[]> {
   // Shuffle to get variety, then take 3× limit (many will have no image)
   const shuffled = allIds.sort(() => Math.random() - 0.5).slice(0, limit * 3);
 
+  // objectName post-fetch filter: exact match
+  const objectNameFilter: string | undefined   = params.objectName;
+  const excludeObjectNames: string[] | undefined = params.excludeObjectNames;
+
   const results: any[] = [];
   const fetchOne = async (id: number) => {
     const obj = await get(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`, 10000);
-    if (obj?.primaryImage) return obj;
-    return null;
+    if (!obj?.primaryImage) return null;
+    // Apply objectName include filter
+    if (objectNameFilter) {
+      const name = (obj.objectName || '').toLowerCase();
+      if (!name.includes(objectNameFilter.toLowerCase())) return null;
+    }
+    // Apply objectName exclude filter
+    if (excludeObjectNames?.length) {
+      const name = (obj.objectName || '').toLowerCase();
+      if (excludeObjectNames.some(ex => name.includes(ex.toLowerCase()))) return null;
+    }
+    return obj;
   };
 
   // Process in batches, stop once we hit the limit
@@ -125,9 +141,14 @@ async function fetchMet(config: any): Promise<any[]> {
 }
 
 // ─── ART INSTITUTE OF CHICAGO ─────────────────────────────────────────────────
-// params.artwork_type_title → query[term][artwork_type_title.keyword]=Poster
-// params.classification_id  → query[term][classification_id]=PC-12
-// Uses /artworks list endpoint (NOT /search — that only supports q= text)
+// Uses POST /artworks/search with full Elasticsearch body.
+// This is the only reliable way to filter by artwork_type_title, classification,
+// or department_title — the GET endpoint's query[term] params are unreliable.
+//
+// params.artwork_type_title → must: [term: artwork_type_title.keyword]
+// params.classification_id  → must: [term: classification_id]
+// params.department_title   → must: [match: department_title]
+// params.q                  → must: [match: _all / title]
 
 async function fetchArtic(config: any): Promise<any[]> {
   const { params, limit = 300 } = config;
@@ -136,28 +157,44 @@ async function fetchArtic(config: any): Promise<any[]> {
   const results: any[] = [];
   let page = 1;
 
+  // Build Elasticsearch bool filter clauses
+  const mustFilters: any[] = [
+    { term: { is_public_domain: true } },
+    { exists: { field: 'image_id' } },
+  ];
+
+  if (params.artwork_type_title) {
+    mustFilters.push({ term: { 'artwork_type_title.keyword': params.artwork_type_title } });
+  }
+  if (params.classification_id) {
+    mustFilters.push({ term: { classification_id: params.classification_id } });
+  }
+  if (params.department_title) {
+    mustFilters.push({ match: { department_title: params.department_title } });
+  }
+  if (params.q) {
+    mustFilters.push({ multi_match: { query: params.q, fields: ['title^3', 'alt_titles', 'artist_display', 'medium_display'] } });
+  }
+
   while (results.length < limit && page <= 60) {
     await sleep(600);
 
-    let url: string;
-    if (params.artwork_type_title) {
-      // Exact term match on artwork_type_title — the most precise poster filter
-      url = `https://api.artic.edu/api/v1/artworks` +
-        `?query[term][is_public_domain]=true` +
-        `&query[term][artwork_type_title.keyword]=${encodeURIComponent(params.artwork_type_title)}` +
-        `&fields=${FIELDS}&limit=100&page=${page}`;
-    } else if (params.classification_id) {
-      url = `https://api.artic.edu/api/v1/artworks` +
-        `?query[term][is_public_domain]=true` +
-        `&query[term][classification_id]=${encodeURIComponent(params.classification_id)}` +
-        `&fields=${FIELDS}&limit=100&page=${page}`;
-    } else {
-      url = `https://api.artic.edu/api/v1/artworks` +
-        `?query[term][is_public_domain]=true` +
-        `&fields=${FIELDS}&limit=100&page=${page}`;
-    }
+    const body = {
+      query: { bool: { must: mustFilters } },
+      fields: FIELDS.split(','),
+      _source: true,
+      size: 100,
+      from: (page - 1) * 100,
+    };
 
-    const data = await get(url);
+    const resp = await fetch(`https://api.artic.edu/api/v1/artworks/search?fields=${FIELDS}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!resp.ok) break;
+    const data = await resp.json() as any;
     if (!data?.data?.length) break;
 
     for (const item of data.data) {
@@ -334,7 +371,10 @@ async function fetchHarvard(config: any): Promise<any[]> {
     await sleep(400);
 
     let qParam: string;
-    if (params.keyword)         qParam = `keyword=${encodeURIComponent(params.keyword)}`;
+    if (params.worktype)         qParam = `worktype=${encodeURIComponent(params.worktype)}`;
+    else if (params.classification) qParam = `classification=${encodeURIComponent(params.classification)}`;
+    else if (params.keyword)     qParam = `keyword=${encodeURIComponent(params.keyword)}`;
+    else if (params.technique)   qParam = `technique=${encodeURIComponent(params.technique)}`;
     else if (params.classification_id) qParam = `classification_id=${params.classification_id}`;
     else qParam = 'keyword=poster';
 
@@ -391,13 +431,14 @@ async function fetchEuropeana(config: any): Promise<any[]> {
 async function fetchWellcome(config: any): Promise<any[]> {
   const { params, limit = 200 } = config;
   const workType = params.workType || 'k';
+  const query    = params.query ? `&query=${encodeURIComponent(params.query)}` : '';
   const results: any[] = [];
   let page = 1;
 
   while (results.length < limit && page <= 20) {
     await sleep(500);
     const url = `https://api.wellcomecollection.org/catalogue/v2/works` +
-      `?workType=${workType}&pageSize=100&page=${page}&include=subjects,contributors`;
+      `?workType=${workType}${query}&pageSize=100&page=${page}&include=subjects,contributors`;
 
     const data = await get(url);
     if (!data?.results?.length) break;
@@ -504,13 +545,37 @@ async function fetchCooper(config: any): Promise<any[]> {
         const type = (obj.type || '').toLowerCase();
         const cls  = (obj.classification || '').toLowerCase();
         const med  = (obj.medium || '').toLowerCase();
+        const dept = (obj.department?.name || '').toLowerCase();
+        // Extended match logic per filter type
         const matches =
           type.includes(typeFilter) ||
           cls.includes(typeFilter) ||
+          dept.includes(typeFilter) ||
           (typeFilter === 'poster' && (
             cls.includes('advertisement') || cls.includes('trade card') ||
             cls.includes('printed ephemera') || med.includes('lithograph') ||
             med.includes('screenprint') || med.includes('letterpress')
+          )) ||
+          (typeFilter === 'textile' && (
+            cls.includes('fabric') || cls.includes('lace') || cls.includes('tapestry') ||
+            cls.includes('embroidery') || cls.includes('carpet') || cls.includes('weaving') ||
+            dept.includes('textile')
+          )) ||
+          (typeFilter === 'graphic design' && (
+            cls.includes('graphic') || cls.includes('print') || cls.includes('ephemera') ||
+            dept.includes('graphic') || dept.includes('drawing')
+          )) ||
+          (typeFilter === 'jewelry' && (
+            cls.includes('jewel') || cls.includes('ornament') || cls.includes('brooch') ||
+            cls.includes('necklace') || cls.includes('ring')
+          )) ||
+          (typeFilter === 'ceramic' && (
+            cls.includes('ceramic') || cls.includes('porcelain') || cls.includes('pottery') ||
+            cls.includes('earthenware') || cls.includes('glass')
+          )) ||
+          (typeFilter === 'product' && (
+            cls.includes('product') || cls.includes('industrial') || cls.includes('furniture') ||
+            cls.includes('lamp') || cls.includes('clock') || dept.includes('product')
           ));
         if (!matches) continue;
       } else if (deptFilter && obj.department_id !== deptFilter) {
@@ -661,15 +726,19 @@ async function fetchSmithsonian(config: any): Promise<any[]> {
   const key  = process.env.SMITHSONIAN_API_KEY;
   const { params, limit = 200 } = config;
   const q    = params.q || 'poster';
+  const unit = params.unit_code || '';
+  const type = params.type || '';
   const results: any[] = [];
   let start  = 0;
 
   while (results.length < limit) {
     await sleep(500);
     const base = 'https://api.si.edu/openaccess/api/v1.0/search';
-    const url  = key
+    let url = key
       ? `${base}?api_key=${key}&q=${encodeURIComponent(q)}&rows=100&start=${start}`
       : `${base}?q=${encodeURIComponent(q)}&rows=100&start=${start}`;
+    if (unit) url += `&unit_code=${encodeURIComponent(unit)}`;
+    if (type) url += `&type=${encodeURIComponent(type)}`;
 
     const data = await get(url);
     const rows = data?.response?.rows || [];
@@ -705,6 +774,42 @@ async function fetchNGA(config: any): Promise<any[]> {
   return results;
 }
 
+// ─── NYPL ──────────────────────────────────────────────────────────────────────
+// New York Public Library Digital Collections API v2
+// params.subject     → subject filter (e.g. "posters", "photographs")
+// Requires NYPL_API_KEY env var (free at digitalcollections.nypl.org/developers)
+
+async function fetchNYPL(config: any): Promise<any[]> {
+  const key = process.env.NYPL_API_KEY;
+  if (!key) { console.warn('  NYPL: no NYPL_API_KEY — skipping'); return []; }
+
+  const { params, limit = 200 } = config;
+  const subject = params.subject || 'posters';
+  const results: any[] = [];
+  let page = 1;
+
+  while (results.length < limit && page <= 20) {
+    await sleep(600);
+    // NYPL v2 API uses Basic auth via token
+    const url = `https://api.nypl.org/api/v2/items/search?q=${encodeURIComponent(subject)}&per_page=100&page=${page}&token=${key}`;
+    const data = await get(url);
+    const items = data?.nyplAPI?.response?.result || [];
+    if (!items.length) break;
+
+    for (const item of items) {
+      if (results.length >= limit) break;
+      // NYPL item needs an imageID
+      if (!item.imageID?.length && !Array.isArray(item.imageID)) continue;
+      results.push(item);
+    }
+    process.stdout.write(`  NYPL: ${results.length}/${limit}\r`);
+    page++;
+  }
+
+  console.log(`\n  NYPL: ✓ ${results.length} items`);
+  return results;
+}
+
 // ─── DISPATCHER ───────────────────────────────────────────────────────────────
 
 const FETCHERS: Record<string, (config: any) => Promise<any[]>> = {
@@ -724,6 +829,18 @@ const FETCHERS: Record<string, (config: any) => Promise<any[]>> = {
   letterform:     fetchLetterform,
   smithsonian:    fetchSmithsonian,
   nga:            fetchNGA,
+  nypl:           fetchNYPL,
+  // Note: aif, ada, harvardme, palarchive, translatio, auc need custom fetch logic.
+  // These are intentionally left with empty fallbacks — add fetchers as those
+  // APIs become accessible.
+  aif:            async () => [],
+  ada:            async () => [],
+  harvardme:      async () => [],
+  palarchive:     async () => [],
+  translatio:     async () => [],
+  auc:            async () => [],
+  jstor:          async () => [],
+  getty:          async () => [],
 };
 
 export async function fetchSourceData(source: string, config: any): Promise<any[]> {
