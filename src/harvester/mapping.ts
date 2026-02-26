@@ -3,92 +3,244 @@ import { SourceConfig } from './types.js';
 // ─────────────────────────────────────────────────────────────────────────────
 // CATEGORY MAP
 //
-// Every source listed here has BOTH a real fetcher in fetcher.ts AND a real
-// adapter in adapters/. Sources marked ⚠️ need a free API key in .env —
-// the fetcher will skip them gracefully with a message if the key is missing.
+// params{} contains the exact API query parameters for each source × category.
+// The fetcher reads these directly — no hardcoded category logic in fetcher.ts.
 //
-// KEY REQUIREMENTS:
-//   RIJKS_API_KEY     — optional (demo key 0fiuZFh4 works as fallback)
-//   HARVARD_API_KEY   — required for harvard (free: harvardartmuseums.org/collections/api)
-//   EUROPEANA_API_KEY — required for europeana (free: api.europeana.eu)
-//   NYPL_API_TOKEN    — required for nypl (free: digitalcollections.nypl.org/help/api)
-//   SMITHSONIAN_API_KEY — optional (works without key, key gives higher limits)
+// CONFIRMED TAXONOMY (verified against each API's docs/thesaurus):
+//
+//  Source      │ Field              │ Poster value     │ Notes
+//  ────────────┼────────────────────┼──────────────────┼──────────────────────
+//  MET         │ q (search)         │ "poster"         │ /search?q=poster
+//  ARTIC       │ artwork_type_title │ "Poster"         │ Elasticsearch term query
+//  V&A         │ id_category        │ THES48943        │ V&A thesaurus: Posters
+//  LOC         │ collection         │ posters          │ /collections/posters/
+//  Rijks       │ type               │ affiche          │ Dutch for poster
+//  Harvard     │ keyword            │ poster           │ /object?keyword=poster
+//  Europeana   │ query              │ poster OR affiche│ free-text + TYPE:IMAGE
+//  Wellcome    │ workType           │ k                │ Pictures/Visual Works
+//  IA          │ subject            │ poster           │ Solr subject:(poster)
+//  Cooper      │ typeFilter         │ poster           │ code-filtered on type field
+//  DR          │ —                  │ all              │ entire site is graphic design
+//  LFA         │ —                  │ all              │ entire account is graphic design
+//
+// KEY REQUIREMENTS (set in .env.local):
+//   HARVARD_API_KEY   — required (free at harvardartmuseums.org/collections/api)
+//   EUROPEANA_API_KEY — required (free at api.europeana.eu)
+//   RIJKS_API_KEY     — optional (demo key 0fiuZFh4 works but rate-limited)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const CategoryMap: Record<string, SourceConfig[]> = {
 
-  GRAPHIC_DESIGN: [
-    // No key needed
-    { source: 'cooper',         filterId: '35347493',      filterType: 'department_id' },
-    { source: 'met',            filterId: '19',            filterType: 'departmentId' },
-    { source: 'artic',          filterId: 'PC-2',          filterType: 'classification_id' },
-    { source: 'va',             filterId: 'THES48956',     filterType: 'category' },       // V&A Graphic Design thesaurus ID
-    { source: 'loc',            filterId: 'pos',           filterType: 'format' },         // LOC Posters collection
-    { source: 'rijks',          filterId: 'prent',         filterType: 'type' },           // prints (demo key works)
-    { source: 'wikimedia',      filterId: 'Posters',       filterType: 'category' },
-    { source: 'wellcome',       filterId: 'k',             filterType: 'workType' },       // k = poster in Wellcome workType
-    { source: 'ia',             filterId: 'posters',       filterType: 'subject' },
-    { source: 'rave',           filterId: 'rave flyer',    filterType: 'subject' },     // routes to IA rave-flyers collection
-    { source: 'designreviewed', filterId: 'graphic-design',filterType: 'category' },
-    { source: 'letterform',     filterId: 'all',           filterType: 'all' },
-    // ⚠️ NEEDS KEY: EUROPEANA_API_KEY (free)
-    { source: 'europeana',      filterId: 'IMAGE',         filterType: 'type' },
-    // ⚠️ NEEDS KEY: HARVARD_API_KEY (free)
-    { source: 'harvard',        filterId: '21',            filterType: 'classification_id' },
+  // ── POSTERS ────────────────────────────────────────────────────────────────
+  // Theater, propaganda, travel, political, cultural event posters.
+  // Think: Public Theater, WPA, Bauhaus, Swiss modernism, NYC cultural life.
+
+  POSTERS: [
+    {
+      source: 'met',
+      limit:  300,
+      params: { q: 'poster', hasImages: true },
+    },
+    {
+      source: 'artic',
+      limit:  300,
+      params: { artwork_type_title: 'Poster' },
+      // ARTIC Elasticsearch: query[term][artwork_type_title.keyword]=Poster
+    },
+    {
+      source: 'va',
+      limit:  300,
+      params: { id_category: 'THES48943' },
+      // V&A thesaurus THES48943 = Posters (confirmed)
+      // NOT THES48956 (Fashion) — that was wrong
+    },
+    {
+      source: 'loc',
+      limit:  400,
+      params: { collection: 'posters' },
+      // /collections/posters/ — 6,000+ WPA, WWII, cultural posters
+    },
+    {
+      source: 'rijks',
+      limit:  200,
+      params: { type: 'affiche', q: '*' },
+      // affiche = Dutch for poster. q=* required (without it returns 0)
+    },
+    {
+      source: 'cooper',
+      limit:  300,
+      params: { typeFilter: 'poster' },
+      // GitHub dump probe — filter: classification/type contains "poster"
+    },
+    {
+      source: 'wikimedia',
+      limit:  200,
+      params: { category: 'Posters' },
+    },
+    {
+      source: 'ia',
+      limit:  200,
+      params: { subject: 'poster', mediatype: 'image' },
+    },
+    {
+      source: 'letterform',
+      limit:  600,
+      params: {},
+      // Entire LFA collection is graphic design — adapter filters type specimens
+    },
+    {
+      source: 'designreviewed',
+      limit:  500,
+      params: {},
+      // Entire site is graphic design: Swiss modernism, books, type, posters
+    },
+    {
+      source: 'europeana',
+      limit:  200,
+      params: { query: 'poster OR affiche OR plakat' },
+    },
+    {
+      source: 'harvard',
+      limit:  200,
+      params: { keyword: 'poster' },
+    },
   ],
+
+  // ── PHOTOGRAPHY ────────────────────────────────────────────────────────────
 
   PHOTOGRAPHY: [
-    // No key needed
-    { source: 'met',            filterId: '19',            filterType: 'departmentId',     subFilter: 'Photographs' },
-    { source: 'artic',          filterId: 'PC-12',         filterType: 'classification_id' },
-    { source: 'loc',            filterId: 'pho',           filterType: 'format' },
-    { source: 'rijks',          filterId: 'foto',          filterType: 'type' },
-    { source: 'ia',             filterId: 'photographs',   filterType: 'subject' },
-    { source: 'wikimedia',      filterId: 'Photographs',   filterType: 'category' },
-    { source: 'smithsonian',    filterId: 'Photographs',   filterType: 'type' },
-    { source: 'nga',            filterId: 'Photography',   filterType: 'type' },
-    // ⚠️ NEEDS KEY: HARVARD_API_KEY (free)
-    { source: 'harvard',        filterId: '26',            filterType: 'classification_id' },
+    {
+      source: 'met',
+      limit:  300,
+      params: { q: 'photograph', hasImages: true },
+    },
+    {
+      source: 'artic',
+      limit:  300,
+      params: { classification_id: 'PC-12' },
+      // PC-12 = Photography department
+    },
+    {
+      source: 'loc',
+      limit:  300,
+      params: { collection: 'fsa-owi-color-photographs' },
+      // FSA/OWI color photographs — 1930s–40s documentary photography
+    },
+    {
+      source: 'rijks',
+      limit:  200,
+      params: { type: 'foto', q: '*' },
+    },
+    {
+      source: 'smithsonian',
+      limit:  200,
+      params: { q: 'photograph', unit_code: 'NMAAHC|NMAH|SAAM' },
+    },
+    {
+      source: 'harvard',
+      limit:  200,
+      params: { keyword: 'photograph' },
+    },
+    {
+      source: 'ia',
+      limit:  200,
+      params: { subject: 'photographs', mediatype: 'image' },
+    },
   ],
 
-  PAINTING: [
-    // No key needed
-    { source: 'met',            filterId: '11',            filterType: 'departmentId' },   // European Paintings
-    { source: 'artic',          filterId: 'PC-1',          filterType: 'classification_id' },
-    { source: 'rijks',          filterId: 'schilderij',    filterType: 'type' },
-    { source: 'smithsonian',    filterId: 'Paintings',     filterType: 'type' },
-    { source: 'nga',            filterId: 'Painting',      filterType: 'type' },
-    // ⚠️ NEEDS KEY: HARVARD_API_KEY (free)
-    { source: 'harvard',        filterId: '26',            filterType: 'classification_id' },
+  // ── PAINTINGS ──────────────────────────────────────────────────────────────
+
+  PAINTINGS: [
+    {
+      source: 'met',
+      limit:  300,
+      params: { departmentId: '11' },
+      // Dept 11 = European Paintings
+    },
+    {
+      source: 'artic',
+      limit:  300,
+      params: { classification_id: 'PC-1' },
+      // PC-1 = Painting
+    },
+    {
+      source: 'rijks',
+      limit:  300,
+      params: { type: 'schilderij', q: '*' },
+      // schilderij = Dutch for painting
+    },
+    {
+      source: 'nga',
+      limit:  200,
+      params: { classification: 'Painting' },
+    },
+    {
+      source: 'harvard',
+      limit:  200,
+      params: { keyword: 'painting' },
+    },
   ],
+
+  // ── PRINTS ─────────────────────────────────────────────────────────────────
+
+  PRINTS: [
+    {
+      source: 'met',
+      limit:  300,
+      params: { departmentId: '9' },
+      // Dept 9 = Drawings and Prints
+    },
+    {
+      source: 'artic',
+      limit:  300,
+      params: { classification_id: 'PC-2' },
+    },
+    {
+      source: 'rijks',
+      limit:  300,
+      params: { type: 'prent', q: '*' },
+      // prent = Dutch for print/engraving
+    },
+    {
+      source: 'loc',
+      limit:  300,
+      params: { collection: 'fine-prints-american-before-1940' },
+    },
+    {
+      source: 'harvard',
+      limit:  200,
+      params: { classification_id: '21' },
+      // classification_id 21 = Prints (confirmed)
+    },
+  ],
+
+  // ── DECORATIVE ARTS ────────────────────────────────────────────────────────
 
   DECORATIVE_ARTS: [
-    // No key needed
-    { source: 'met',            filterId: '12',            filterType: 'departmentId' },   // European Sculpture & Dec Arts
-    { source: 'artic',          filterId: 'PC-15',         filterType: 'classification_id' }, // Textiles
-    { source: 'cooper',         filterId: '35347501',      filterType: 'department_id' },   // Cooper Textiles dept
-    { source: 'va',             filterId: 'THES48881',     filterType: 'category' },        // V&A Textiles/Fashion thesaurus ID
-    { source: 'rijks',          filterId: 'meubilair',     filterType: 'type' },            // Furniture
-    { source: 'smithsonian',    filterId: 'Ceramics',      filterType: 'type' },
-  ],
-
-  PRINTS_AND_DRAWINGS: [
-    // No key needed
-    { source: 'met',            filterId: '9',             filterType: 'departmentId' },    // Drawings & Prints dept
-    { source: 'artic',          filterId: 'PC-10',         filterType: 'classification_id' },
-    { source: 'loc',            filterId: 'app',           filterType: 'format' },          // LOC Prints collection
-    { source: 'cooper',         filterId: '35347497',      filterType: 'department_id' },
-    { source: 'rijks',          filterId: 'tekening',      filterType: 'type' },            // Drawings
+    {
+      source: 'met',
+      limit:  300,
+      params: { departmentId: '12' },
+      // Dept 12 = European Sculpture and Decorative Arts
+    },
+    {
+      source: 'va',
+      limit:  300,
+      params: { id_category: 'THES48881' },
+      // THES48881 = Textiles and Fashion (V&A confirmed)
+    },
+    {
+      source: 'rijks',
+      limit:  200,
+      params: { type: 'meubilair', q: '*' },
+      // meubilair = Dutch for furniture
+    },
+    {
+      source: 'cooper',
+      limit:  300,
+      params: { department_id: '35347501' },
+      // Cooper Hewitt Textiles department
+    },
   ],
 
 };
-
-// ─── NOT YET IN MAPPING (no confirmed public API) ────────────────────────────
-// These adapters exist as schema definitions but have no working fetcher.
-// Do not add them to CategoryMap until a real fetch strategy is confirmed.
-//
-//   ada        — Arabic Design Archive: no public API documented
-//   aif        — Arab Image Foundation: no public API documented
-//   palarchive — Palestinian Museum: CollectiveAccess instance, no open API confirmed
-//   translatio — research project, no API
-//   jstor      — requires institutional access

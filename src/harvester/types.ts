@@ -1,9 +1,8 @@
 export interface SourceConfig {
-    source: string;
-    filterId: string;
-    filterType: string; 
-    subFilter?: string; // The '?' makes it optional, fixing the error
-  }
+  source:     string;
+  params:     Record<string, any>;  // all fetch params live here — q, type, id_category, etc.
+  limit?:     number;
+}
 export interface ArchiveItem {
     id: string;            // e.g., "met-123" or "rave-techno-99"
     title: string;

@@ -7,90 +7,65 @@ import { ArchiveItem } from './types.js';
 
 export async function runHarvest(category: string) {
   const configs = CategoryMap[category as keyof typeof CategoryMap];
-
   if (!configs) {
-    console.error(`❌ Category "${category}" not found in mapping.ts`);
-    console.log('Available categories:', Object.keys(CategoryMap).join(', '));
+    console.error(`❌ Unknown category "${category}". Available: ${Object.keys(CategoryMap).join(', ')}`);
     return;
   }
 
-  const outputPath = path.join(
-    process.cwd(), 'public', 'manifests', `${category.toLowerCase()}.json`
-  );
-  const dir = path.dirname(outputPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const outputPath = path.join(process.cwd(), 'public', 'manifests', `${category.toLowerCase()}.json`);
+  if (!fs.existsSync(path.dirname(outputPath))) fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-  // Resume: reload any items already saved from a previous partial run
-  let globalManifest: ArchiveItem[] = [];
+  let manifest: ArchiveItem[] = [];
   const completedSources = new Set<string>();
 
   if (fs.existsSync(outputPath)) {
     try {
       const existing = JSON.parse(fs.readFileSync(outputPath, 'utf8')) as ArchiveItem[];
-      globalManifest = existing;
-      // Track which source prefixes are already represented
-      for (const item of existing) {
-        const prefix = item.id.split('-')[0];
-        completedSources.add(prefix);
-      }
-      console.log(`\n▶ Resuming — ${existing.length} items already in manifest`);
-    } catch {
-      console.log('Could not parse existing manifest, starting fresh.');
-    }
+      manifest = existing;
+      for (const item of existing) completedSources.add(item.id.split('-')[0]);
+      console.log(`\n▶ Resuming — ${existing.length} items, completed sources: ${[...completedSources].join(', ')}`);
+    } catch { console.log('Starting fresh.'); }
   }
 
-  console.log(`\n═══════════════════════════════════════════════════`);
+  console.log(`\n${'═'.repeat(55)}`);
   console.log(`  HARVEST: ${category}  (${configs.length} sources)`);
-  console.log(`═══════════════════════════════════════════════════\n`);
+  console.log(`${'═'.repeat(55)}\n`);
 
   for (const config of configs) {
     const adapter = Adapters[config.source];
-    if (!adapter) {
-      console.warn(`⚠️  No adapter registered for "${config.source}" — skipping`);
+    if (!adapter) { console.warn(`⚠️  No adapter for "${config.source}"`); continue; }
+
+    // Skip sources already in the manifest (resume logic)
+    const prefix = { met:'met',artic:'artic',va:'va',loc:'loc',rijks:'rijks',
+      harvard:'harvard',europeana:'europeana',wellcome:'wellcome',ia:'ia',
+      rave:'rave',cooper:'ch',wikimedia:'wiki',designreviewed:'dr',
+      letterform:'lfa',smithsonian:'si',nga:'nga' }[config.source];
+    if (prefix && completedSources.has(prefix)) {
+      console.log(`\n⏭  ${config.source.toUpperCase()} — already in manifest, skipping`);
       continue;
     }
 
-    console.log(`\n📡 ${config.source.toUpperCase()} (filterId: ${config.filterId})`);
+    console.log(`\n📡 ${config.source.toUpperCase()}`);
 
     try {
-      const rawDataArray = await fetchSourceData(config.source, config);
+      const raw = await fetchSourceData(config.source, config);
+      if (!raw.length) { console.log(`   → 0 items returned`); continue; }
 
-      if (!rawDataArray.length) {
-        console.log(`   → 0 raw items returned`);
-        continue;
-      }
+      const clean: ArchiveItem[] = raw
+        .map((item: any) => { try { return adapter(item); } catch { return null; } })
+        .filter((item): item is ArchiveItem => !!item?.imageUrl);
 
-      // Run adapter on each item.
-      // Filter out nulls — letterform adapter returns null for rejected posts.
-      // Also filter out items with no imageUrl (they'll break the gallery).
-      const cleanData: ArchiveItem[] = rawDataArray
-        .map((item: any) => {
-          try { return adapter(item); }
-          catch (e: any) { return null; }
-        })
-        .filter((item): item is ArchiveItem => item !== null && !!item.imageUrl)
-        .map(({ _raw, ...rest }) => rest as ArchiveItem); // strip _raw
-      
-      const filtered = rawDataArray.length - cleanData.length;
-      globalManifest = [...globalManifest, ...cleanData];
-
-      console.log(`   ✅ ${cleanData.length} clean items (${filtered} filtered — no image or rejected)`);
-
-      // Checkpoint after every source — crash safety.
-      // If a 3-hour harvest dies on source 8 of 12, you keep items 1–7.
-      fs.writeFileSync(outputPath, JSON.stringify(globalManifest, null, 2));
-      console.log(`   💾 Checkpoint saved (${globalManifest.length} total so far)`);
-
+      manifest = [...manifest, ...clean];
+      console.log(`   ✅ ${clean.length} items (${raw.length - clean.length} filtered)`);
+      fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
+      console.log(`   💾 Checkpoint (${manifest.length} total)`);
     } catch (err: any) {
-      console.error(`   ❌ Error harvesting ${config.source}:`, err.message);
+      console.error(`   ❌ ${config.source}: ${err.message}`);
     }
   }
 
-  // Final save
-  fs.writeFileSync(outputPath, JSON.stringify(globalManifest, null, 2));
-
-  console.log(`\n═══════════════════════════════════════════════════`);
-  console.log(`  🏁 DONE: ${globalManifest.length} items`);
-  console.log(`  📄 ${outputPath}`);
-  console.log(`═══════════════════════════════════════════════════\n`);
+  fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2));
+  console.log(`\n${'═'.repeat(55)}`);
+  console.log(`  ✅ DONE: ${manifest.length} items → ${outputPath}`);
+  console.log(`${'═'.repeat(55)}\n`);
 }
