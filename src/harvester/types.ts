@@ -1,76 +1,50 @@
-// ─── Main Categories ──────────────────────────────────────────────────────────
-export type MainCategory =
-  | 'GRAPHIC_DESIGN'
-  | 'PHOTOGRAPHY'
-  | 'PAINTING'
-  | 'PRINTS_AND_DRAWINGS'
-  | 'DECORATIVE_ARTS';
+// src/harvester/types.ts
 
-// ─── Sub-Categories ───────────────────────────────────────────────────────────
-// Every subCategoryHint string in mapping.ts must be one of these.
-export type SubCategory =
-  // GRAPHIC_DESIGN
-  | 'Poster'
-  | 'Advertising'
-  | 'Typography'
-  | 'Editorial'
-  | 'Packaging'
-  | 'Identity & Branding'
-  | 'Graphic Design'       // catch-all for undifferentiated graphic design
-  // PHOTOGRAPHY
-  | 'Fine Art Photography'
-  | 'Documentary'
-  | 'Portraiture'
-  | 'Photojournalism'
-  | 'Experimental Photography'
-  | 'Photography'          // catch-all
-  // PAINTING
-  | 'Oil'
-  | 'Watercolor'
-  | 'Tempera'
-  | 'Gouache'
-  | 'Acrylic'
-  | 'Fresco'
-  | 'Painting'             // catch-all
-  // PRINTS_AND_DRAWINGS
-  | 'Etching'
-  | 'Engraving'
-  | 'Woodcut'
-  | 'Lithograph'
-  | 'Screenprint'
-  | 'Monotype'
-  | 'Print'                // catch-all for undifferentiated print
-  | 'Drawing'
-  | 'Collage'
-  // DECORATIVE_ARTS
-  | 'Ceramics & Glass'
-  | 'Furniture'
-  | 'Textiles & Fashion'
-  | 'Metalwork & Jewelry'
-  | 'Decorative Arts';     // catch-all
+export type SourceName = 'met' | 'artic' | 'va' | 'smithsonian' | 'rijks';
 
-// ─── SourceConfig ─────────────────────────────────────────────────────────────
-export interface SourceConfig {
-  source:           string;
-  params:           Record<string, any>;
-  limit?:           number;
-  subCategoryHint?: SubCategory;
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. RAW ITEM (The "Extract" Contract)
+// ─────────────────────────────────────────────────────────────────────────────
+// This is exactly what the API returned. No filtering. No transformation.
+// We store this as JSON in /data/raw/{source}/{id}.json
+export interface RawItem {
+  id: string | number;
+  source: SourceName;
+  fetchedAt: string;
+  data: unknown; // The raw API JSON object
 }
 
-// ─── ArchiveItem ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. ARCHIVE ITEM (The "Load" Contract)
+// ─────────────────────────────────────────────────────────────────────────────
+// This is the cleaned, standardized object that goes into your DB / Processed folder.
 export interface ArchiveItem {
-  id:             string;
-  title:          string;
-  author:         string;
-  year:           string;
-  imageUrl:       string;
-  source:         string;
-  link:           string;
-  department:     string;
-  classification: string;
-  medium:         string;
-  culture:        string;
-  mainCategory?:  MainCategory;
-  subCategory?:   SubCategory;
-  _raw?:          any;
+  id: string;             // Standardized ID (e.g., "met-12345")
+  title: string;
+  author: string;
+  year: string;
+  imageUrl: string | null;
+  source: SourceName;
+  link: string;
+  
+  // Taxonomy
+  mainCategory: string;   // e.g., "Graphic Design"
+  subCategory: string;    // e.g., "Posters & Advertising"
+  
+  // Audit Trail
+  confidenceScore: number;
+  classificationReasons: string[];
+  
+  // Optional: Keep a reference to the raw file for debugging
+  rawFilePath?: string; 
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. CLASSIFICATION RESULT (The "Transform" Contract)
+// ─────────────────────────────────────────────────────────────────────────────
+export interface ClassificationResult {
+  accepted: boolean;
+  score: number;
+  reasons: string[];
+  item?: ArchiveItem;
 }

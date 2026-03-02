@@ -1,0 +1,31 @@
+[
+  {
+    "itemId": "met-824771",
+    "timestamp": "2026-03-02T02:23:14.532Z",
+    "input": {
+      "classification": "Drawings",
+      "department": "Drawings and Prints",
+      "objectType": "",
+      "medium": "Black chalk, stumped, and white chalk; framing lines in black chalk",
+      "title": "Marie Antoinette in a Park"
+    },
+    "output": {
+      "mainCategory": "Prints & Drawings",
+      "subCategory": "Lithograph",
+      "confidence": 18
+    },
+    "scoreBreakdown": {
+      "nativeTaxonomy": 10,
+      "department": 6,
+      "objectType": 0,
+      "medium": 0,
+      "keywords": 0,
+      "intentOverride": 0
+    },
+    "triggeredRules": [
+      "classification:prints-drawings",
+      "department:prints-drawings"
+    ],
+    "version": "1.0.0"
+  }
+]
