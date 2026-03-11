@@ -4,10 +4,10 @@
 
 /* ── Design Tokens ─────────────────────────────────────────────── */
 :root {
-  /* Palette — warm parchment + near-black */
-  --bg:           #f7f6f1;
-  --bg-card:      #efede7;
-  --bg-hover:     #e9e7e0;
+  /* Museum wall — warm, slightly chalky off-white */
+  --bg:           #f0ede8;
+  --bg-card:      #e8e5df;
+  --bg-hover:     #e2ded7;
   --fg:           #0d0c0a;
   --fg-muted:     rgba(13, 12, 10, 0.50);
   --fg-faint:     rgba(13, 12, 10, 0.25);
@@ -44,7 +44,6 @@ body {
 
 ::selection { background: var(--fg); color: var(--bg); }
 
-/* Fine scrollbar */
 ::-webkit-scrollbar { width: 2px; height: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 1px; }
@@ -68,12 +67,10 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Animation utilities ───────────────────────────────────────── */
 .anim-fade-up  { animation: fade-up  0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-fade-in  { animation: fade-in  0.55s ease both; }
 .anim-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-/* Delay helpers */
 .d-0 { animation-delay: 0s; }
 .d-1 { animation-delay: 0.1s; }
 .d-2 { animation-delay: 0.2s; }
@@ -83,7 +80,6 @@ body {
 .d-6 { animation-delay: 0.75s; }
 .d-7 { animation-delay: 0.9s; }
 
-/* Vercel badge removal */
 #vercel-live-feedback, [data-nextjs-toast], .vercel-badge, nextjs-portal {
   display: none !important;
 }

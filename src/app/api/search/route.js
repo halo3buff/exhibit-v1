@@ -47,7 +47,7 @@ function fetchByIds(db, ids) {
   if (!stmtCache.has(key)) {
     stmtCache.set(key, db.prepare(`
       SELECT id, title, author, year, imageUrl, source, link,
-             mainCategory AS type, subCategory, classification, medium, department
+             mainCategory AS type, subCategory, classification, medium, department, origin
       FROM artworks
       WHERE id IN (${ids.map(() => '?').join(',')})
         AND imageUrl IS NOT NULL AND imageUrl != ''
