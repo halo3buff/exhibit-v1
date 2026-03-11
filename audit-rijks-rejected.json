@@ -1,0 +1,690 @@
+﻿[
+    {
+        "id":  "2001",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.842Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\2001.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010073",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.895Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010073.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100880",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.907Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100880.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100881",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.908Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100881.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100883",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.908Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100883.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100885",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.909Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100885.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100888",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.911Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100888.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100891",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.913Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100891.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100892",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.913Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100892.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100893",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.913Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100893.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100897",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.916Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100897.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100898",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.916Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100898.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100901",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.918Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100901.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100904",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.920Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100904.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100906",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.921Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100906.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100909",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.922Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100909.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100910",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.924Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100910.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100912",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.925Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100912.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100914",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.925Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100914.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100977",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.968Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100977.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200100980",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.971Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200100980.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010099",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.977Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010099.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "2001010",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.981Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\2001010.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010100",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.981Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010100.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010101",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.983Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010101.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010102",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.985Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010102.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010103",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.989Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010103.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010104",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.992Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010104.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101046",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.997Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101046.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101047",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.997Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101047.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010105",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:25.998Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010105.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101052",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.000Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101052.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101054",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.001Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101054.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101055",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.001Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101055.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101056",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.001Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101056.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010106",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.003Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010106.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101060",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.004Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101060.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101061",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.004Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101061.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101062",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.004Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101062.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101064",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.004Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101064.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101065",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.004Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101065.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101066",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.005Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101066.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101067",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.005Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101067.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101068",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.005Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101068.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010107",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.006Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010107.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101071",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.007Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101071.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101075",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.009Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101075.json",
+        "accepted":  false,
+        "score":  7,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "200101076",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.009Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\200101076.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010108",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.012Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010108.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    },
+    {
+        "id":  "20010109",
+        "source":  "rijks",
+        "timestamp":  "2026-03-05T01:48:26.019Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\rijks\\20010109.json",
+        "accepted":  false,
+        "score":  4,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Has date (+2)",
+                        "Below threshold (18)"
+                    ]
+    }
+]

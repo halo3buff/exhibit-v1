@@ -1,0 +1,106 @@
+{
+  "id": 765305,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:21:08.837Z",
+  "data": {
+    "objectID": 765305,
+    "isHighlight": false,
+    "accessionNumber": "1981.1136.803",
+    "accessionYear": "1981",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP885960.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP885960.jpg",
+    "additionalImages": [
+      "https://images.metmuseum.org/CRDImages/dp/original/DP885961.jpg"
+    ],
+    "constituents": [
+      {
+        "constituentID": 74848,
+        "role": "Artist",
+        "name": "Kate Greenaway",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500030743",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q204936",
+        "gender": "Female"
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Valentine",
+    "title": "Valentine",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Kate Greenaway",
+    "artistDisplayBio": "British, London 1846–1901 London",
+    "artistSuffix": "",
+    "artistAlphaSort": "Greenaway, Kate",
+    "artistNationality": "British",
+    "artistBeginDate": "1846",
+    "artistEndDate": "1901",
+    "artistGender": "Female",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q204936",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500030743",
+    "objectDate": "ca. 1880",
+    "objectBeginDate": 1880,
+    "objectEndDate": 1880,
+    "medium": "White card stock with gilding; chromolithography, gold lithography",
+    "dimensions": "Width: 2 7/16 in. (6.2 cm)\r\nLength: 3 3/8 in. (8.6 cm)",
+    "measurements": [
+      {
+        "elementName": "Length",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Length": 8.6
+        }
+      },
+      {
+        "elementName": "Width",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Width": 6.2
+        }
+      }
+    ],
+    "creditLine": "Gift of Mrs. Richard Riddell, 1981",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Ephemera",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/765305",
+    "tags": [
+      {
+        "term": "Couples",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300379217",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q219160"
+      },
+      {
+        "term": "Men",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025928",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q8441"
+      },
+      {
+        "term": "Women",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025943",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q467"
+      }
+    ],
+    "objectWikidata_URL": "https://www.wikidata.org/wiki/Q96195287",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

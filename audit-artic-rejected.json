@@ -1,0 +1,650 @@
+﻿[
+    {
+        "id":  "10006",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.892Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\10006.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Aureus (Coin) Portraying Emperor Antoninus Pius"
+    },
+    {
+        "id":  "10016",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.893Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\10016.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Denarius (Coin) Portraying Emperor Trajan"
+    },
+    {
+        "id":  "100628",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.902Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100628.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Side Panel of a Sarcophagus"
+    },
+    {
+        "id":  "100690",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100690.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Church at Montigny-Sur-Loing, France, Travel Sketch"
+    },
+    {
+        "id":  "100692",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100692.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Church Tower, Cologne, Germany, Travel Sketch"
+    },
+    {
+        "id":  "100693",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100693.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Tower of Heidelberg Castle, Germany, Travel Sketch"
+    },
+    {
+        "id":  "100694",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100694.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Arcade from Heidelberg Castle, Germany, Travel Sketch"
+    },
+    {
+        "id":  "100695",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100695.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Clocktower on a Street, Lucerne, Switzerland, Travel Sketch"
+    },
+    {
+        "id":  "100696",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100696.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Campanile, Piazza de San Marco, Venice, Italy, Travel Sketch"
+    },
+    {
+        "id":  "100698",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.903Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100698.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Sta. Maria della Salute, Venice, Italy, Travel Sketch"
+    },
+    {
+        "id":  "100699",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.904Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100699.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "San Miniato, Florence, Italy, Travel Sketch"
+    },
+    {
+        "id":  "100700",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.904Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100700.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Gothic Church, Rouen, France, Travel Sketch"
+    },
+    {
+        "id":  "100936",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.910Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100936.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Small Residence, Perspective Study"
+    },
+    {
+        "id":  "100938",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.910Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\100938.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Fragment of a Kneeling Figure"
+    },
+    {
+        "id":  "101029",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.911Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\101029.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Vase in the Shape of an Ancient Ritual Bronze Hu Vessel"
+    },
+    {
+        "id":  "101031",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.911Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\101031.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Crowned and Bejewelled Buddha Seated on an Elephant Throne"
+    },
+    {
+        "id":  "101509",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.911Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\101509.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Man Wearing a Straw Hat"
+    },
+    {
+        "id":  "102074",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.912Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102074.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Head of Mars"
+    },
+    {
+        "id":  "102080",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.912Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102080.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Loutrophoros (Container for Bath Water)"
+    },
+    {
+        "id":  "102101",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.915Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102101.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Virgin and Child with Saint Anne"
+    },
+    {
+        "id":  "102103",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.915Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102103.json",
+        "accepted":  false,
+        "score":  0,
+        "reasons":  [
+                        "Below threshold (18)"
+                    ],
+        "title":  "George Whitfield, A.B."
+    },
+    {
+        "id":  "102111",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.915Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102111.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "The Holy Family"
+    },
+    {
+        "id":  "102131",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.918Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102131.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Self-Portrait with a Visor"
+    },
+    {
+        "id":  "102138",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.919Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102138.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Vase and Cover (one of a pair)"
+    },
+    {
+        "id":  "102201",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.921Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102201.json",
+        "accepted":  false,
+        "score":  0,
+        "reasons":  [
+                        "Below threshold (18)"
+                    ],
+        "title":  "Evening by a Mountain Lake"
+    },
+    {
+        "id":  "102296",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.925Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102296.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Stock Buckle"
+    },
+    {
+        "id":  "102592",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.927Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102592.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Truth"
+    },
+    {
+        "id":  "102611",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.927Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102611.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Veranda Post (Ã’pÃ³ Ã’gÃ²gÃ¡)"
+    },
+    {
+        "id":  "102622",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.929Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102622.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Bacchante with Infant Faun"
+    },
+    {
+        "id":  "102623",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.929Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102623.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Picture Frame"
+    },
+    {
+        "id":  "102693",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.930Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102693.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Landscape in Montfoucault"
+    },
+    {
+        "id":  "102695",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.930Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102695.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Untitled"
+    },
+    {
+        "id":  "102771",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.933Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102771.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Eagle"
+    },
+    {
+        "id":  "102772",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.934Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102772.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Barcelona Chair (model MR 90)"
+    },
+    {
+        "id":  "102933",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.937Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102933.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Soissons Cathedral, Soissons, France, Travel Sketch"
+    },
+    {
+        "id":  "102934",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.937Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102934.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Soissons Cathedral, Soissons, France, Travel Sketch"
+    },
+    {
+        "id":  "102935",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.937Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102935.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Villa Rotonda, Vincenza, Italy, Travel Sketch"
+    },
+    {
+        "id":  "102936",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.938Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102936.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Baptistry, Duomo and Tower, Pisa, Italy, Travel Sketch"
+    },
+    {
+        "id":  "102937",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.938Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102937.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Town and Cathedral, Siena, Italy, Travel Sketch"
+    },
+    {
+        "id":  "102939",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.938Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102939.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "St. Peter\u0027s Basilica, Rome, Italy, Travel Sketch"
+    },
+    {
+        "id":  "102940",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.938Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102940.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Temple Ruins, Agrigento, Sicily, Travel Sketch"
+    },
+    {
+        "id":  "102982",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.938Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102982.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Ewer and Basin (Pot a l\u0027Eau et jatte Feuille d\u0027Eau)"
+    },
+    {
+        "id":  "102986",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.939Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102986.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Busts of a Man and Woman in Costume"
+    },
+    {
+        "id":  "102989",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.939Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\102989.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "African Hunter"
+    },
+    {
+        "id":  "103114",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.949Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103114.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Abraham Lincoln"
+    },
+    {
+        "id":  "103295",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.953Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103295.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Vase with Figures among Waves"
+    },
+    {
+        "id":  "103304",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.953Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103304.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Hand Mirror"
+    },
+    {
+        "id":  "103397",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.955Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103397.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Soapstone Figure of Guanyin"
+    },
+    {
+        "id":  "103398",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.956Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103398.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "White Jade Pouring Cup (Yi)"
+    },
+    {
+        "id":  "103900",
+        "source":  "artic",
+        "timestamp":  "2026-03-05T01:48:10.962Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\artic\\103900.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Water Mills in Meaux"
+    }
+]

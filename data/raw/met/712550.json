@@ -1,0 +1,106 @@
+{
+  "id": 712550,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:00:47.414Z",
+  "data": {
+    "objectID": 712550,
+    "isHighlight": false,
+    "accessionNumber": "63.350.206.115.10",
+    "accessionYear": "1963",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DPB873474.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DPB873474.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 105670,
+        "role": "Publisher",
+        "name": "Issued by W. Duke, Sons &amp; Co.",
+        "constituentULAN_URL": "(not assigned)",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q66734555",
+        "gender": ""
+      },
+      {
+        "constituentID": 163960,
+        "role": "Lithographer",
+        "name": "Lithography by Donaldson Brothers",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500524355",
+        "constituentWikidata_URL": "",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "Kisses, from the Honest Library series (N115) issued by Duke Sons & Co. to promote Honest Long Cut Tobacco",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Publisher",
+    "artistPrefix": "Issued by",
+    "artistDisplayName": "W. Duke, Sons & Co.",
+    "artistDisplayBio": "New York and Durham, N.C.",
+    "artistSuffix": "",
+    "artistAlphaSort": "Duke, W. Sons & Co.",
+    "artistNationality": "American",
+    "artistBeginDate": "1870",
+    "artistEndDate": "1920",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q66734555",
+    "artistULAN_URL": "(not assigned)",
+    "objectDate": "1896",
+    "objectBeginDate": 1896,
+    "objectEndDate": 1896,
+    "medium": "Commercial color lithograph",
+    "dimensions": "Sheet: 4 1/8 × 2 1/2 in. (10.4 × 6.3 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 10.4,
+          "Width": 6.3
+        }
+      }
+    ],
+    "creditLine": "The Jefferson R. Burdick Collection, Gift of Jefferson R. Burdick",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-11-21T10:05:27.96Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/712550",
+    "tags": [
+      {
+        "term": "Couples",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300379217",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q219160"
+      },
+      {
+        "term": "Men",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025928",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q8441"
+      },
+      {
+        "term": "Women",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025943",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q467"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

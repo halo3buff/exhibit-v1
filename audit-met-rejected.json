@@ -1,0 +1,681 @@
+﻿[
+    {
+        "id":  10004,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.091Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10004.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Work Table"
+    },
+    {
+        "id":  1005,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.093Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1005.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Bread Plate"
+    },
+    {
+        "id":  10103,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.093Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10103.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Abraham Lincoln"
+    },
+    {
+        "id":  10110,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.093Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10110.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Preparedness"
+    },
+    {
+        "id":  10143,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.094Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10143.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Ducks in Calm Water"
+    },
+    {
+        "id":  10200,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.097Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10200.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "John Ruskin"
+    },
+    {
+        "id":  10237,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.097Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10237.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Major General Philip Kearny"
+    },
+    {
+        "id":  10238,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.097Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10238.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Thomas Cole"
+    },
+    {
+        "id":  10345,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.102Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10345.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "John La Farge"
+    },
+    {
+        "id":  10357,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.102Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10357.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Charles Loring Elliott"
+    },
+    {
+        "id":  10365,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.103Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10365.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "View of the City of New York and Governors Island Taken from Brooklyn Heights on the Morning after the Conflagration"
+    },
+    {
+        "id":  10426,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.106Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10426.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mrs. George Catlin (Clara Bartlet Gregory)"
+    },
+    {
+        "id":  10427,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.106Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10427.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Portrait of a Gentleman"
+    },
+    {
+        "id":  1052,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.112Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1052.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Butter Mold"
+    },
+    {
+        "id":  10591,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.117Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10591.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Benson John Lossing"
+    },
+    {
+        "id":  10598,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.117Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10598.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Portrait of a Gentleman"
+    },
+    {
+        "id":  10675,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.119Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10675.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mountains"
+    },
+    {
+        "id":  1075,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.120Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1075.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Medal"
+    },
+    {
+        "id":  10753,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.120Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10753.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "John Payne Todd"
+    },
+    {
+        "id":  10755,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.120Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10755.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mr. Rutherford"
+    },
+    {
+        "id":  10758,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.120Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10758.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Portrait of a Gentleman"
+    },
+    {
+        "id":  10776,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.121Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10776.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Anne Charlotte Lynch (Later Mrs. Vincenzo Botta)"
+    },
+    {
+        "id":  10782,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.122Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10782.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "William Gale"
+    },
+    {
+        "id":  1079,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.122Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1079.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Commode"
+    },
+    {
+        "id":  108,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.123Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\108.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Andiron"
+    },
+    {
+        "id":  10802,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.124Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10802.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "In the Studio"
+    },
+    {
+        "id":  10831,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.126Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10831.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Panel from the Ballroom at Gadsby\u0027s Tavern, Alexandria, Virginia"
+    },
+    {
+        "id":  10839,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.126Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10839.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mother Love"
+    },
+    {
+        "id":  10929,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.128Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10929.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mrs. Manigault Heyward (Susan Hayne Simmons)"
+    },
+    {
+        "id":  10932,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.128Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\10932.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Cottage Garden, Warwick, England"
+    },
+    {
+        "id":  1099,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.129Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1099.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Bottle"
+    },
+    {
+        "id":  11087,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.133Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11087.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "The Straw Field"
+    },
+    {
+        "id":  11089,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.133Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11089.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "View of a Ruined English Abbey"
+    },
+    {
+        "id":  11106,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.133Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11106.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Henry L. Taylor"
+    },
+    {
+        "id":  11129,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.135Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11129.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Natural Bridge, Bermuda"
+    },
+    {
+        "id":  11131,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.135Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11131.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Palm Tree, Nassau"
+    },
+    {
+        "id":  11138,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.135Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11138.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Shore and Surf, Nassau"
+    },
+    {
+        "id":  11206,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.138Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11206.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Benjamin Moore McVickar"
+    },
+    {
+        "id":  11237,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.140Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11237.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Rebecca at the Well"
+    },
+    {
+        "id":  11242,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.140Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11242.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Elizabeth Freeman Duran"
+    },
+    {
+        "id":  11248,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.141Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11248.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Portrait of a Gentleman"
+    },
+    {
+        "id":  1134,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.144Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\1134.json",
+        "accepted":  false,
+        "score":  3,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Candelabrum"
+    },
+    {
+        "id":  11385,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.145Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11385.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "The Relation of the Individual to the State: Socrates and His Friends Discuss \"The Republic,\" as in Plato\u0027s Account; Color Study for Mural, Supreme Court Room, Saint Paul, Minnesota State Capitol, Saint Paul"
+    },
+    {
+        "id":  11503,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.146Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11503.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Mrs. John Nightingale (Martha Washington Greene)"
+    },
+    {
+        "id":  11508,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.146Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11508.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Susan Poinsett"
+    },
+    {
+        "id":  11580,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.149Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11580.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "The Grandmother Tree, near Middletown, Long Island"
+    },
+    {
+        "id":  11595,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.149Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11595.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Street Cafeâ€”San Felio de Quixols"
+    },
+    {
+        "id":  11660,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.153Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11660.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Caestus"
+    },
+    {
+        "id":  11663,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.154Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11663.json",
+        "accepted":  false,
+        "score":  2,
+        "reasons":  [
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "The Virgin"
+    },
+    {
+        "id":  11679,
+        "source":  "met",
+        "timestamp":  "2026-03-05T01:48:07.154Z",
+        "inputFile":  "C:\\Users\\ameen\\Desktop\\exhibit\\data\\raw\\met\\11679.json",
+        "accepted":  false,
+        "score":  5,
+        "reasons":  [
+                        "Has image (+3)",
+                        "Has artist (+2)",
+                        "Below threshold (18)"
+                    ],
+        "title":  "Cameo of a Gentleman"
+    }
+]

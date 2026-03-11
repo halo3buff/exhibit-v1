@@ -1,0 +1,98 @@
+{
+  "id": 716436,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:08:49.907Z",
+  "data": {
+    "objectID": 716436,
+    "isHighlight": false,
+    "accessionNumber": "63.350.216.203.280",
+    "accessionYear": "1963",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DPB871555.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DPB871555.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 191388,
+        "role": "Publisher",
+        "name": "Issued by William S. Kimball &amp; Company",
+        "constituentULAN_URL": "",
+        "constituentWikidata_URL": "",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Photograph",
+    "title": "Annie Robe, from the Actresses series (N203) issued by Wm. S. Kimball & Co.",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Publisher",
+    "artistPrefix": "Issued by",
+    "artistDisplayName": "William S. Kimball & Company",
+    "artistDisplayBio": "",
+    "artistSuffix": "",
+    "artistAlphaSort": "William S. Kimball & Company",
+    "artistNationality": "",
+    "artistBeginDate": "",
+    "artistEndDate": "",
+    "artistGender": "",
+    "artistWikidata_URL": "",
+    "artistULAN_URL": "",
+    "objectDate": "1889",
+    "objectBeginDate": 1889,
+    "objectEndDate": 1889,
+    "medium": "Commercial color lithograph",
+    "dimensions": "Sheet: 2 5/8 × 1 3/8 in. (6.6 × 3.5 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 6.6,
+          "Width": 3.5
+        }
+      }
+    ],
+    "creditLine": "The Jefferson R. Burdick Collection, Gift of Jefferson R. Burdick",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Photographs",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-11-21T10:05:27.96Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/716436",
+    "tags": [
+      {
+        "term": "Portraits",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300015637",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q134307"
+      },
+      {
+        "term": "Women",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025943",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q467"
+      },
+      {
+        "term": "Actresses",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025658",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q21169216"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

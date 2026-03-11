@@ -1,0 +1,104 @@
+{
+  "id": 388426,
+  "source": "met",
+  "fetchedAt": "2026-03-02T21:55:51.109Z",
+  "data": {
+    "objectID": 388426,
+    "isHighlight": false,
+    "accessionNumber": "2009.390",
+    "accessionYear": "2009",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP222149.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP222149.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 162667,
+        "role": "Artist",
+        "name": "Giovanni Volpato",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500124921",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q3107516",
+        "gender": ""
+      },
+      {
+        "constituentID": 69031,
+        "role": "Artist",
+        "name": "Abraham Louis Rodolphe Ducros",
+        "constituentULAN_URL": "(not assigned)",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q2821803",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "Arch of Titus",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Giovanni Volpato",
+    "artistDisplayBio": "Italian, Bassano 1732–1803 Rome",
+    "artistSuffix": "",
+    "artistAlphaSort": "Volpato, Giovanni",
+    "artistNationality": "Italian",
+    "artistBeginDate": "1732",
+    "artistEndDate": "1803",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q3107516",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500124921",
+    "objectDate": "ca. 1780",
+    "objectBeginDate": 1775,
+    "objectEndDate": 1785,
+    "medium": "Etching, with watercolor and gouache",
+    "dimensions": "Mat: 31 7/8 × 23 1/16 in. (80.9 × 58.5 cm)\r\nImage: 28 7/8 × 19 15/16 in. (73.4 × 50.7 cm)",
+    "measurements": [
+      {
+        "elementName": "Mat",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 80.9,
+          "Width": 58.5
+        }
+      },
+      {
+        "elementName": "Image",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 73.4,
+          "Width": 50.7
+        }
+      }
+    ],
+    "creditLine": "Gift of Mrs. Charles Wrightsman, 2009",
+    "geographyType": "Country of Origin",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "Switzerland",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-11-21T10:05:27.96Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/388426",
+    "tags": [
+      {
+        "term": "Arches",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300001062",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q12277"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

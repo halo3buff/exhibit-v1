@@ -1,0 +1,98 @@
+{
+  "id": 820926,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:05:50.785Z",
+  "data": {
+    "objectID": 820926,
+    "isHighlight": false,
+    "accessionNumber": "27.10.1",
+    "accessionYear": "1927",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP884910.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP884910.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 161806,
+        "role": "Artist",
+        "name": "Charles-François Daubigny",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500115164",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q252357",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "La Tonnelle",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Charles-François Daubigny",
+    "artistDisplayBio": "French, Paris 1817–1878 Paris",
+    "artistSuffix": "",
+    "artistAlphaSort": "Daubigny, Charles-François",
+    "artistNationality": "French",
+    "artistBeginDate": "1817",
+    "artistEndDate": "1878",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q252357",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500115164",
+    "objectDate": "1838",
+    "objectBeginDate": 1838,
+    "objectEndDate": 1838,
+    "medium": "Photogravure",
+    "dimensions": "Image: 5 1/16 × 7 13/16 in. (12.9 × 19.9 cm)\r\nPlate: 6 1/16 × 8 11/16 in. (15.4 × 22 cm)\r\nSheet: 11 5/16 × 13 9/16 in. (28.7 × 34.4 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 28.7,
+          "Width": 34.4
+        }
+      },
+      {
+        "elementName": "Image",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 12.9,
+          "Width": 19.9
+        }
+      },
+      {
+        "elementName": "Plate",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 15.4,
+          "Width": 22
+        }
+      }
+    ],
+    "creditLine": "Harris Brisbane Dick Fund, 1927",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/820926",
+    "tags": null,
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

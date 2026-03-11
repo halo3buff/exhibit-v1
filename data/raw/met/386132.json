@@ -1,0 +1,104 @@
+{
+  "id": 386132,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:08:44.210Z",
+  "data": {
+    "objectID": 386132,
+    "isHighlight": false,
+    "accessionNumber": "24.63.1607",
+    "accessionYear": "1924",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/24.63.1607.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/24.63.1607.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 74435,
+        "role": "Artist",
+        "name": "Anne Claude Philippe de Tubières, comte de Caylus",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500014478",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q2734012",
+        "gender": ""
+      },
+      {
+        "constituentID": 162552,
+        "role": "Artist",
+        "name": "After Titian (Tiziano Vecellio)",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500031075",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q47551",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "Charles V after Titian",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Anne Claude Philippe de Tubières, comte de Caylus",
+    "artistDisplayBio": "French, Paris 1692–1765 Paris",
+    "artistSuffix": "",
+    "artistAlphaSort": "Caylus, Anne Claude Philippe de Tubières comte de",
+    "artistNationality": "French",
+    "artistBeginDate": "1692",
+    "artistEndDate": "1765",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q2734012",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500014478",
+    "objectDate": "n.d.",
+    "objectBeginDate": 1480,
+    "objectEndDate": 1924,
+    "medium": "Etching",
+    "dimensions": "",
+    "measurements": [
+      {
+        "elementName": "Plate",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 21.9,
+          "Width": 20.8
+        }
+      },
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 43.8,
+          "Width": 30.4
+        }
+      }
+    ],
+    "creditLine": "Gift of Georgiana W. Sargent, in memory of John Osborne Sargent, 1924",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/386132",
+    "tags": [
+      {
+        "term": "Men",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300025928",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q8441"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

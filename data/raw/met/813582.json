@@ -1,0 +1,106 @@
+{
+  "id": 813582,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:17:00.908Z",
+  "data": {
+    "objectID": 813582,
+    "isHighlight": false,
+    "accessionNumber": "59.500.687(117)",
+    "accessionYear": "1959",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP887630.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP887630.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 69061,
+        "role": "Illustrator",
+        "name": "J. J. Grandville",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500029535",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q744442",
+        "gender": ""
+      },
+      {
+        "constituentID": 105634,
+        "role": "Engraver",
+        "name": "Théodore Maurisset",
+        "constituentULAN_URL": "",
+        "constituentWikidata_URL": "",
+        "gender": ""
+      },
+      {
+        "constituentID": 70205,
+        "role": "Publisher",
+        "name": "Fournier &amp; Perrotin",
+        "constituentULAN_URL": "",
+        "constituentWikidata_URL": "",
+        "gender": ""
+      },
+      {
+        "constituentID": 71882,
+        "role": "Author",
+        "name": "Pierre Jean de Béranger",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500524810",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q324998",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "Ugliness and Beauty, from \"The Complete Works of Béranger\"",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "Oeuvres complètes de Béranger",
+    "artistRole": "Illustrator",
+    "artistPrefix": "",
+    "artistDisplayName": "J. J. Grandville",
+    "artistDisplayBio": "French, Nancy 1803–1847 Vanves",
+    "artistSuffix": "",
+    "artistAlphaSort": "Grandville, J. J.",
+    "artistNationality": "French",
+    "artistBeginDate": "1803",
+    "artistEndDate": "1847",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q744442",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500029535",
+    "objectDate": "1836",
+    "objectBeginDate": 1836,
+    "objectEndDate": 1836,
+    "medium": "Wood engraving",
+    "dimensions": "Sheet: 8 5/8 × 5 1/2 in. (21.9 × 14 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 21.9,
+          "Width": 14
+        }
+      }
+    ],
+    "creditLine": "The Elisha Whittelsey Collection. The Elisha Whittelsey Fund, 1959",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/813582",
+    "tags": null,
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

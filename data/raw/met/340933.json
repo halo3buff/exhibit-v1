@@ -1,0 +1,105 @@
+{
+  "id": 340933,
+  "source": "met",
+  "fetchedAt": "2026-03-02T22:18:00.741Z",
+  "data": {
+    "objectID": 340933,
+    "isHighlight": false,
+    "accessionNumber": "59.597.1",
+    "accessionYear": "1959",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP801597.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP801597.jpg",
+    "additionalImages": [
+      "https://images.metmuseum.org/CRDImages/dp/original/MM91437.jpg"
+    ],
+    "constituents": [
+      {
+        "constituentID": 162607,
+        "role": "Artist",
+        "name": "Giorgio Vasari",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500015206",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q22343608",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Drawing",
+    "title": "Design for a Fountain with Rivergods and Nymphs",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Giorgio Vasari",
+    "artistDisplayBio": "Italian, Arezzo 1511–1574 Florence",
+    "artistSuffix": ", workshop of",
+    "artistAlphaSort": "Vasari, Giorgio",
+    "artistNationality": "Italian",
+    "artistBeginDate": "1511",
+    "artistEndDate": "1574",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q22343608",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500015206",
+    "objectDate": "1511–74",
+    "objectBeginDate": 1511,
+    "objectEndDate": 1574,
+    "medium": "Pen with medium and dark brown ink, brush and gray wash, highlighted with white gouache, over graphite. Traces of framing outlines in pen with brown and black ink",
+    "dimensions": "sheet: 15 3/16 x 9 13/16 in. (38.6 x 25 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 38.6,
+          "Width": 25
+        }
+      }
+    ],
+    "creditLine": "The Elisha Whittelsey Collection, The Elisha Whittelsey Fund, 1959",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Drawings",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/340933",
+    "tags": [
+      {
+        "term": "Fountains",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300006179",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q483453"
+      },
+      {
+        "term": "Male Nudes",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300189568",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q40446"
+      },
+      {
+        "term": "Female Nudes",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300189568",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q40446"
+      },
+      {
+        "term": "Nymphs",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300379159",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q373916"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}

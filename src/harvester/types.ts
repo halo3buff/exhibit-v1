@@ -1,50 +1,71 @@
 // src/harvester/types.ts
 
-export type SourceName = 'met' | 'artic' | 'va' | 'smithsonian' | 'rijks';
+export type SourceName = 'met' | 'artic' | 'va' | 'rijks' | 'smithsonian' | 'cooperhewitt';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. RAW ITEM (The "Extract" Contract)
+// RAW ITEM — exactly what the API returned, stored as-is in /data/raw/
 // ─────────────────────────────────────────────────────────────────────────────
-// This is exactly what the API returned. No filtering. No transformation.
-// We store this as JSON in /data/raw/{source}/{id}.json
 export interface RawItem {
-  id: string | number;
-  source: SourceName;
+  id:        string | number;
+  source:    SourceName;
   fetchedAt: string;
-  data: unknown; // The raw API JSON object
+  data:      unknown;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. ARCHIVE ITEM (The "Load" Contract)
+// ARCHIVE ITEM — standardized, enriched object in /data/processed/
+//
+// Optional fields are only populated when the source actually has them.
+// Every field maps to a real API field — nothing is fabricated.
 // ─────────────────────────────────────────────────────────────────────────────
-// This is the cleaned, standardized object that goes into your DB / Processed folder.
 export interface ArchiveItem {
-  id: string;             // Standardized ID (e.g., "met-12345")
-  title: string;
-  author: string;
-  year: string;
-  imageUrl: string | null;
+  // ── Identity ──────────────────────────────────────────────────────────────
+  id:     string;       // e.g. "met-12345", "artic-67890"
   source: SourceName;
-  link: string;
-  
-  // Taxonomy
-  mainCategory: string;   // e.g., "Graphic Design"
-  subCategory: string;    // e.g., "Posters & Advertising"
-  
-  // Audit Trail
-  confidenceScore: number;
+  link:   string;       // canonical URL to the museum's object page
+
+  // ── Core Display ──────────────────────────────────────────────────────────
+  title:    string;
+  author:   string;         // artist / maker / designer
+  year:     string;         // display string e.g. "1923" or "ca. 1880–1920"
+  imageUrl: string | null;  // null = no image, never a placeholder URL
+
+  // ── Classification ────────────────────────────────────────────────────────
+  mainCategory: string;   // "Graphic Design" | "Painting" | "Prints & Drawings" | etc.
+  subCategory:  string;   // "Posters & Advertising" | "Oil" | "Photograph" | etc.
+
+  // ── Rich Provenance (populated from every available API field) ────────────
+  department?:      string;  // museum dept / collection name
+  objectType?:      string;  // how the museum classifies the object
+  medium?:          string;  // materials & technique
+  culture?:         string;  // cultural / geographic origin
+  place?:           string;  // place of creation
+  dimensions?:      string;  // physical dimensions
+  description?:     string;  // curator notes / abstract
+  creditLine?:      string;  // acquisition / credit line
+  accessionNumber?: string;  // museum's inventory / accession number
+  rights?:          string;  // license (CC0, public domain, etc.)
+  period?:          string;  // historical period / dynasty / style
+
+  // ── Classifier Audit Trail ────────────────────────────────────────────────
+  confidenceScore:       number;
   classificationReasons: string[];
-  
-  // Optional: Keep a reference to the raw file for debugging
-  rawFilePath?: string; 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. CLASSIFICATION RESULT (The "Transform" Contract)
+// CLASSIFICATION RESULT
 // ─────────────────────────────────────────────────────────────────────────────
 export interface ClassificationResult {
   accepted: boolean;
-  score: number;
-  reasons: string[];
-  item?: ArchiveItem;
+  score:    number;
+  reasons:  string[];
+  item?:    ArchiveItem;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FETCH RESULT
+// ─────────────────────────────────────────────────────────────────────────────
+export interface FetchResult {
+  newCount:       number;
+  duplicateCount: number;
 }

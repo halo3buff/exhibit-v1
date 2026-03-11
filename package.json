@@ -1,27 +1,42 @@
 {
-  "name": "exhibit",
-  "version": "0.1.0",
+  "name": "art-harvester-etl",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/scripts/dev.ts",
-    "extract": "tsx src/scripts/01-extract.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "harvest:met": "tsx src/scripts/harvest-met.ts",
+    "harvest:artic": "tsx src/scripts/harvest-artic.ts",
+    "harvest:va": "tsx src/scripts/harvest-va.ts",
+    "harvest:rijks": "tsx src/scripts/harvest-rijks.ts",
+    "harvest:smithsonian": "tsx src/scripts/harvest-smithsonian.ts",
+    "harvest:cooperhewitt": "tsx src/scripts/harvest-cooperhewitt.ts",
+    "harvest:all": "npm run harvest:met && npm run harvest:artic && npm run harvest:va && npm run harvest:rijks && npm run harvest:smithsonian",
     "transform": "tsx src/scripts/02-transform.ts",
     "load": "tsx src/scripts/03-load.ts",
-    "pipeline": "npm run extract && npm run transform && npm run load",
-    "clean:raw": "rm -rf data/raw/* && mkdir -p data/raw/met data/raw/artic data/raw/va data/raw/smithsonian data/raw/rijks",
-    "clean:processed": "rm -rf data/processed/* && mkdir -p data/processed"
+    "pipeline": "npm run harvest:all && npm run transform && npm run load",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.3.1",
+    "framer-motion": "^12.35.2",
     "next": "^16.1.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "better-sqlite3": "^12.6.2",
-    "dotenv": "^17.3.1"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.13.10",
+    "@types/react": "19.2.14",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
     "tsx": "^4.19.3",
-    "typescript": "^5.7.3",
-    "@types/node": "^22.13.10"
+    "typescript": "^5.7.3"
   }
 }

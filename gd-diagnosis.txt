@@ -1,0 +1,212 @@
+﻿
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+SOURCE: MET | CATEGORY: Graphic Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  ΓöÇΓöÇ Typography & Lettering (2 total) ΓöÇΓöÇ
+
+    [met-218070] "Specimen"
+      objectName                   = Specimen
+      department                   = European Sculpture and Decorative Arts
+      medium                       = Needle lace
+      classification               = Textiles-Laces
+      title                        = Specimen
+
+    [met-218508] "Specimen"
+      objectName                   = Specimen
+      department                   = European Sculpture and Decorative Arts
+      medium                       = Crochet
+      classification               = Textiles-Laces
+      title                        = Specimen
+
+  ΓöÇΓöÇ Editorial/Publication (1 total) ΓöÇΓöÇ
+
+    [met-437196] "Saint Michael"
+      objectName                   = Painting, recto of a book cover
+      department                   = European Paintings
+      medium                       = Tempera on wood
+      classification               = Paintings
+      title                        = Saint Michael
+
+  ΓöÇΓöÇ Packaging (1 total) ΓöÇΓöÇ
+
+    [met-4652] "Label"
+      objectName                   = Label
+      department                   = The American Wing
+      medium                       = Paper
+      title                        = Label
+
+  ΓöÇΓöÇ Posters & Advertising (7 total) ΓöÇΓöÇ
+
+    [met-696947] "Advertisement for Philadelphia Sunday Press, May 1"
+      objectName                   = Poster
+      department                   = Drawings and Prints
+      medium                       = Lithograph
+      classification               = Posters
+      title                        = Advertisement for Philadelphia Sunday Press, May 17, 1896
+
+    [met-812871] "Trade Card for J. Throsby, printer, stationer and "
+      objectName                   = Trade Card
+      department                   = Drawings and Prints
+      medium                       = Engraving
+      classification               = Prints
+      title                        = Trade Card for J. Throsby, printer, stationer and printseller
+
+    [met-818062] "Certificate of Membership of the Society of Copper"
+      objectName                   = Print, Trade Card
+      department                   = Drawings and Prints
+      medium                       = Engraving
+      classification               = Prints
+      title                        = Certificate of Membership of the Society of Copper-Plate Printers
+
+    [met-818913] "Trade Card for W. H. Lizars, Engraver"
+      objectName                   = Print, Trade Card
+      department                   = Drawings and Prints
+      medium                       = Engraving
+      classification               = Prints
+      title                        = Trade Card for W. H. Lizars, Engraver
+
+    [met-821058] "Trade Card for Joshua Cross, Seal and Copper Plate"
+      objectName                   = Print, Trade Card
+      department                   = Drawings and Prints
+      medium                       = Engraving
+      classification               = Prints
+      title                        = Trade Card for Joshua Cross, Seal and Copper Plate Engraver
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+SOURCE: ARTIC | CATEGORY: Graphic Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  ΓöÇΓöÇ Posters & Advertising (7 total) ΓöÇΓöÇ
+
+    [artic-196669] "Design for Democracy:  Ballot and Election Design"
+      artwork_type_title           = Graphic Design
+      classification_title         = book
+      department_title             = Architecture and Design
+      medium_display               = Book
+      title                        = Design for Democracy:  Ballot and Election Design
+
+    [artic-204509] "Pig 05049"
+      artwork_type_title           = Graphic Design
+      classification_title         = book
+      department_title             = Architecture and Design
+      medium_display               = Paper
+      title                        = Pig 05049
+
+    [artic-204511] "Pig 05049"
+      artwork_type_title           = Graphic Design
+      classification_title         = graphic design
+      department_title             = Architecture and Design
+      medium_display               = Paper
+      title                        = Pig 05049
+
+    [artic-258424] "Art Against Aids Poster"
+      artwork_type_title           = Graphic Design
+      classification_title         = graphic design
+      department_title             = Architecture and Design
+      medium_display               = Lithograph on paper
+      title                        = Art Against Aids Poster
+
+    [artic-276779] "La Masacre de Ponce"
+      artwork_type_title           = Graphic Design
+      classification_title         = graphic design
+      department_title             = Architecture and Design
+      medium_display               = Color screenprint on off-white wove paper
+      title                        = La Masacre de Ponce
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+SOURCE: VA | CATEGORY: Graphic Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  ΓöÇΓöÇ Posters & Advertising (200 total) ΓöÇΓöÇ
+
+    [va-O100723] "Hate The Enemy Annihilate America and Britain"
+      objectType                   = Poster
+      title                        = Hate The Enemy Annihilate America and Britain
+
+    [va-O100738] "Warsaw"
+      objectType                   = Poster
+      title                        = Warsaw
+
+    [va-O100758] "Never Again"
+      objectType                   = Poster
+      title                        = Never Again
+
+    [va-O100770] "Defended to Death"
+      objectType                   = Poster
+      title                        = Defended to Death
+
+    [va-O100784] "Workers Citizens Farmers Soldiers All the Peoples "
+      objectType                   = Poster
+      title                        = Workers Citizens Farmers Soldiers All the Peoples of Germany
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+SOURCE: SMITHSONIAN | CATEGORY: Graphic Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  ΓöÇΓöÇ Posters & Advertising (200 total) ΓöÇΓöÇ
+
+    [smithsonian-ld1-1643398853934-1643398865643-0] "Chromolithograph entitled "Custer's Last Fight""
+      unitCode                     = NMAH
+      object_type_indexed          = Chromolithographs
+      object_type_freetext         = Chromolithograph
+      physicalDescription          = paper (overall material)
+      title                        = Chromolithograph entitled "Custer's Last Fight"
+
+    [smithsonian-ld1-1643398986850-1643399007890-0] "Lands and Homes"
+      unitCode                     = NMAH
+      object_type_indexed          = Posters
+      object_type_freetext         = Poster
+      physicalDescription          = paper (overall material)
+      title                        = Lands and Homes
+
+    [smithsonian-ld1-1643399625297-1643399675314-0] "Know Nothing Poster, 1854"
+      unitCode                     = NMAH
+      object_type_indexed          = Posters
+      object_type_freetext         = Poster
+      physicalDescription          = paper (overall material)
+      title                        = Know Nothing Poster, 1854
+
+    [smithsonian-ld1-1643399887910-1643399888004-1] "Nude"
+      unitCode                     = CHNDM
+      object_type_indexed          = Drawings
+      object_type_freetext         = Drawing
+      title                        = Nude
+
+    [smithsonian-ld1-1643399887910-1643399888008-0] "Study of Three Figures"
+      unitCode                     = CHNDM
+      object_type_indexed          = Drawings
+      object_type_freetext         = Drawing
+      title                        = Study of Three Figures
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+SOURCE: RIJKS | CATEGORY: Graphic Design
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  ΓöÇΓöÇ Identity & Branding (199 total) ΓöÇΓöÇ
+
+    [rijks-20010000] "Portret van Dirk I, graaf van Holland"
+      technique                    = 1
+      title                        = Graven en gravinnen van Holland
+
+    [rijks-20010001] "Portret van Dirk II, graaf van Holland"
+      technique                    = 1
+      title                        = Portret van Dirk II, graaf van Holland
+
+    [rijks-20010002] "Portret van Arnulf, graaf van Holland"
+      technique                    = 1
+      title                        = Graven en gravinnen van Holland
+
+    [rijks-20010003] "Portret van Dirk III, graaf van Holland"
+      technique                    = 1
+      title                        = Portret van Dirk III, graaf van Holland
+
+    [rijks-20010004] "Portret van Dirk IV, graaf van Holland"
+      technique                    = 1
+      title                        = Graven en gravinnen van Holland
+
+  ΓöÇΓöÇ Posters & Advertising (1 total) ΓöÇΓöÇ
+
+    [rijks-200101086] "Reclamekaart voor 'De Kroniek'"
+      technique                    = 1 | 2
+      title                        = Reclamekaart voor 'De Kroniek'

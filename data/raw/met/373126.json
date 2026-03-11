@@ -1,0 +1,88 @@
+{
+  "id": 373126,
+  "source": "met",
+  "fetchedAt": "2026-03-02T21:56:03.930Z",
+  "data": {
+    "objectID": 373126,
+    "isHighlight": false,
+    "accessionNumber": "18.55.1",
+    "accessionYear": "1918",
+    "isPublicDomain": true,
+    "primaryImage": "https://images.metmuseum.org/CRDImages/dp/original/DP864070.jpg",
+    "primaryImageSmall": "https://images.metmuseum.org/CRDImages/dp/web-large/DP864070.jpg",
+    "additionalImages": [],
+    "constituents": [
+      {
+        "constituentID": 165238,
+        "role": "Artist",
+        "name": "Daniel Hopfer",
+        "constituentULAN_URL": "http://vocab.getty.edu/page/ulan/500011802",
+        "constituentWikidata_URL": "https://www.wikidata.org/wiki/Q548407",
+        "gender": ""
+      }
+    ],
+    "department": "Drawings and Prints",
+    "objectName": "Print",
+    "title": "Design for Armor Decoration",
+    "culture": "",
+    "period": "",
+    "dynasty": "",
+    "reign": "",
+    "portfolio": "",
+    "artistRole": "Artist",
+    "artistPrefix": "",
+    "artistDisplayName": "Daniel Hopfer",
+    "artistDisplayBio": "German, Kaufbeuren 1471–1536 Augsburg",
+    "artistSuffix": "",
+    "artistAlphaSort": "Hopfer, Daniel",
+    "artistNationality": "German",
+    "artistBeginDate": "1471",
+    "artistEndDate": "1536",
+    "artistGender": "",
+    "artistWikidata_URL": "https://www.wikidata.org/wiki/Q548407",
+    "artistULAN_URL": "http://vocab.getty.edu/page/ulan/500011802",
+    "objectDate": "ca. 1515",
+    "objectBeginDate": 1510,
+    "objectEndDate": 1520,
+    "medium": "Etching; second state of two",
+    "dimensions": "Sheet: 3 3/8 × 5 5/16 in. (8.5 × 13.5 cm)",
+    "measurements": [
+      {
+        "elementName": "Sheet",
+        "elementDescription": null,
+        "elementMeasurements": {
+          "Height": 8.5,
+          "Width": 13.5
+        }
+      }
+    ],
+    "creditLine": "Rogers Fund, 1918",
+    "geographyType": "",
+    "city": "",
+    "state": "",
+    "county": "",
+    "country": "",
+    "region": "",
+    "subregion": "",
+    "locale": "",
+    "locus": "",
+    "excavation": "",
+    "river": "",
+    "classification": "Prints",
+    "rightsAndReproduction": "",
+    "linkResource": "",
+    "metadataDate": "2025-03-06T04:54:30Z",
+    "repository": "Metropolitan Museum of Art, New York, NY",
+    "objectURL": "https://www.metmuseum.org/art/collection/search/373126",
+    "tags": [
+      {
+        "term": "Ornament",
+        "AAT_URL": "http://vocab.getty.edu/page/aat/300164595",
+        "Wikidata_URL": "https://www.wikidata.org/wiki/Q335261"
+      }
+    ],
+    "objectWikidata_URL": "",
+    "isTimelineWork": false,
+    "GalleryNumber": ""
+  }
+}
