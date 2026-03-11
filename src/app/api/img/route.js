@@ -3,6 +3,8 @@ import fs     from 'fs';
 import path   from 'path';
 import crypto from 'crypto';
 
+
+// TODO: Make sure this is compatable on all platforms!! (B-Lou Nuke)
 const CACHE_DIR = 'C:\\Users\\ameen\\Desktop\\.img-cache';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
