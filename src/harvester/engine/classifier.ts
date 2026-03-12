@@ -33,7 +33,9 @@ export function classifyItem(raw: RawItem): ClassificationResult {
     case 'rijks':        return classifyRijks(data as Record<string, unknown>, raw);
     case 'smithsonian':  return classifySmithsonian(data as Record<string, unknown>, raw);
     // CH files are saved flat (no .data wrapper), so pass raw itself as the data object
-    case 'cooperhewitt': return classifyCooperHewitt(raw as unknown as Record<string, unknown>, raw);
+    case 'cooperhewitt':   return classifyCooperHewitt(raw as unknown as Record<string, unknown>, raw);
+    // DA files are also saved flat (no .data wrapper) — fields live at root level
+    case 'designarchive':  return classifyDesignArchive(raw as unknown as Record<string, unknown>, raw);
     default:
       return { accepted: false, score: 0, reasons: [`Unknown source: ${source}`] };
   }
@@ -772,6 +774,159 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITY: SubCategory → MainCategory
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN ARCHIVE (AIGA)
+// Raw files are saved flat (same shape as the harvest record, no .data wrapper).
+// Key fields: title, author, year, imageUrl, url, discipline, formats[], collections[]
+// ─────────────────────────────────────────────────────────────────────────────
+
+// discipline → subCategory
+const DA_DISCIPLINE_MAP: Record<string, { subCategory: string; score: number }> = {
+  'Advertising':                   { subCategory: 'Posters & Advertising',  score: 22 },
+  'Poster':                        { subCategory: 'Posters & Advertising',  score: 25 },
+  'Posters':                       { subCategory: 'Posters & Advertising',  score: 25 },
+  'Environmental Design':          { subCategory: 'Identity & Branding',    score: 18 },
+  'Identity / Branding':           { subCategory: 'Identity & Branding',    score: 25 },
+  'Branding':                      { subCategory: 'Identity & Branding',    score: 25 },
+  'Identity':                      { subCategory: 'Identity & Branding',    score: 25 },
+  'Packaging':                     { subCategory: 'Packaging',              score: 25 },
+  'Typography':                    { subCategory: 'Typography & Lettering', score: 25 },
+  'Lettering':                     { subCategory: 'Typography & Lettering', score: 22 },
+  'Editorial':                     { subCategory: 'Editorial/Publication',  score: 22 },
+  'Book Design':                   { subCategory: 'Editorial/Publication',  score: 22 },
+  'Publication':                   { subCategory: 'Editorial/Publication',  score: 22 },
+  'Interactive':                   { subCategory: 'Posters & Advertising',  score: 14 },
+  'Motion':                        { subCategory: 'Posters & Advertising',  score: 14 },
+  'Illustration':                  { subCategory: 'Posters & Advertising',  score: 16 },
+};
+
+// format keywords → subCategory (applied when discipline doesn't match)
+const DA_FORMAT_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'poster',       subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'advertisement',subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'brochure',     subCategory: 'Posters & Advertising',  score: 16 },
+  { keyword: 'logo',         subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'identity',     subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'packaging',    subCategory: 'Packaging',              score: 22 },
+  { keyword: 'label',        subCategory: 'Packaging',              score: 18 },
+  { keyword: 'typeface',     subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'typography',   subCategory: 'Typography & Lettering', score: 20 },
+  { keyword: 'lettering',    subCategory: 'Typography & Lettering', score: 18 },
+  { keyword: 'book',         subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'magazine',     subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'annual report',subCategory: 'Editorial/Publication',  score: 18 },
+];
+
+function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const discipline  = str((data as any).discipline).trim();
+  const formats     = ((data as any).formats ?? []) as string[];
+  const title       = str((data as any).title).toLowerCase();
+  const imageUrl    = str((data as any).imageUrl) || null;
+  const author      = str((data as any).author);
+  const year        = str((data as any).year);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  // 1. Discipline exact match
+  const disciplineKey = Object.keys(DA_DISCIPLINE_MAP).find(
+    k => k.toLowerCase() === discipline.toLowerCase()
+  );
+  if (disciplineKey) {
+    const { subCategory, score: s } = DA_DISCIPLINE_MAP[disciplineKey];
+    bestSubCategory = subCategory;
+    score += s;
+    reasons.push(`discipline "${discipline}" → ${subCategory} (+${s})`);
+  }
+
+  // 2. Discipline partial match (handles values like "Identity / Branding Programs")
+  if (!bestSubCategory && discipline) {
+    for (const [key, rule] of Object.entries(DA_DISCIPLINE_MAP)) {
+      if (discipline.toLowerCase().includes(key.toLowerCase())) {
+        bestSubCategory = rule.subCategory;
+        score += rule.score - 3;
+        reasons.push(`discipline partial "${discipline}" ~ "${key}" → ${rule.subCategory} (+${rule.score - 3})`);
+        break;
+      }
+    }
+  }
+
+  // 3. Formats array scan
+  if (!bestSubCategory && formats.length > 0) {
+    for (const fmt of formats) {
+      const fmtLower = fmt.toLowerCase();
+      const hit = DA_FORMAT_MAP.find(r => fmtLower.includes(r.keyword));
+      if (hit) {
+        bestSubCategory = hit.subCategory;
+        score += hit.score;
+        reasons.push(`format "${fmt}" → ${hit.subCategory} (+${hit.score})`);
+        break;
+      }
+    }
+  }
+
+  // 4. Title keyword fallback (weak signal)
+  if (!bestSubCategory) {
+    for (const r of DA_FORMAT_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += Math.floor(r.score * 0.6);
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${Math.floor(r.score * 0.6)})`);
+        break;
+      }
+    }
+  }
+
+  // 5. AIGA is a graphic design archive — if we still have nothing, default
+  if (!bestSubCategory) {
+    bestSubCategory = 'Posters & Advertising';
+    score += 15;
+    reasons.push(`AIGA archive default → Posters & Advertising (+15)`);
+  }
+
+  // Bonuses
+  if (imageUrl) {
+    score += CONFIG.HAS_IMAGE_BONUS;
+    reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`);
+  }
+  if (author && author !== 'Unknown') {
+    score += CONFIG.HAS_CREATOR_BONUS;
+    reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`);
+  }
+  if (year && year !== 'n.d.') {
+    score += CONFIG.HAS_DATE_BONUS;
+    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`);
+  }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:         str((data as any).id),
+      source:     'designarchive' as SourceName,
+      link:       str((data as any).url) || '',
+      title:      str((data as any).title) || 'Untitled',
+      author:     author || 'Unknown',
+      year:       year || 'n.d.',
+      imageUrl,
+      department: 'Graphic Design',
+      classification: discipline || 'Graphic Design',
+      medium:     formats.join(', ') || 'Unknown',
+      objectType: discipline || 'Graphic Design',
+      mainCategory,
+      subCategory:       bestSubCategory,
+      confidenceScore:   score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 function mapSubToMain(subCategory: string | null): string {
   if (!subCategory) return 'Uncategorized';

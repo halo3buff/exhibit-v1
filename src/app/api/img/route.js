@@ -2,6 +2,10 @@
 import fs     from 'fs';
 import path   from 'path';
 import crypto from 'crypto';
+import https  from 'https';
+
+// designarchives.aiga.org has a self-signed SSL cert Node.js rejects via fetch().
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
 
 // TODO: Make sure this is compatable on all platforms!! (B-Lou Nuke)
@@ -82,12 +86,34 @@ export async function GET(request) {
 
   // 3. Fetch from museum
   try {
-    const res = await fetch(fetchUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!res.ok) return new Response('Upstream error', { status: 502 });
-    let buf = Buffer.from(await res.arrayBuffer());
+    let buf;
+
+    if (fetchUrl.includes('designarchives.aiga.org')) {
+      // designarchives.aiga.org has a bad SSL cert — use https.get with rejectUnauthorized:false
+      buf = await new Promise((resolve, reject) => {
+        const req = https.get(fetchUrl, {
+          agent: insecureAgent,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
+        }, (res) => {
+          if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume(); reject(new Error(`HTTP ${res.statusCode}`)); return;
+          }
+          const chunks = [];
+          res.on('data', c => chunks.push(c));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+        req.on('error', reject);
+        req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+      });
+    } else {
+      const res = await fetch(fetchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) return new Response('Upstream error', { status: 502 });
+      buf = Buffer.from(await res.arrayBuffer());
+    }
+
     if (!isValidImage(buf)) return new Response('Not an image', { status: 502 });
     if (!isIiif && size) buf = await resizeBuffer(buf, size);
     fs.writeFileSync(cachePath, buf);

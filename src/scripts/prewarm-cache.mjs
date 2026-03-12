@@ -1,4 +1,3 @@
-// src/scripts/prewarm-cache.mjs
 // Caches two sizes per artwork: 400px (grid) and 1200px (fullscreen modal).
 //
 // Per-source strategy:
@@ -11,9 +10,14 @@
 import fs       from 'fs';
 import path     from 'path';
 import crypto   from 'crypto';
+import https    from 'https';
 import sharp    from 'sharp';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
+
+// designarchives.aiga.org has a self-signed / chain-incomplete SSL cert that
+// Node.js rejects. Use a custom agent with rejectUnauthorized:false for those URLs only.
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const ROOT       = path.join(__dirname, '..', '..');
@@ -101,6 +105,45 @@ function getConcurrency(domain) {
 
 async function fetchRaw(url, attempt = 0) {
   try {
+    // designarchives.aiga.org has a self-signed SSL cert Node.js rejects via fetch().
+    // Use https.get with rejectUnauthorized:false for those URLs only.
+    if (url.includes('designarchives.aiga.org')) {
+      return await new Promise((resolve) => {
+        const req = https.get(url, {
+          agent: insecureAgent,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+            'Accept':     'image/webp,image/jpeg,image/png,image/*,*/*',
+            'Referer':    'https://designarchives.aiga.org',
+          },
+        }, (res) => {
+          if (res.statusCode === 429 || res.statusCode === 503) {
+            res.resume();
+            if (attempt < MAX_RETRIES) {
+              setTimeout(() => fetchRaw(url, attempt + 1).then(resolve), (attempt + 1) * 3000);
+            } else {
+              resolve({ err: `fail:${res.statusCode}` });
+            }
+            return;
+          }
+          if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume();
+            resolve({ err: `fail:${res.statusCode}` });
+            return;
+          }
+          const chunks = [];
+          res.on('data', c => chunks.push(c));
+          res.on('end', () => {
+            const buf = Buffer.concat(chunks);
+            if (!isImage(buf)) { resolve({ err: 'fail:not-image' }); return; }
+            resolve({ buf });
+          });
+        });
+        req.on('error', (e) => resolve({ err: `fail:${e.code || e.message?.slice(0, 20)}` }));
+        req.setTimeout(20000, () => { req.destroy(); resolve({ err: 'fail:timeout' }); });
+      });
+    }
+
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',

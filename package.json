@@ -18,7 +18,10 @@
     "transform": "tsx src/scripts/02-transform.ts",
     "load": "tsx src/scripts/03-load.ts",
     "pipeline": "npm run harvest:all && npm run transform && npm run load",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "transform:designarchive": "tsx src/scripts/02-transform-designarchive.ts",
+    "load:designarchive": "tsx src/scripts/03-load-designarchive.ts",
+    "pipeline:designarchive": "npm run harvest:designarchive && npm run transform:designarchive && npm run load:designarchive"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",

@@ -472,7 +472,7 @@ function GalleryInner() {
               {/* Image */}
               <div onClick={() => setSelectedIdx(null)}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', minWidth: 0, pointerEvents: 'all', cursor: 'default' }}>
-                <img key={selected.id} src={imgUrl(selected.imageUrl, 1600)} alt={selected.title}
+                <img key={selected.id} src={imgUrl(selected.imageUrl, 1200)} alt={selected.title}
                   onClick={e => e.stopPropagation()}
                   style={{ maxHeight: '88vh', maxWidth: '100%', objectFit: 'contain', cursor: 'default' }}
                 />

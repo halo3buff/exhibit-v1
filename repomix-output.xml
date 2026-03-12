@@ -101,7 +101,9 @@ src/lib/archives/va.js
 src/lib/archives/wikimedia.js
 src/lib/db.ts
 src/lib/search.js
+src/scripts/02-transform-designarchive.ts
 src/scripts/02-transform.ts
+src/scripts/03-load-designarchive.ts
 src/scripts/03-load.ts
 src/scripts/backfill-rijks-images.ts
 src/scripts/backfill-unknowns.mjs
@@ -115,6 +117,7 @@ src/scripts/fix-failures.mjs
 src/scripts/fix-va-images.mjs
 src/scripts/harvest-artic.ts
 src/scripts/harvest-cooperhewitt.ts
+src/scripts/harvest-designarchive.ts
 src/scripts/harvest-met.ts
 src/scripts/harvest-rijks.ts
 src/scripts/harvest-smithsonian.ts
@@ -135,6 +138,617 @@ verify-apis.js
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/scripts/02-transform-designarchive.ts">
+// src/scripts/02-transform-designarchive.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// TRANSFORM PHASE: Classify designarchive raw items → processed ArchiveItems
+// Reads: /data/raw/designarchive/*.json
+// Writes: /data/processed/designarchive-{id}.json
+// Logs: /data/processed/audit-designarchive.json
+// ─────────────────────────────────────────────────────────────────────────────
+import * as fs from 'fs';
+import * as path from 'path';
+import { SourceName } from '../harvester/types.js';
+import { classifyItem, CONFIG } from '../harvester/engine/classifier.js';
+import { listRawFiles, saveProcessedItem, ensureDir } from '../harvester/utils/fs.js';
+
+const PROCESSED_DIR = path.join(process.cwd(), 'data', 'processed');
+const SOURCE: SourceName = 'designarchive';
+
+interface SourceStats {
+  total: number;
+  accepted: number;
+  rejected: number;
+  noImage: number;
+}
+
+interface TransformStats {
+  total: number;
+  accepted: number;
+  rejected: number;
+  scoreSum: number;
+  bySource: Record<SourceName, SourceStats>;
+  byCategory: Record<string, number>;
+}
+
+interface AuditLogEntry {
+  id: string | number;
+  source: SourceName;
+  timestamp: string;
+  inputFile: string;
+  accepted: boolean;
+  score: number;
+  reasons: string[];
+  title?: string;
+}
+
+async function transformDesignArchive(stats: TransformStats): Promise<AuditLogEntry[]> {
+  console.log(`\n🔄 Processing ${SOURCE.toUpperCase()}...`);
+  
+  const files = listRawFiles(SOURCE);
+  if (files.length === 0) {
+    console.log(`⊘ No raw files found in /data/raw/${SOURCE}/`);
+    return [];
+  }
+  
+  console.log(`→ Found ${files.length} raw files`);
+  
+  const auditLog: AuditLogEntry[] = [];
+  
+  for (const filePath of files) {
+    try {
+      const rawItem = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const result = classifyItem(rawItem);
+      
+      auditLog.push({
+        id: rawItem.id,
+        source: SOURCE,
+        timestamp: new Date().toISOString(),
+        inputFile: filePath,
+        accepted: result.accepted,
+        score: result.score,
+        reasons: result.reasons,
+        title: (result.item?.title) || (rawItem.data as Record<string, unknown>)?.title as string,
+      });
+      
+      stats.total++;
+      stats.bySource[SOURCE].total++;
+      
+      if (result.accepted && result.item) {
+        // REJECT items without images — can't display art without an image
+        if (!result.item.imageUrl) {
+          stats.bySource[SOURCE].noImage++;
+          stats.rejected++;
+          stats.bySource[SOURCE].rejected++;
+          continue;
+        }
+        
+        saveProcessedItem(result.item);
+        stats.accepted++;
+        stats.bySource[SOURCE].accepted++;
+        stats.scoreSum += result.score;
+        
+        const cat = result.item.mainCategory;
+        stats.byCategory[cat] = (stats.byCategory[cat] || 0) + 1;
+        
+        if (stats.accepted % 100 === 0) {
+          console.log(`   ✓ Processed ${stats.accepted} accepted items...`);
+        }
+      } else {
+        stats.rejected++;
+        stats.bySource[SOURCE].rejected++;
+      }
+      
+    } catch (e: any) {
+      console.warn(`   ⊘ Error processing ${path.basename(filePath)}: ${e.message}`);
+      stats.rejected++;
+      stats.bySource[SOURCE].rejected++;
+    }
+  }
+  
+  const sourceAuditPath = path.join(PROCESSED_DIR, `audit-${SOURCE}.json`);
+  fs.writeFileSync(sourceAuditPath, JSON.stringify(auditLog, null, 2));
+  
+  console.log(`✅ ${SOURCE}: ${stats.bySource[SOURCE].accepted} accepted, ${stats.bySource[SOURCE].rejected} rejected`);
+  
+  return auditLog;
+}
+
+async function main() {
+  console.log('╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  DESIGN ARCHIVE TRANSFORM — Classifying Raw Items        ║');
+  console.log(`║ Threshold: ${CONFIG.THRESHOLD} | Output: /data/processed/ ║`);
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+  
+  ensureDir(PROCESSED_DIR);
+  
+  const stats: TransformStats = {
+    total: 0,
+    accepted: 0,
+    rejected: 0,
+    scoreSum: 0,
+    bySource: {
+      met:          { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      artic:        { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      va:           { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      rijks:        { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      smithsonian:  { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      cooperhewitt: { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      designarchive:{ total: 0, accepted: 0, rejected: 0, noImage: 0 },
+    },
+    byCategory: {},
+  };
+  
+  await transformDesignArchive(stats);
+  
+  const avgScore  = stats.accepted > 0 ? (stats.scoreSum / stats.accepted).toFixed(1) : '0';
+  const acceptPct = stats.total > 0 ? ((stats.accepted / stats.total) * 100).toFixed(1) : '0';
+  
+  console.log('\n╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  TRANSFORM COMPLETE                                       ║');
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+  
+  console.log(`📊 Overall:`);
+  console.log(`Total: ${stats.total}`);
+  console.log(`Accepted: ${stats.accepted} (${acceptPct}%)`);
+  console.log(`Rejected: ${stats.rejected}`);
+  console.log(`Avg score: ${avgScore}`);
+  
+  console.log(`\n📁 By Source:`);
+  const s = stats.bySource[SOURCE];
+  if (s.total > 0) {
+    const pct = ((s.accepted / s.total) * 100).toFixed(1);
+    console.log(`${SOURCE.padEnd(12)}: ${s.accepted}/${s.total} accepted (${pct}%), ${s.noImage} no image`);
+  }
+  
+  console.log(`\n🏷️ By Category:`);
+  Object.entries(stats.byCategory)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([cat, count]) => {
+      console.log(`${cat.padEnd(25)}: ${count}`);
+    });
+  
+  console.log(`\n📁 Output: /data/processed/ (${stats.accepted} items)`);
+  console.log(`Audit log: audit-designarchive.json`);
+  
+  if (stats.rejected > stats.accepted) {
+    console.log(`\n💡 High rejection rate — tips:`);
+    console.log(`1. Lower CONFIG.THRESHOLD in classifier.ts (currently ${CONFIG.THRESHOLD})`);
+    console.log(`2. Review audit-designarchive.json to see rejection reasons`);
+    console.log(`3. Add missing discipline/format values to taxonomy mappings`);
+  }
+}
+
+main().catch(console.error);
+</file>
+
+<file path="src/scripts/03-load-designarchive.ts">
+// src/scripts/03-load-designarchive.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// LOAD PHASE: Import processed designarchive items into SQLite
+// Reads: /data/processed/designarchive-*.json
+// Writes: artworks.db (appends to existing database)
+// ─────────────────────────────────────────────────────────────────────────────
+import * as fs from 'fs';
+import * as path from 'path';
+import Database from 'better-sqlite3';
+
+const PROCESSED_DIR = path.join(process.cwd(), 'data', 'processed');
+const DB_PATH = path.join(process.cwd(), 'artworks.db');
+const SOURCE_PREFIX = 'designarchive-';
+
+function extractYearSort(year: string): number | null {
+  if (!year || year === 'n.d.') return null;
+  const match = year.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+  return match ? parseInt(match[0]) : null;
+}
+
+async function main() {
+  console.log('╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  DESIGN ARCHIVE LOAD — Importing to SQLite               ║');
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+  
+  if (!fs.existsSync(PROCESSED_DIR)) {
+    console.error('❌ /data/processed/ directory not found. Run transform first.');
+    process.exit(1);
+  }
+  
+  // Read only designarchive processed item files
+  const files = fs.readdirSync(PROCESSED_DIR)
+    .filter(f => f.startsWith(SOURCE_PREFIX) && f.endsWith('.json'));
+  
+  if (files.length === 0) {
+    console.error('❌ No processed designarchive files found. Run transform first.');
+    process.exit(1);
+  }
+  
+  console.log(`📦 Found ${files.length} processed designarchive files\n`);
+  
+  // Open database (read-write, create if not exists)
+  const db = new Database(DB_PATH);
+  db.pragma('journal_mode = WAL');
+  
+  // Ensure schema exists (idempotent)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS artworks (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      author TEXT NOT NULL,
+      year TEXT NOT NULL,
+      year_sort INTEGER,
+      mainCategory TEXT NOT NULL,
+      subCategory TEXT,
+      source TEXT NOT NULL,
+      imageUrl TEXT NOT NULL,
+      link TEXT NOT NULL,
+      classification TEXT,
+      medium TEXT,
+      department TEXT,
+      objectType TEXT,
+      confidenceScore INTEGER,
+      origin TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Indexes for common queries
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_mainCategory ON artworks(mainCategory);
+    CREATE INDEX IF NOT EXISTS idx_subCategory ON artworks(subCategory);
+    CREATE INDEX IF NOT EXISTS idx_source ON artworks(source);
+    CREATE INDEX IF NOT EXISTS idx_year_sort ON artworks(year_sort);
+    CREATE INDEX IF NOT EXISTS idx_origin ON artworks(origin);
+  `);
+  
+  const insert = db.prepare(`
+    INSERT OR REPLACE INTO artworks (
+      id, title, author, year, year_sort, mainCategory, subCategory,
+      source, imageUrl, link, classification, medium, department,
+      objectType, confidenceScore, origin
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  const insertMany = db.transaction((items: any[]) => {
+    for (const item of items) {
+      insert.run(
+        item.id,
+        item.title,
+        item.author,
+        item.year,
+        extractYearSort(item.year),
+        item.mainCategory,
+        item.subCategory || null,
+        item.source,
+        item.imageUrl,
+        item.link,
+        item.classification || null,
+        item.medium || null,
+        item.department || null,
+        item.objectType || null,
+        item.confidenceScore || null,
+        item.origin || null
+      );
+    }
+  });
+  
+  // Load and insert items in batches
+  const batchSize = 500;
+  let inserted = 0;
+  let errors = 0;
+  
+  console.log('💾 Inserting into database...');
+  
+  for (let i = 0; i < files.length; i += batchSize) {
+    const batch = files.slice(i, i + batchSize);
+    const items = [];
+    
+    for (const file of batch) {
+      try {
+        const filePath = path.join(PROCESSED_DIR, file);
+        const item = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        items.push(item);
+      } catch (e: any) {
+        console.warn(`⚠️  Error reading ${file}: ${e.message}`);
+        errors++;
+      }
+    }
+    
+    if (items.length > 0) {
+      insertMany(items);
+      inserted += items.length;
+      if (inserted % 2000 === 0) {
+        console.log(`   ✓ ${inserted} items inserted...`);
+      }
+    }
+  }
+  
+  // Stats for designarchive only
+  const stats = {
+    total: db.prepare(`SELECT COUNT() as count FROM artworks WHERE source = ?`).get(SOURCE_PREFIX.replace('-', '')) as { count: number },
+    byCategory: db.prepare(`SELECT mainCategory, COUNT() as count FROM artworks WHERE source = ? GROUP BY mainCategory ORDER BY count DESC`).all(SOURCE_PREFIX.replace('-', '')) as Array<{ mainCategory: string; count: number }>,
+  };
+  
+  console.log('\n╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  LOAD COMPLETE                                            ║');
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+  
+  console.log(`📊 Design Archive Stats:`);
+  console.log(`Total artworks: ${stats.total.count}`);
+  console.log(`Errors: ${errors}`);
+  
+  console.log(`\n🏷️ By Category:`);
+  if (stats.byCategory.length > 0) {
+    stats.byCategory.forEach(row => {
+      console.log(`${row.mainCategory.padEnd(25)} ${row.count}`);
+    });
+  } else {
+    console.log('  (no categorized items yet)');
+  }
+  
+  console.log(`\n📁 Database: artworks.db\n`);
+  
+  db.close();
+}
+
+main().catch(console.error);
+</file>
+
+<file path="src/scripts/harvest-designarchive.ts">
+// src/scripts/harvest-designarchive.ts
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+
+dotenv.config({ path: '.env.local' });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AIGA DESIGN ARCHIVE HARVEST — No API key required
+//
+// Confirmed live endpoint (from network inspection):
+//   https://designarchives.aiga.org/srv/entries.json
+//
+// Params:
+//   q     — Lucene query ('' = all, or keyword)
+//   page  — 1-indexed
+//   limit — items per page (50 works)
+//
+// Response: { list: [...], pagination: { page, totalPages, totalItems } }
+// Image:    CDN_BASE + entry.primary_asset.files.lg.img
+// Author:   entry.primary_credits.credits[0]
+// Link:     CDN_BASE + entry.uri_parsed
+//
+// NOTE: designarchives.aiga.org uses a self-signed / chain-incomplete SSL cert
+// that Node.js rejects. We use https.request with rejectUnauthorized:false —
+// same workaround as any internal corporate tool. The data itself is public.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const OUT_DIR  = path.join('data', 'raw', 'designarchive');
+const BASE_URL = 'https://designarchives.aiga.org/srv/entries.json'; // ✅ Fixed: removed trailing spaces
+const CDN_BASE = 'https://designarchives.aiga.org';                   // ✅ Fixed: removed trailing spaces
+const PAGE_SIZE = 50;
+
+// Custom HTTPS agent that skips SSL cert verification — needed because
+// designarchives.aiga.org has a cert Node.js rejects (browser ignores it).
+const agent = new https.Agent({ rejectUnauthorized: false });
+
+function sleep(ms: number) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function getImageUrl(primaryAsset: any): string {
+  if (!primaryAsset?.files) return '';
+  const f   = primaryAsset.files;
+  const img = f.lg?.img ?? f.or?.img ?? f.prev?.img ?? '';
+  return img ? `${CDN_BASE}${img}` : '';
+}
+
+async function fetchPage(
+  q: string,
+  page: number,
+  retries = 3
+): Promise<{ list: any[]; totalPages: number } | null> {
+  const params = new URLSearchParams({
+    q,
+    page:  String(page),
+    limit: String(PAGE_SIZE),
+  });
+
+  const url = `${BASE_URL}?${params.toString()}`;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const data = await new Promise<any>((resolve, reject) => {
+        const req = https.get(url, {
+          agent,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; ArtHarvester/2.0)',
+            'Accept':     'application/json',
+            'Referer':    'https://designarchives.aiga.org/', // ✅ Fixed: removed trailing spaces
+          },
+        }, (res) => {
+          if (res.statusCode === 429) {
+            const wait = parseInt(res.headers['retry-after'] || '30') * 1000;
+            console.log(`   ⏸  Rate limited — waiting ${wait / 1000}s`);
+            res.resume();
+            setTimeout(() => resolve(fetchPage(q, page)), wait);
+            return;
+          }
+          if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume();
+            reject(new Error(`HTTP ${res.statusCode}`));
+            return;
+          }
+
+          let body = '';
+          res.setEncoding('utf8');
+          res.on('data', chunk => body += chunk);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); }
+            catch (e) { reject(new Error('JSON parse error')); }
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+      });
+
+      return {
+        list:       data?.list       ?? [],
+        totalPages: data?.pagination?.totalPages ?? 1,
+      };
+    } catch (e: any) {
+      console.warn(`   Fetch error (attempt ${attempt + 1}/${retries}): ${e.message}`);
+      if (attempt < retries - 1) await sleep(1000 * (attempt + 1));
+    }
+  }
+  return null;
+}
+
+async function runTask(
+  desc: string,
+  q: string,
+  limit: number,
+  startPage: number,
+  seen: Set<string>,
+  fileIndex: { n: number }
+): Promise<{ newCount: number; dupeCount: number; noImgCount: number }> {
+  console.log(`\n📌 ${desc}`);
+
+  let page       = startPage;
+  let totalPages = 9999;
+  let newCount   = 0;
+  let dupeCount  = 0;
+  let noImgCount = 0;
+  const maxPages = startPage + Math.ceil(limit / PAGE_SIZE) - 1;
+
+  while (page <= Math.min(totalPages, maxPages)) {
+    const result = await fetchPage(q, page);
+
+    if (!result || !result.list.length) {
+      console.log('   → No more results');
+      break;
+    }
+
+    if (page === startPage) totalPages = result.totalPages;
+
+    for (const entry of result.list) {
+      const rawId = entry.id;
+      if (!rawId) continue;
+
+      const id = `designarchive-${rawId}`;
+      if (seen.has(id)) { dupeCount++; continue; }
+
+      const imageUrl = getImageUrl(entry.primary_asset);
+      if (!imageUrl) { noImgCount++; continue; }
+
+      const record = {
+        id,
+        source:      'designarchive',
+        title:       entry.title                          ?? '',
+        author:      entry.primary_credits?.credits?.[0] ?? '',
+        year:        String(entry.year ?? ''),
+        imageUrl,
+        url:         `${CDN_BASE}${entry.uri_parsed}`,
+        discipline:  entry.discipline                     ?? '',
+        formats:     (entry.formats     ?? []).map((f: any) => f.name),
+        collections: (entry.collections ?? []).map((c: any) => c.name),
+        location:    entry.locations?.[0]                ?? '',
+        raw:         entry,
+      };
+
+      seen.add(id);
+      const outPath = path.join(OUT_DIR, `designarchive-${String(fileIndex.n++).padStart(6, '0')}.json`);
+      fs.writeFileSync(outPath, JSON.stringify(record, null, 2));
+      newCount++;
+    }
+
+    page++;
+    await sleep(400);
+  }
+
+  console.log(`   ✓ ${newCount} new, ${dupeCount} dupes, ${noImgCount} no-image`);
+  return { newCount, dupeCount, noImgCount };
+}
+
+async function main() {
+  console.log('╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  AIGA DESIGN ARCHIVE HARVEST — No API Key Required       ║');
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  const seenPath = path.join(OUT_DIR, '.seen-ids.json');
+  const seen: Set<string> = new Set(
+    fs.existsSync(seenPath) ? JSON.parse(fs.readFileSync(seenPath, 'utf8')) : []
+  );
+  const fileIndex = { n: seen.size };
+
+  const tasks: { desc: string; q: string; limit: number; startPage: number }[] = [
+    // Broad sweeps — q='' returns the full collection in publication order
+    // ✅ Fixed: changed q: '*' to q: '' (empty string = all results)
+    { desc: 'Sweep 1  (pages   1–100)', q: '', limit: 5000, startPage: 1   },
+    { desc: 'Sweep 2  (pages 101–200)', q: '', limit: 5000, startPage: 101 },
+    { desc: 'Sweep 3  (pages 201–300)', q: '', limit: 5000, startPage: 201 },
+    { desc: 'Sweep 4  (pages 301–400)', q: '', limit: 5000, startPage: 301 },
+    // Keyword passes for graphic design disciplines
+    { desc: 'Keyword: Poster',          q: 'poster',       limit: 2000, startPage: 1 },
+    { desc: 'Keyword: Typography',      q: 'typography',   limit: 2000, startPage: 1 },
+    { desc: 'Keyword: Book design',     q: 'book',         limit: 2000, startPage: 1 },
+    { desc: 'Keyword: Identity',        q: 'identity',     limit: 2000, startPage: 1 },
+    { desc: 'Keyword: Packaging',       q: 'packaging',    limit: 1500, startPage: 1 },
+    { desc: 'Keyword: Environmental',   q: 'environmental',limit: 1000, startPage: 1 },
+  ];
+
+  let totalNew   = 0;
+  let totalDupes = 0;
+  let totalNoImg = 0;
+  const results: { desc: string; newCount: number; dupeCount: number }[] = [];
+
+  for (const task of tasks) {
+    const r = await runTask(task.desc, task.q, task.limit, task.startPage, seen, fileIndex);
+    totalNew   += r.newCount;
+    totalDupes += r.dupeCount;
+    totalNoImg += r.noImgCount;
+    results.push({ desc: task.desc, newCount: r.newCount, dupeCount: r.dupeCount });
+    fs.writeFileSync(seenPath, JSON.stringify([...seen]));
+    await sleep(2000);
+  }
+
+  fs.writeFileSync(seenPath, JSON.stringify([...seen]));
+
+  const descWidth = Math.max(...results.map(r => r.desc.length));
+  console.log('\n╔═══════════════════════════════════════════════════════════╗');
+  console.log('║  HARVEST COMPLETE                                         ║');
+  console.log('╠═══════════════════════════════════════════════════════════╣');
+  results.forEach((r, i) => {
+    const num  = String(i + 1).padStart(2, ' ');
+    const desc = r.desc.padEnd(descWidth, ' ');
+    const nw   = String(r.newCount).padStart(6, ' ');
+    const dp   = String(r.dupeCount).padStart(5, ' ');
+    console.log(`  ${num}. ${desc}   ${nw} new   ${dp} dupes`);
+  });
+  console.log('╠═══════════════════════════════════════════════════════════╣');
+  console.log(`   No image (skipped) : ${totalNoImg.toLocaleString()}`);
+  console.log(`   Duplicates skipped : ${totalDupes.toLocaleString()}`);
+  console.log(`   ✅ New items saved  : ${totalNew.toLocaleString()}`);
+  console.log('╠═══════════════════════════════════════════════════════════╣');
+  console.log('   Next steps:');
+  console.log('     npm run transform');
+  console.log('     npm run load');
+  console.log('     node src/scripts/reclassify-from-raw.mjs --commit');
+  console.log('╚═══════════════════════════════════════════════════════════╝\n');
+}
+
+main().catch(console.error);
+</file>
+
+<file path=".repomixignore">
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+</file>
 
 <file path="data/backfill-log.json">
 []
@@ -24250,756 +24864,6 @@ This section contains the contents of the repository's files.
 ]
 </file>
 
-<file path="src/app/template.js">
-'use client';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// template.js re-mounts on every navigation, giving us a clean
-// enter animation without needing to manage AnimatePresence state.
-// exit animations are handled by the outgoing template's unmount.
-
-export default function Template({ children }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{
-        duration: 0.45,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-</file>
-
-<file path="src/scripts/backfill-unknowns.mjs">
-// src/scripts/backfill-unknowns.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-// BACKFILL: Fill in missing year, title, author by re-reading raw source files
-// and looking at alternative fields the original transform didn't use.
-//
-// Strategy:
-//   - Only touches rows where year = 'n.d.' OR title = 'Untitled' OR author = 'Unknown'
-//   - Reads the raw JSON for each such item from data/raw/{source}/
-//   - Applies source-specific extended field extraction
-//   - Updates the DB row in-place — does NOT reclassify or change categories
-//   - Logs every change made so you can audit/revert
-//
-// Run: node src/scripts/backfill-unknowns.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-
-import Database from 'better-sqlite3';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT      = path.join(__dirname, '..', '..');
-const DB_PATH   = path.join(ROOT, 'artworks.db');
-const RAW_DIR   = path.join(ROOT, 'data', 'raw');
-const LOG_PATH  = path.join(ROOT, 'data', 'backfill-log.json');
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function str(val) {
-  if (val === null || val === undefined) return '';
-  return String(val).trim();
-}
-
-function isEmpty(val) {
-  if (!val) return true;
-  const v = str(val).toLowerCase();
-  return v === '' || v === 'unknown' || v === 'untitled' || v === 'n.d.' || v === 'n/a' || v === 'none';
-}
-
-/** Extract the best 4-digit year, or a "c. YYYY–YYYY" range string, from raw date info */
-function bestYear(display, begin, end) {
-  // Try display string first (e.g. "ca. 1920", "1900-1910", "19th century")
-  if (display && str(display) !== 'n.d.') {
-    const single = str(display).match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
-    if (single) return single[0];
-
-    // Range like "1900-1910" or "1900–1910"
-    const range = str(display).match(/\b(1[0-9]{3}|20[0-9]{2})\b.*?\b(1[0-9]{3}|20[0-9]{2})\b/);
-    if (range) return `c. ${range[1]}–${range[2]}`;
-  }
-
-  // Fall back to structured begin/end
-  const b = parseInt(str(begin).match(/(\d{4})/)?.[1] || '');
-  const e = parseInt(str(end).match(/(\d{4})/)?.[1] || '');
-
-  if (!isNaN(b) && !isNaN(e)) {
-    if (b === e) return String(b);
-    if (Math.abs(e - b) <= 5) return String(b);  // close enough — use begin
-    return `c. ${b}–${e}`;
-  }
-  if (!isNaN(b)) return String(b);
-  if (!isNaN(e)) return String(e);
-
-  return null;
-}
-
-// ── Per-source extractors ─────────────────────────────────────────────────────
-
-function extractMet(raw) {
-  const d = raw.data || raw;
-  const updates = {};
-
-  // Year — objectDate display string ONLY.
-  // IMPORTANT: objectBeginDate/objectEndDate are the ARTIST'S lifespan dates,
-  // NOT the artwork's creation date. Never use them for year.
-  const dateDisplay = str(d.objectDate);
-  if (dateDisplay && dateDisplay !== 'n.d.') {
-    const single = dateDisplay.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
-    if (single) updates.year = single[0];
-    // No range fallback for Met — objectDate display is the only reliable source
-  }
-
-  // Author — artistDisplayName is primary; fall back to artistPrefix + artistSuffix
-  if (str(d.artistDisplayName)) {
-    updates.author = str(d.artistDisplayName);
-  } else {
-    const prefix = str(d.artistPrefix);
-    const suffix = str(d.artistSuffix);
-    const nation = str(d.artistNationality);
-    const dates  = str(d.artistBeginDate) && str(d.artistEndDate)
-      ? `${d.artistBeginDate}–${d.artistEndDate}` : '';
-    // "Circle of ...", "Workshop of ..." etc live in artistRole
-    const role = str(d.artistRole);
-    if (role && prefix) updates.author = `${role}, ${prefix}`.trim();
-    else if (nation && dates) updates.author = `${nation}, ${dates}`;
-  }
-
-  // Title — objectName is a reasonable fallback
-  if (!str(d.title) || str(d.title).toLowerCase() === 'untitled') {
-    if (str(d.objectName)) updates.title = str(d.objectName);
-  } else {
-    updates.title = str(d.title);
-  }
-
-  // Culture as author fallback
-  if (isEmpty(updates.author) && str(d.culture)) {
-    updates.author = str(d.culture);
-  }
-
-  return updates;
-}
-
-function extractArtic(raw) {
-  const d = raw.data || raw;
-  const updates = {};
-
-  const year = bestYear(d.date_display, d.date_start, d.date_end);
-  if (year) updates.year = year;
-
-  // artist_display includes nationality+dates, e.g. "Rembrandt van Rijn\nDutch, 1606-1669"
-  // Clean it to just the name
-  if (str(d.artist_display)) {
-    updates.author = str(d.artist_display).split('\n')[0].trim();
-  } else if (str(d.artist_title)) {
-    updates.author = str(d.artist_title);
-  }
-
-  if (str(d.title)) updates.title = str(d.title);
-
-  // Place of origin as author fallback
-  if (isEmpty(updates.author) && str(d.place_of_origin)) {
-    updates.author = str(d.place_of_origin);
-  }
-
-  return updates;
-}
-
-function extractVa(raw) {
-  const d = raw.data || raw;
-  const updates = {};
-
-  // _primaryDate is display string; productionDates has structured begin/end
-  const prodDates = d.productionDates || [];
-  const pd = prodDates[0]?.date || {};
-  const year = bestYear(d._primaryDate, pd.earliest, pd.latest);
-  if (year) updates.year = year;
-
-  // Maker
-  const maker = d._primaryMaker?.name;
-  if (str(maker)) {
-    updates.author = str(maker);
-  }
-
-  // Title
-  const title = d._primaryTitle || (d.titles?.[0]?.title);
-  if (str(title)) updates.title = str(title);
-
-  // If still no author, try place
-  if (isEmpty(updates.author) && str(d._primaryPlace)) {
-    updates.author = str(d._primaryPlace);
-  }
-
-  return updates;
-}
-
-function extractRijks(raw) {
-  const d = raw.data || raw;
-  const updates = {};
-
-  // Year from timespan
-  const ts = d.produced_by?.timespan;
-  if (ts) {
-    const begin = str(ts.begin_of_the_begin).match(/^(\d{4})/)?.[1];
-    const end   = str(ts.end_of_the_end).match(/^(\d{4})/)?.[1];
-    const year  = bestYear(null, begin, end);
-    if (year) updates.year = year;
-  }
-
-  // Title from identified_by
-  const names = d.identified_by || [];
-  const primary = names.find(n =>
-    n.type === 'Name' &&
-    n.classified_as?.some(c => c.id?.includes('300404670') || c.id?.includes('300417200'))
-  ) || names.find(n => n.type === 'Name');
-  if (primary?.content) updates.title = str(primary.content);
-
-  // Artist from produced_by.referred_to_by (EN label)
-  for (const ref of d.produced_by?.referred_to_by || []) {
-    const isEN = ref.language?.some(l => l.id?.includes('300388277'));
-    if (isEN && ref.content) {
-      updates.author = str(ref.content).replace(/\s*\(.*?\)\s*$/, '').trim();
-      break;
-    }
-  }
-  // Fallback — parts
-  if (isEmpty(updates.author)) {
-    for (const part of d.produced_by?.part || []) {
-      const name = part.referred_to_by?.find(r =>
-        r.language?.some(l => l.id?.includes('300388277'))
-      )?.content;
-      if (name) { updates.author = str(name).replace(/\s*\(.*?\)\s*$/, '').trim(); break; }
-    }
-  }
-
-  return updates;
-}
-
-function extractSmithsonian(raw) {
-  const d = raw.data || raw;
-  const ft = d.content?.freetext || {};
-  const updates = {};
-
-  // Date — freetext.date[0] ONLY.
-  // indexedStructured.date is NOT reliably ordered begin→end in SI data
-  // and produces inverted ranges like "c. 1930–1850". Avoid it.
-  const dateDisplay = str(ft.date?.[0]?.content);
-  if (dateDisplay) {
-    const single = dateDisplay.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
-    if (single) updates.year = single[0];
-  }
-
-  // Creator
-  const creator = str(ft.name?.[0]?.content);
-  if (creator) updates.author = creator;
-
-  // Title
-  const title = str(d.title);
-  if (title) updates.title = title;
-
-  // Culture / place fallback
-  if (isEmpty(updates.author)) {
-    const place = str(ft.place?.[0]?.content || d.content?.indexedStructured?.place?.[0]);
-    if (place) updates.author = place;
-  }
-
-  return updates;
-}
-
-function extractCooperHewitt(flat) {
-  // CH files are flat (no .data wrapper)
-  const updates = {};
-  const ch = flat.raw || {};
-
-  // Date can be "1890-1900" or "1890" or "ca. 1920"
-  const date = str(flat.date || ch.date);
-  const year = bestYear(date, null, null);
-  if (year) updates.year = year;
-
-  // Designer from participants
-  const participants = ch.participants || [];
-  const designer = participants.find(p => p?.person?.name)?.person?.name;
-  if (str(designer)) updates.author = str(designer);
-
-  // Title
-  if (str(flat.title)) updates.title = str(flat.title);
-
-  return updates;
-}
-
-// ── Raw file loader ───────────────────────────────────────────────────────────
-
-// CooperHewitt files are saved with sequential counter names like
-// "cooperhewitt-000000.json" rather than by the actual CH object ID.
-// We build a one-time index: { "cooperhewitt-18065659": "cooperhewitt-000042.json" }
-let chIndex = null;
-
-function buildChIndex() {
-  if (chIndex) return chIndex;
-  console.log('  Building CooperHewitt filename index (one-time scan)...');
-  chIndex = {};
-  const dir = path.join(RAW_DIR, 'cooperhewitt');
-  if (!fs.existsSync(dir)) return chIndex;
-
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('.'));
-  let scanned = 0;
-  for (const filename of files) {
-    try {
-      const raw = JSON.parse(fs.readFileSync(path.join(dir, filename), 'utf8'));
-      // CH files are flat — the `id` field is the full "cooperhewitt-XXXXXXXX" DB id
-      if (raw.id) chIndex[raw.id] = filename;
-    } catch {
-      // skip malformed
-    }
-    scanned++;
-    if (scanned % 5000 === 0) console.log(`    ...scanned ${scanned} CH files`);
-  }
-  console.log(`  CH index built: ${Object.keys(chIndex).length} entries from ${scanned} files\n`);
-  return chIndex;
-}
-
-function loadRaw(source, dbId) {
-  if (source === 'cooperhewitt') {
-    const index = buildChIndex();
-    const filename = index[dbId];
-    if (!filename) return null;
-    try {
-      return JSON.parse(fs.readFileSync(path.join(RAW_DIR, 'cooperhewitt', filename), 'utf8'));
-    } catch { return null; }
-  }
-
-  // All other sources: file is named by the numeric part of the DB id
-  const numericId = dbId.slice(source.length + 1); // strip "source-" prefix
-  const filePath  = path.join(RAW_DIR, source, `${numericId}.json`);
-  if (!fs.existsSync(filePath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
-
-async function main() {
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  BACKFILL — Recovering missing year / title / author      ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-  if (!fs.existsSync(DB_PATH)) {
-    console.error(`❌  Database not found at ${DB_PATH}`);
-    process.exit(1);
-  }
-
-  const db = new Database(DB_PATH);
-
-  // Find every row that has at least one "unknown" field
-  const targets = db.prepare(`
-    SELECT id, source, title, author, year
-    FROM artworks
-    WHERE
-      year   IN ('n.d.', '', 'Unknown') OR year IS NULL OR
-      title  IN ('Untitled', '', 'Unknown') OR title IS NULL OR
-      author IN ('Unknown', '', 'Untitled') OR author IS NULL
-  `).all();
-
-  console.log(`🔍  Found ${targets.length} rows with missing fields\n`);
-
-  const update = db.prepare(`
-    UPDATE artworks
-    SET title = ?, author = ?, year = ?, year_sort = ?
-    WHERE id = ?
-  `);
-
-  function yearToSort(y) {
-    if (!y) return null;
-    const m = y.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
-    return m ? parseInt(m[0]) : null;
-  }
-
-  const EXTRACTORS = {
-    met:          extractMet,
-    artic:        extractArtic,
-    va:           extractVa,
-    rijks:        extractRijks,
-    smithsonian:  extractSmithsonian,
-    cooperhewitt: extractCooperHewitt,
-  };
-
-  const log = [];
-  const stats = { scanned: 0, updated: 0, noRaw: 0, noImprovement: 0 };
-
-  for (const row of targets) {
-    stats.scanned++;
-
-    const raw = loadRaw(row.source, row.id);
-    if (!raw) {
-      stats.noRaw++;
-      if (stats.noRaw <= 5) console.log(`  ⚠  No raw file: ${row.id}`);
-      continue;
-    }
-
-    const extractor = EXTRACTORS[row.source];
-    if (!extractor) continue;
-
-    const extracted = extractor(raw);
-
-    // Only apply if actually better than what we have
-    const newTitle  = (!isEmpty(extracted.title)  && isEmpty(row.title))  ? extracted.title  : row.title;
-    const newAuthor = (!isEmpty(extracted.author) && isEmpty(row.author)) ? extracted.author : row.author;
-    const newYear   = (!isEmpty(extracted.year)   && isEmpty(row.year))   ? extracted.year   : row.year;
-
-    const changed =
-      newTitle  !== row.title  ||
-      newAuthor !== row.author ||
-      newYear   !== row.year;
-
-    if (!changed) {
-      stats.noImprovement++;
-      continue;
-    }
-
-    update.run(newTitle, newAuthor, newYear, yearToSort(newYear), row.id);
-    stats.updated++;
-
-    const entry = { id: row.id, source: row.source };
-    if (newTitle  !== row.title)  entry.title  = { was: row.title,  now: newTitle  };
-    if (newAuthor !== row.author) entry.author = { was: row.author, now: newAuthor };
-    if (newYear   !== row.year)   entry.year   = { was: row.year,   now: newYear   };
-    log.push(entry);
-
-    if (stats.updated <= 20 || stats.updated % 100 === 0) {
-      console.log(`  ✓ ${row.id}`);
-      if (entry.title)  console.log(`      title:  "${entry.title.was}"  →  "${entry.title.now}"`);
-      if (entry.author) console.log(`      author: "${entry.author.was}"  →  "${entry.author.now}"`);
-      if (entry.year)   console.log(`      year:   "${entry.year.was}"  →  "${entry.year.now}"`);
-    }
-  }
-
-  // Write log
-  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
-  fs.writeFileSync(LOG_PATH, JSON.stringify(log, null, 2));
-
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  BACKFILL COMPLETE                                        ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-  console.log(`  Scanned:         ${stats.scanned}`);
-  console.log(`  Updated:         ${stats.updated}`);
-  console.log(`  No raw file:     ${stats.noRaw}`);
-  console.log(`  No improvement:  ${stats.noImprovement}`);
-  console.log(`\n  Log written to:  data/backfill-log.json`);
-  console.log(`  (review log before next harvest to see what was changed)\n`);
-
-  db.close();
-}
-
-main().catch(err => { console.error(err); process.exit(1); });
-</file>
-
-<file path="src/scripts/migrate-origin-field.mjs">
-// src/scripts/migrate-origin-field.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-// MIGRATION: Add `origin` column and separate place attributions from author.
-//
-// Problem: backfill-unknowns wrote place names ("France", "Lucknow", etc.)
-// into the `author` field as a fallback. These are legitimate museum
-// attributions but should be displayed as "Origin", not "Artist".
-//
-// This script:
-//   1. Adds an `origin` column to artworks table
-//   2. Identifies rows where `author` looks like a place (not a person name)
-//   3. Moves those values to `origin`, resets `author` to 'Unknown'
-//   4. Logs every row changed for audit
-//
-// Safe to re-run — uses INSERT OR IGNORE / UPDATE WHERE logic.
-// Run: node src/scripts/migrate-origin-field.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-
-import Database from 'better-sqlite3';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT     = path.join(__dirname, '..', '..');
-const DB_PATH  = path.join(ROOT, 'artworks.db');
-const LOG_PATH = path.join(ROOT, 'data', 'origin-migration-log.json');
-
-// ── Place-name detection ───────────────────────────────────────────────────
-// These are values the backfill wrote into `author` that are actually origins.
-// Covers everything written by the V&A, Smithsonian, Met, and Rijks extractors.
-const KNOWN_PLACE_AUTHORS = new Set([
-  // Countries / regions
-  'France', 'Germany', 'Italy', 'England', 'Britain', 'Great Britain',
-  'United Kingdom', 'Netherlands', 'Europe', 'America', 'American',
-  'Japan', 'China', 'India', 'Korea', 'Iran', 'Turkey', 'Egypt',
-  'Spain', 'Portugal', 'Belgium', 'Austria', 'Switzerland', 'Russia',
-  'Scandinavia', 'Denmark', 'Sweden', 'Norway', 'Finland',
-  'Mexico', 'Peru', 'Colombia', 'Brazil',
-  'Africa', 'West Africa', 'East Africa', 'South Africa',
-
-  // Cities
-  'London', 'Paris', 'Rome', 'Florence', 'Venice', 'Milan',
-  'Amsterdam', 'Antwerp', 'Brussels', 'Vienna', 'Prague',
-  'New York', 'Boston', 'Philadelphia',
-  'Lucknow', 'Kolkata', 'Mumbai', 'Delhi', 'Jaipur', 'Varanasi',
-  'Hyderabad', 'Deccan', 'Kangra', 'Rajasthan', 'Dunhuang',
-  'Lahore', 'Ramsgate', 'Cuddalore', 'Astana', 'Shache',
-  'Trichinopoly', 'Mughal Empire', 'Malay Peninsula',
-  'The Limes Watchtowers',
-
-  // Met nationality strings (written to author as culture fallback)
-  'Chinese, for American market',
-  'American, 19th century',
-  'French, 18th century',
-  'Dutch, 17th century',
-  'British, 19th century',
-  'Italian, 17th century',
-  'German, 18th century',
-  'Japanese, Edo period',
-  'Korean, Joseon dynasty',
-  'Chinese, Qing dynasty',
-]);
-
-// Also catch the pattern "Adjective, period" (e.g. "French, ca. 1750")
-// and multi-word place-like strings that aren't people names
-function looksLikePlace(author) {
-  if (!author) return false;
-  const a = author.trim();
-  if (KNOWN_PLACE_AUTHORS.has(a)) return true;
-
-  // Pattern: "Nationality, date-or-period"  e.g. "American, 18th century"
-  if (/^[A-Z][a-z]+,\s*(ca?\.\s*)?\d/.test(a)) return true;
-  if (/^[A-Z][a-z]+,\s*(early|late|mid|circa)/.test(a)) return true;
-
-  // All-caps country abbreviation-style values
-  if (/^[A-Z]{2,6}$/.test(a)) return true;
-
-  return false;
-}
-
-async function main() {
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  MIGRATION — Separating "Origin" from "Author"            ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-  if (!fs.existsSync(DB_PATH)) {
-    console.error(`❌  Database not found at ${DB_PATH}`);
-    process.exit(1);
-  }
-
-  const db = new Database(DB_PATH);
-
-  // Step 1 — add `origin` column if it doesn't exist yet
-  const cols = db.prepare(`PRAGMA table_info(artworks)`).all().map(r => r.name);
-  if (!cols.includes('origin')) {
-    db.exec(`ALTER TABLE artworks ADD COLUMN origin TEXT`);
-    console.log('✓ Added `origin` column to artworks table\n');
-  } else {
-    console.log('ℹ  `origin` column already exists — skipping ALTER TABLE\n');
-  }
-
-  // Step 2 — add index for origin queries
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_origin ON artworks(origin)`);
-
-  // Step 3 — find rows where author looks like a place
-  const rows = db.prepare(`
-    SELECT id, source, author, origin
-    FROM artworks
-    WHERE author IS NOT NULL AND author != 'Unknown' AND author != ''
-  `).all();
-
-  console.log(`Scanning ${rows.length.toLocaleString()} rows with a non-empty author...\n`);
-
-  const updateStmt = db.prepare(`
-    UPDATE artworks SET author = 'Unknown', origin = ? WHERE id = ?
-  `);
-
-  const log = [];
-  let moved = 0;
-  let alreadyHasOrigin = 0;
-
-  const migrate = db.transaction(() => {
-    for (const row of rows) {
-      if (!looksLikePlace(row.author)) continue;
-
-      // If origin already has a real value from somewhere else, don't clobber it
-      if (row.origin && row.origin !== 'Unknown' && row.origin !== '') {
-        alreadyHasOrigin++;
-        continue;
-      }
-
-      updateStmt.run(row.author, row.id);
-      log.push({ id: row.id, source: row.source, movedToOrigin: row.author });
-      moved++;
-    }
-  });
-
-  migrate();
-
-  // Write log
-  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
-  fs.writeFileSync(LOG_PATH, JSON.stringify(log, null, 2));
-
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║  MIGRATION COMPLETE                                       ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-  console.log(`  Rows migrated (author → origin):  ${moved}`);
-  console.log(`  Skipped (origin already set):     ${alreadyHasOrigin}`);
-  console.log(`  Log: data/origin-migration-log.json\n`);
-
-  // Show breakdown by source
-  const breakdown = {};
-  for (const entry of log) {
-    breakdown[entry.source] = (breakdown[entry.source] || 0) + 1;
-  }
-  console.log('  By source:');
-  for (const [src, count] of Object.entries(breakdown).sort((a, b) => b[1] - a[1])) {
-    console.log(`    ${src.padEnd(14)} ${count}`);
-  }
-  console.log('');
-
-  db.close();
-}
-
-main().catch(err => { console.error(err); process.exit(1); });
-</file>
-
-<file path="src/scripts/revert-bad-years.mjs">
-// src/scripts/revert-bad-years.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-// Reverts two classes of bad data introduced by backfill-unknowns.mjs:
-//
-//   1. Met year ranges — backfill incorrectly used objectBeginDate/objectEndDate
-//      which are the ARTIST'S lifespan, not the artwork's date.
-//      Fix: revert any Met row whose year was changed to a "c. YYYY–YYYY" range
-//      back to 'n.d.' (honest unknown is better than wrong data)
-//
-//   2. Smithsonian inverted ranges — indexedStructured.date isn't reliably
-//      ordered begin→end, producing nonsense like "c. 1930–1850".
-//      Fix: revert any Smithsonian range where begin > end.
-//
-// Run: node src/scripts/revert-bad-years.mjs
-// ─────────────────────────────────────────────────────────────────────────────
-
-import Database from 'better-sqlite3';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT      = path.join(__dirname, '..', '..');
-const DB_PATH   = path.join(ROOT, 'artworks.db');
-const LOG_PATH  = path.join(ROOT, 'data', 'backfill-log.json');
-
-function yearToSort(y) {
-  if (!y) return null;
-  const m = y.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
-  return m ? parseInt(m[0]) : null;
-}
-
-function isInverted(yearStr) {
-  // matches "c. 1930–1850" style — range where begin > end
-  const m = yearStr.match(/c\.\s*(\d{4})[–-](\d{4})/);
-  if (!m) return false;
-  return parseInt(m[1]) > parseInt(m[2]);
-}
-
-async function main() {
-  console.log('\n╔════════════════════════════════════════════════════════════╗');
-  console.log('║  REVERT — Fixing bad Met years & inverted SI ranges       ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-
-  if (!fs.existsSync(DB_PATH)) {
-    console.error(`❌  Database not found at ${DB_PATH}`);
-    process.exit(1);
-  }
-
-  const db     = new Database(DB_PATH);
-  const update = db.prepare(`UPDATE artworks SET year = ?, year_sort = ? WHERE id = ?`);
-
-  let metReverted = 0;
-  let siReverted  = 0;
-
-  // ── 1. Revert Met artist-lifespan ranges ──────────────────────────────────
-  // These were written as "c. YYYY–YYYY" where neither year was in objectDate.
-  // The safest revert: any Met row whose year is now a "c. YYYY–YYYY" range
-  // AND whose year_sort could not have come from objectDate (heuristic: if the
-  // year_sort matches the begin year of the range, it came from objectBeginDate).
-  // Simplest safe approach: revert ALL Met "c. YYYY–YYYY" rows, since the
-  // original transform would have set a real year if objectDate had one.
-
-  const metRanges = db.prepare(`
-    SELECT id, year FROM artworks
-    WHERE source = 'met'
-      AND year LIKE 'c. %–%'
-  `).all();
-
-  console.log(`Found ${metRanges.length} Met rows with range years to revert`);
-
-  const metBatch = db.transaction(() => {
-    for (const row of metRanges) {
-      update.run('n.d.', null, row.id);
-      metReverted++;
-    }
-  });
-  metBatch();
-
-  console.log(`✓ Reverted ${metReverted} Met rows → 'n.d.'\n`);
-
-  // ── 2. Revert inverted Smithsonian ranges ─────────────────────────────────
-  const siRanges = db.prepare(`
-    SELECT id, year FROM artworks
-    WHERE source = 'smithsonian'
-      AND year LIKE 'c. %–%'
-  `).all();
-
-  console.log(`Found ${siRanges.length} Smithsonian range rows, checking for inversions...`);
-
-  const siBatch = db.transaction(() => {
-    for (const row of siRanges) {
-      if (isInverted(row.year)) {
-        update.run('n.d.', null, row.id);
-        siReverted++;
-      }
-    }
-  });
-  siBatch();
-
-  console.log(`✓ Reverted ${siReverted} inverted Smithsonian ranges → 'n.d.'\n`);
-
-  // ── Summary ───────────────────────────────────────────────────────────────
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║  REVERT COMPLETE                                          ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
-  console.log(`  Met rows reverted:          ${metReverted}`);
-  console.log(`  Smithsonian rows reverted:  ${siReverted}`);
-  console.log(`  Total reverted:             ${metReverted + siReverted}`);
-  console.log(`\n  Rows NOT reverted (kept as correct):`);
-  console.log(`    - V&A, ARTIC, Rijks, CooperHewitt range years (source date fields)`);
-  console.log(`    - Place-origin author values (France, Lucknow, etc.) — legitimate museum attribution\n`);
-
-  db.close();
-}
-
-main().catch(err => { console.error(err); process.exit(1); });
-</file>
-
-<file path=".repomixignore">
-# Add patterns to ignore here, one per line
-# Example:
-# *.log
-# tmp/
-</file>
-
 <file path="eslint.config.mjs">
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -42649,6 +42513,31 @@ export async function GET(request, { params }) {
 }
 </file>
 
+<file path="src/app/template.js">
+'use client';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// template.js re-mounts on every navigation, giving us a clean
+// enter animation without needing to manage AnimatePresence state.
+// exit animations are handled by the outgoing template's unmount.
+
+export default function Template({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{
+        duration: 0.45,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+</file>
+
 <file path="src/components/Placard.js">
 // src/components/Placard.js
 'use client';
@@ -42737,7 +42626,9 @@ export function classifyItem(raw: RawItem): ClassificationResult {
     case 'rijks':        return classifyRijks(data as Record<string, unknown>, raw);
     case 'smithsonian':  return classifySmithsonian(data as Record<string, unknown>, raw);
     // CH files are saved flat (no .data wrapper), so pass raw itself as the data object
-    case 'cooperhewitt': return classifyCooperHewitt(raw as unknown as Record<string, unknown>, raw);
+    case 'cooperhewitt':   return classifyCooperHewitt(raw as unknown as Record<string, unknown>, raw);
+    // DA files are also saved flat (no .data wrapper) — fields live at root level
+    case 'designarchive':  return classifyDesignArchive(raw as unknown as Record<string, unknown>, raw);
     default:
       return { accepted: false, score: 0, reasons: [`Unknown source: ${source}`] };
   }
@@ -43476,6 +43367,159 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITY: SubCategory → MainCategory
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN ARCHIVE (AIGA)
+// Raw files are saved flat (same shape as the harvest record, no .data wrapper).
+// Key fields: title, author, year, imageUrl, url, discipline, formats[], collections[]
+// ─────────────────────────────────────────────────────────────────────────────
+
+// discipline → subCategory
+const DA_DISCIPLINE_MAP: Record<string, { subCategory: string; score: number }> = {
+  'Advertising':                   { subCategory: 'Posters & Advertising',  score: 22 },
+  'Poster':                        { subCategory: 'Posters & Advertising',  score: 25 },
+  'Posters':                       { subCategory: 'Posters & Advertising',  score: 25 },
+  'Environmental Design':          { subCategory: 'Identity & Branding',    score: 18 },
+  'Identity / Branding':           { subCategory: 'Identity & Branding',    score: 25 },
+  'Branding':                      { subCategory: 'Identity & Branding',    score: 25 },
+  'Identity':                      { subCategory: 'Identity & Branding',    score: 25 },
+  'Packaging':                     { subCategory: 'Packaging',              score: 25 },
+  'Typography':                    { subCategory: 'Typography & Lettering', score: 25 },
+  'Lettering':                     { subCategory: 'Typography & Lettering', score: 22 },
+  'Editorial':                     { subCategory: 'Editorial/Publication',  score: 22 },
+  'Book Design':                   { subCategory: 'Editorial/Publication',  score: 22 },
+  'Publication':                   { subCategory: 'Editorial/Publication',  score: 22 },
+  'Interactive':                   { subCategory: 'Posters & Advertising',  score: 14 },
+  'Motion':                        { subCategory: 'Posters & Advertising',  score: 14 },
+  'Illustration':                  { subCategory: 'Posters & Advertising',  score: 16 },
+};
+
+// format keywords → subCategory (applied when discipline doesn't match)
+const DA_FORMAT_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'poster',       subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'advertisement',subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'brochure',     subCategory: 'Posters & Advertising',  score: 16 },
+  { keyword: 'logo',         subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'identity',     subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'packaging',    subCategory: 'Packaging',              score: 22 },
+  { keyword: 'label',        subCategory: 'Packaging',              score: 18 },
+  { keyword: 'typeface',     subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'typography',   subCategory: 'Typography & Lettering', score: 20 },
+  { keyword: 'lettering',    subCategory: 'Typography & Lettering', score: 18 },
+  { keyword: 'book',         subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'magazine',     subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'annual report',subCategory: 'Editorial/Publication',  score: 18 },
+];
+
+function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const discipline  = str((data as any).discipline).trim();
+  const formats     = ((data as any).formats ?? []) as string[];
+  const title       = str((data as any).title).toLowerCase();
+  const imageUrl    = str((data as any).imageUrl) || null;
+  const author      = str((data as any).author);
+  const year        = str((data as any).year);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  // 1. Discipline exact match
+  const disciplineKey = Object.keys(DA_DISCIPLINE_MAP).find(
+    k => k.toLowerCase() === discipline.toLowerCase()
+  );
+  if (disciplineKey) {
+    const { subCategory, score: s } = DA_DISCIPLINE_MAP[disciplineKey];
+    bestSubCategory = subCategory;
+    score += s;
+    reasons.push(`discipline "${discipline}" → ${subCategory} (+${s})`);
+  }
+
+  // 2. Discipline partial match (handles values like "Identity / Branding Programs")
+  if (!bestSubCategory && discipline) {
+    for (const [key, rule] of Object.entries(DA_DISCIPLINE_MAP)) {
+      if (discipline.toLowerCase().includes(key.toLowerCase())) {
+        bestSubCategory = rule.subCategory;
+        score += rule.score - 3;
+        reasons.push(`discipline partial "${discipline}" ~ "${key}" → ${rule.subCategory} (+${rule.score - 3})`);
+        break;
+      }
+    }
+  }
+
+  // 3. Formats array scan
+  if (!bestSubCategory && formats.length > 0) {
+    for (const fmt of formats) {
+      const fmtLower = fmt.toLowerCase();
+      const hit = DA_FORMAT_MAP.find(r => fmtLower.includes(r.keyword));
+      if (hit) {
+        bestSubCategory = hit.subCategory;
+        score += hit.score;
+        reasons.push(`format "${fmt}" → ${hit.subCategory} (+${hit.score})`);
+        break;
+      }
+    }
+  }
+
+  // 4. Title keyword fallback (weak signal)
+  if (!bestSubCategory) {
+    for (const r of DA_FORMAT_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += Math.floor(r.score * 0.6);
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${Math.floor(r.score * 0.6)})`);
+        break;
+      }
+    }
+  }
+
+  // 5. AIGA is a graphic design archive — if we still have nothing, default
+  if (!bestSubCategory) {
+    bestSubCategory = 'Posters & Advertising';
+    score += 15;
+    reasons.push(`AIGA archive default → Posters & Advertising (+15)`);
+  }
+
+  // Bonuses
+  if (imageUrl) {
+    score += CONFIG.HAS_IMAGE_BONUS;
+    reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`);
+  }
+  if (author && author !== 'Unknown') {
+    score += CONFIG.HAS_CREATOR_BONUS;
+    reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`);
+  }
+  if (year && year !== 'n.d.') {
+    score += CONFIG.HAS_DATE_BONUS;
+    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`);
+  }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:         str((data as any).id),
+      source:     'designarchive' as SourceName,
+      link:       str((data as any).url) || '',
+      title:      str((data as any).title) || 'Untitled',
+      author:     author || 'Unknown',
+      year:       year || 'n.d.',
+      imageUrl,
+      department: 'Graphic Design',
+      classification: discipline || 'Graphic Design',
+      medium:     formats.join(', ') || 'Unknown',
+      objectType: discipline || 'Graphic Design',
+      mainCategory,
+      subCategory:       bestSubCategory,
+      confidenceScore:   score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 function mapSubToMain(subCategory: string | null): string {
   if (!subCategory) return 'Uncategorized';
@@ -44591,6 +44635,7 @@ async function main() {
       rijks:        { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       smithsonian:  { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       cooperhewitt: { total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      designarchive: { total: 0, accepted: 0, rejected: 0, noImage: 0 }
     },
     byCategory: {},
   };
@@ -44955,6 +45000,435 @@ async function main() {
 }
 
 main().catch(console.error);
+</file>
+
+<file path="src/scripts/backfill-unknowns.mjs">
+// src/scripts/backfill-unknowns.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+// BACKFILL: Fill in missing year, title, author by re-reading raw source files
+// and looking at alternative fields the original transform didn't use.
+//
+// Strategy:
+//   - Only touches rows where year = 'n.d.' OR title = 'Untitled' OR author = 'Unknown'
+//   - Reads the raw JSON for each such item from data/raw/{source}/
+//   - Applies source-specific extended field extraction
+//   - Updates the DB row in-place — does NOT reclassify or change categories
+//   - Logs every change made so you can audit/revert
+//
+// Run: node src/scripts/backfill-unknowns.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+
+import Database from 'better-sqlite3';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT      = path.join(__dirname, '..', '..');
+const DB_PATH   = path.join(ROOT, 'artworks.db');
+const RAW_DIR   = path.join(ROOT, 'data', 'raw');
+const LOG_PATH  = path.join(ROOT, 'data', 'backfill-log.json');
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function str(val) {
+  if (val === null || val === undefined) return '';
+  return String(val).trim();
+}
+
+function isEmpty(val) {
+  if (!val) return true;
+  const v = str(val).toLowerCase();
+  return v === '' || v === 'unknown' || v === 'untitled' || v === 'n.d.' || v === 'n/a' || v === 'none';
+}
+
+/** Extract the best 4-digit year, or a "c. YYYY–YYYY" range string, from raw date info */
+function bestYear(display, begin, end) {
+  // Try display string first (e.g. "ca. 1920", "1900-1910", "19th century")
+  if (display && str(display) !== 'n.d.') {
+    const single = str(display).match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    if (single) return single[0];
+
+    // Range like "1900-1910" or "1900–1910"
+    const range = str(display).match(/\b(1[0-9]{3}|20[0-9]{2})\b.*?\b(1[0-9]{3}|20[0-9]{2})\b/);
+    if (range) return `c. ${range[1]}–${range[2]}`;
+  }
+
+  // Fall back to structured begin/end
+  const b = parseInt(str(begin).match(/(\d{4})/)?.[1] || '');
+  const e = parseInt(str(end).match(/(\d{4})/)?.[1] || '');
+
+  if (!isNaN(b) && !isNaN(e)) {
+    if (b === e) return String(b);
+    if (Math.abs(e - b) <= 5) return String(b);  // close enough — use begin
+    return `c. ${b}–${e}`;
+  }
+  if (!isNaN(b)) return String(b);
+  if (!isNaN(e)) return String(e);
+
+  return null;
+}
+
+// ── Per-source extractors ─────────────────────────────────────────────────────
+
+function extractMet(raw) {
+  const d = raw.data || raw;
+  const updates = {};
+
+  // Year — objectDate display string ONLY.
+  // IMPORTANT: objectBeginDate/objectEndDate are the ARTIST'S lifespan dates,
+  // NOT the artwork's creation date. Never use them for year.
+  const dateDisplay = str(d.objectDate);
+  if (dateDisplay && dateDisplay !== 'n.d.') {
+    const single = dateDisplay.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    if (single) updates.year = single[0];
+    // No range fallback for Met — objectDate display is the only reliable source
+  }
+
+  // Author — artistDisplayName is primary; fall back to artistPrefix + artistSuffix
+  if (str(d.artistDisplayName)) {
+    updates.author = str(d.artistDisplayName);
+  } else {
+    const prefix = str(d.artistPrefix);
+    const suffix = str(d.artistSuffix);
+    const nation = str(d.artistNationality);
+    const dates  = str(d.artistBeginDate) && str(d.artistEndDate)
+      ? `${d.artistBeginDate}–${d.artistEndDate}` : '';
+    // "Circle of ...", "Workshop of ..." etc live in artistRole
+    const role = str(d.artistRole);
+    if (role && prefix) updates.author = `${role}, ${prefix}`.trim();
+    else if (nation && dates) updates.author = `${nation}, ${dates}`;
+  }
+
+  // Title — objectName is a reasonable fallback
+  if (!str(d.title) || str(d.title).toLowerCase() === 'untitled') {
+    if (str(d.objectName)) updates.title = str(d.objectName);
+  } else {
+    updates.title = str(d.title);
+  }
+
+  // Culture as author fallback
+  if (isEmpty(updates.author) && str(d.culture)) {
+    updates.author = str(d.culture);
+  }
+
+  return updates;
+}
+
+function extractArtic(raw) {
+  const d = raw.data || raw;
+  const updates = {};
+
+  const year = bestYear(d.date_display, d.date_start, d.date_end);
+  if (year) updates.year = year;
+
+  // artist_display includes nationality+dates, e.g. "Rembrandt van Rijn\nDutch, 1606-1669"
+  // Clean it to just the name
+  if (str(d.artist_display)) {
+    updates.author = str(d.artist_display).split('\n')[0].trim();
+  } else if (str(d.artist_title)) {
+    updates.author = str(d.artist_title);
+  }
+
+  if (str(d.title)) updates.title = str(d.title);
+
+  // Place of origin as author fallback
+  if (isEmpty(updates.author) && str(d.place_of_origin)) {
+    updates.author = str(d.place_of_origin);
+  }
+
+  return updates;
+}
+
+function extractVa(raw) {
+  const d = raw.data || raw;
+  const updates = {};
+
+  // _primaryDate is display string; productionDates has structured begin/end
+  const prodDates = d.productionDates || [];
+  const pd = prodDates[0]?.date || {};
+  const year = bestYear(d._primaryDate, pd.earliest, pd.latest);
+  if (year) updates.year = year;
+
+  // Maker
+  const maker = d._primaryMaker?.name;
+  if (str(maker)) {
+    updates.author = str(maker);
+  }
+
+  // Title
+  const title = d._primaryTitle || (d.titles?.[0]?.title);
+  if (str(title)) updates.title = str(title);
+
+  // If still no author, try place
+  if (isEmpty(updates.author) && str(d._primaryPlace)) {
+    updates.author = str(d._primaryPlace);
+  }
+
+  return updates;
+}
+
+function extractRijks(raw) {
+  const d = raw.data || raw;
+  const updates = {};
+
+  // Year from timespan
+  const ts = d.produced_by?.timespan;
+  if (ts) {
+    const begin = str(ts.begin_of_the_begin).match(/^(\d{4})/)?.[1];
+    const end   = str(ts.end_of_the_end).match(/^(\d{4})/)?.[1];
+    const year  = bestYear(null, begin, end);
+    if (year) updates.year = year;
+  }
+
+  // Title from identified_by
+  const names = d.identified_by || [];
+  const primary = names.find(n =>
+    n.type === 'Name' &&
+    n.classified_as?.some(c => c.id?.includes('300404670') || c.id?.includes('300417200'))
+  ) || names.find(n => n.type === 'Name');
+  if (primary?.content) updates.title = str(primary.content);
+
+  // Artist from produced_by.referred_to_by (EN label)
+  for (const ref of d.produced_by?.referred_to_by || []) {
+    const isEN = ref.language?.some(l => l.id?.includes('300388277'));
+    if (isEN && ref.content) {
+      updates.author = str(ref.content).replace(/\s*\(.*?\)\s*$/, '').trim();
+      break;
+    }
+  }
+  // Fallback — parts
+  if (isEmpty(updates.author)) {
+    for (const part of d.produced_by?.part || []) {
+      const name = part.referred_to_by?.find(r =>
+        r.language?.some(l => l.id?.includes('300388277'))
+      )?.content;
+      if (name) { updates.author = str(name).replace(/\s*\(.*?\)\s*$/, '').trim(); break; }
+    }
+  }
+
+  return updates;
+}
+
+function extractSmithsonian(raw) {
+  const d = raw.data || raw;
+  const ft = d.content?.freetext || {};
+  const updates = {};
+
+  // Date — freetext.date[0] ONLY.
+  // indexedStructured.date is NOT reliably ordered begin→end in SI data
+  // and produces inverted ranges like "c. 1930–1850". Avoid it.
+  const dateDisplay = str(ft.date?.[0]?.content);
+  if (dateDisplay) {
+    const single = dateDisplay.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    if (single) updates.year = single[0];
+  }
+
+  // Creator
+  const creator = str(ft.name?.[0]?.content);
+  if (creator) updates.author = creator;
+
+  // Title
+  const title = str(d.title);
+  if (title) updates.title = title;
+
+  // Culture / place fallback
+  if (isEmpty(updates.author)) {
+    const place = str(ft.place?.[0]?.content || d.content?.indexedStructured?.place?.[0]);
+    if (place) updates.author = place;
+  }
+
+  return updates;
+}
+
+function extractCooperHewitt(flat) {
+  // CH files are flat (no .data wrapper)
+  const updates = {};
+  const ch = flat.raw || {};
+
+  // Date can be "1890-1900" or "1890" or "ca. 1920"
+  const date = str(flat.date || ch.date);
+  const year = bestYear(date, null, null);
+  if (year) updates.year = year;
+
+  // Designer from participants
+  const participants = ch.participants || [];
+  const designer = participants.find(p => p?.person?.name)?.person?.name;
+  if (str(designer)) updates.author = str(designer);
+
+  // Title
+  if (str(flat.title)) updates.title = str(flat.title);
+
+  return updates;
+}
+
+// ── Raw file loader ───────────────────────────────────────────────────────────
+
+// CooperHewitt files are saved with sequential counter names like
+// "cooperhewitt-000000.json" rather than by the actual CH object ID.
+// We build a one-time index: { "cooperhewitt-18065659": "cooperhewitt-000042.json" }
+let chIndex = null;
+
+function buildChIndex() {
+  if (chIndex) return chIndex;
+  console.log('  Building CooperHewitt filename index (one-time scan)...');
+  chIndex = {};
+  const dir = path.join(RAW_DIR, 'cooperhewitt');
+  if (!fs.existsSync(dir)) return chIndex;
+
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('.'));
+  let scanned = 0;
+  for (const filename of files) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(path.join(dir, filename), 'utf8'));
+      // CH files are flat — the `id` field is the full "cooperhewitt-XXXXXXXX" DB id
+      if (raw.id) chIndex[raw.id] = filename;
+    } catch {
+      // skip malformed
+    }
+    scanned++;
+    if (scanned % 5000 === 0) console.log(`    ...scanned ${scanned} CH files`);
+  }
+  console.log(`  CH index built: ${Object.keys(chIndex).length} entries from ${scanned} files\n`);
+  return chIndex;
+}
+
+function loadRaw(source, dbId) {
+  if (source === 'cooperhewitt') {
+    const index = buildChIndex();
+    const filename = index[dbId];
+    if (!filename) return null;
+    try {
+      return JSON.parse(fs.readFileSync(path.join(RAW_DIR, 'cooperhewitt', filename), 'utf8'));
+    } catch { return null; }
+  }
+
+  // All other sources: file is named by the numeric part of the DB id
+  const numericId = dbId.slice(source.length + 1); // strip "source-" prefix
+  const filePath  = path.join(RAW_DIR, source, `${numericId}.json`);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║  BACKFILL — Recovering missing year / title / author      ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  if (!fs.existsSync(DB_PATH)) {
+    console.error(`❌  Database not found at ${DB_PATH}`);
+    process.exit(1);
+  }
+
+  const db = new Database(DB_PATH);
+
+  // Find every row that has at least one "unknown" field
+  const targets = db.prepare(`
+    SELECT id, source, title, author, year
+    FROM artworks
+    WHERE
+      year   IN ('n.d.', '', 'Unknown') OR year IS NULL OR
+      title  IN ('Untitled', '', 'Unknown') OR title IS NULL OR
+      author IN ('Unknown', '', 'Untitled') OR author IS NULL
+  `).all();
+
+  console.log(`🔍  Found ${targets.length} rows with missing fields\n`);
+
+  const update = db.prepare(`
+    UPDATE artworks
+    SET title = ?, author = ?, year = ?, year_sort = ?
+    WHERE id = ?
+  `);
+
+  function yearToSort(y) {
+    if (!y) return null;
+    const m = y.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+    return m ? parseInt(m[0]) : null;
+  }
+
+  const EXTRACTORS = {
+    met:          extractMet,
+    artic:        extractArtic,
+    va:           extractVa,
+    rijks:        extractRijks,
+    smithsonian:  extractSmithsonian,
+    cooperhewitt: extractCooperHewitt,
+  };
+
+  const log = [];
+  const stats = { scanned: 0, updated: 0, noRaw: 0, noImprovement: 0 };
+
+  for (const row of targets) {
+    stats.scanned++;
+
+    const raw = loadRaw(row.source, row.id);
+    if (!raw) {
+      stats.noRaw++;
+      if (stats.noRaw <= 5) console.log(`  ⚠  No raw file: ${row.id}`);
+      continue;
+    }
+
+    const extractor = EXTRACTORS[row.source];
+    if (!extractor) continue;
+
+    const extracted = extractor(raw);
+
+    // Only apply if actually better than what we have
+    const newTitle  = (!isEmpty(extracted.title)  && isEmpty(row.title))  ? extracted.title  : row.title;
+    const newAuthor = (!isEmpty(extracted.author) && isEmpty(row.author)) ? extracted.author : row.author;
+    const newYear   = (!isEmpty(extracted.year)   && isEmpty(row.year))   ? extracted.year   : row.year;
+
+    const changed =
+      newTitle  !== row.title  ||
+      newAuthor !== row.author ||
+      newYear   !== row.year;
+
+    if (!changed) {
+      stats.noImprovement++;
+      continue;
+    }
+
+    update.run(newTitle, newAuthor, newYear, yearToSort(newYear), row.id);
+    stats.updated++;
+
+    const entry = { id: row.id, source: row.source };
+    if (newTitle  !== row.title)  entry.title  = { was: row.title,  now: newTitle  };
+    if (newAuthor !== row.author) entry.author = { was: row.author, now: newAuthor };
+    if (newYear   !== row.year)   entry.year   = { was: row.year,   now: newYear   };
+    log.push(entry);
+
+    if (stats.updated <= 20 || stats.updated % 100 === 0) {
+      console.log(`  ✓ ${row.id}`);
+      if (entry.title)  console.log(`      title:  "${entry.title.was}"  →  "${entry.title.now}"`);
+      if (entry.author) console.log(`      author: "${entry.author.was}"  →  "${entry.author.now}"`);
+      if (entry.year)   console.log(`      year:   "${entry.year.was}"  →  "${entry.year.now}"`);
+    }
+  }
+
+  // Write log
+  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+  fs.writeFileSync(LOG_PATH, JSON.stringify(log, null, 2));
+
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║  BACKFILL COMPLETE                                        ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+  console.log(`  Scanned:         ${stats.scanned}`);
+  console.log(`  Updated:         ${stats.updated}`);
+  console.log(`  No raw file:     ${stats.noRaw}`);
+  console.log(`  No improvement:  ${stats.noImprovement}`);
+  console.log(`\n  Log written to:  data/backfill-log.json`);
+  console.log(`  (review log before next harvest to see what was changed)\n`);
+
+  db.close();
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
 </file>
 
 <file path="src/scripts/check-ch-type.mjs">
@@ -46136,8 +46610,176 @@ async function main() {
 main().catch(console.error);
 </file>
 
+<file path="src/scripts/migrate-origin-field.mjs">
+// src/scripts/migrate-origin-field.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+// MIGRATION: Add `origin` column and separate place attributions from author.
+//
+// Problem: backfill-unknowns wrote place names ("France", "Lucknow", etc.)
+// into the `author` field as a fallback. These are legitimate museum
+// attributions but should be displayed as "Origin", not "Artist".
+//
+// This script:
+//   1. Adds an `origin` column to artworks table
+//   2. Identifies rows where `author` looks like a place (not a person name)
+//   3. Moves those values to `origin`, resets `author` to 'Unknown'
+//   4. Logs every row changed for audit
+//
+// Safe to re-run — uses INSERT OR IGNORE / UPDATE WHERE logic.
+// Run: node src/scripts/migrate-origin-field.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+
+import Database from 'better-sqlite3';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT     = path.join(__dirname, '..', '..');
+const DB_PATH  = path.join(ROOT, 'artworks.db');
+const LOG_PATH = path.join(ROOT, 'data', 'origin-migration-log.json');
+
+// ── Place-name detection ───────────────────────────────────────────────────
+// These are values the backfill wrote into `author` that are actually origins.
+// Covers everything written by the V&A, Smithsonian, Met, and Rijks extractors.
+const KNOWN_PLACE_AUTHORS = new Set([
+  // Countries / regions
+  'France', 'Germany', 'Italy', 'England', 'Britain', 'Great Britain',
+  'United Kingdom', 'Netherlands', 'Europe', 'America', 'American',
+  'Japan', 'China', 'India', 'Korea', 'Iran', 'Turkey', 'Egypt',
+  'Spain', 'Portugal', 'Belgium', 'Austria', 'Switzerland', 'Russia',
+  'Scandinavia', 'Denmark', 'Sweden', 'Norway', 'Finland',
+  'Mexico', 'Peru', 'Colombia', 'Brazil',
+  'Africa', 'West Africa', 'East Africa', 'South Africa',
+
+  // Cities
+  'London', 'Paris', 'Rome', 'Florence', 'Venice', 'Milan',
+  'Amsterdam', 'Antwerp', 'Brussels', 'Vienna', 'Prague',
+  'New York', 'Boston', 'Philadelphia',
+  'Lucknow', 'Kolkata', 'Mumbai', 'Delhi', 'Jaipur', 'Varanasi',
+  'Hyderabad', 'Deccan', 'Kangra', 'Rajasthan', 'Dunhuang',
+  'Lahore', 'Ramsgate', 'Cuddalore', 'Astana', 'Shache',
+  'Trichinopoly', 'Mughal Empire', 'Malay Peninsula',
+  'The Limes Watchtowers',
+
+  // Met nationality strings (written to author as culture fallback)
+  'Chinese, for American market',
+  'American, 19th century',
+  'French, 18th century',
+  'Dutch, 17th century',
+  'British, 19th century',
+  'Italian, 17th century',
+  'German, 18th century',
+  'Japanese, Edo period',
+  'Korean, Joseon dynasty',
+  'Chinese, Qing dynasty',
+]);
+
+// Also catch the pattern "Adjective, period" (e.g. "French, ca. 1750")
+// and multi-word place-like strings that aren't people names
+function looksLikePlace(author) {
+  if (!author) return false;
+  const a = author.trim();
+  if (KNOWN_PLACE_AUTHORS.has(a)) return true;
+
+  // Pattern: "Nationality, date-or-period"  e.g. "American, 18th century"
+  if (/^[A-Z][a-z]+,\s*(ca?\.\s*)?\d/.test(a)) return true;
+  if (/^[A-Z][a-z]+,\s*(early|late|mid|circa)/.test(a)) return true;
+
+  // All-caps country abbreviation-style values
+  if (/^[A-Z]{2,6}$/.test(a)) return true;
+
+  return false;
+}
+
+async function main() {
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║  MIGRATION — Separating "Origin" from "Author"            ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  if (!fs.existsSync(DB_PATH)) {
+    console.error(`❌  Database not found at ${DB_PATH}`);
+    process.exit(1);
+  }
+
+  const db = new Database(DB_PATH);
+
+  // Step 1 — add `origin` column if it doesn't exist yet
+  const cols = db.prepare(`PRAGMA table_info(artworks)`).all().map(r => r.name);
+  if (!cols.includes('origin')) {
+    db.exec(`ALTER TABLE artworks ADD COLUMN origin TEXT`);
+    console.log('✓ Added `origin` column to artworks table\n');
+  } else {
+    console.log('ℹ  `origin` column already exists — skipping ALTER TABLE\n');
+  }
+
+  // Step 2 — add index for origin queries
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_origin ON artworks(origin)`);
+
+  // Step 3 — find rows where author looks like a place
+  const rows = db.prepare(`
+    SELECT id, source, author, origin
+    FROM artworks
+    WHERE author IS NOT NULL AND author != 'Unknown' AND author != ''
+  `).all();
+
+  console.log(`Scanning ${rows.length.toLocaleString()} rows with a non-empty author...\n`);
+
+  const updateStmt = db.prepare(`
+    UPDATE artworks SET author = 'Unknown', origin = ? WHERE id = ?
+  `);
+
+  const log = [];
+  let moved = 0;
+  let alreadyHasOrigin = 0;
+
+  const migrate = db.transaction(() => {
+    for (const row of rows) {
+      if (!looksLikePlace(row.author)) continue;
+
+      // If origin already has a real value from somewhere else, don't clobber it
+      if (row.origin && row.origin !== 'Unknown' && row.origin !== '') {
+        alreadyHasOrigin++;
+        continue;
+      }
+
+      updateStmt.run(row.author, row.id);
+      log.push({ id: row.id, source: row.source, movedToOrigin: row.author });
+      moved++;
+    }
+  });
+
+  migrate();
+
+  // Write log
+  fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+  fs.writeFileSync(LOG_PATH, JSON.stringify(log, null, 2));
+
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║  MIGRATION COMPLETE                                       ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+  console.log(`  Rows migrated (author → origin):  ${moved}`);
+  console.log(`  Skipped (origin already set):     ${alreadyHasOrigin}`);
+  console.log(`  Log: data/origin-migration-log.json\n`);
+
+  // Show breakdown by source
+  const breakdown = {};
+  for (const entry of log) {
+    breakdown[entry.source] = (breakdown[entry.source] || 0) + 1;
+  }
+  console.log('  By source:');
+  for (const [src, count] of Object.entries(breakdown).sort((a, b) => b[1] - a[1])) {
+    console.log(`    ${src.padEnd(14)} ${count}`);
+  }
+  console.log('');
+
+  db.close();
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
+</file>
+
 <file path="src/scripts/prewarm-cache.mjs">
-// src/scripts/prewarm-cache.mjs
 // Caches two sizes per artwork: 400px (grid) and 1200px (fullscreen modal).
 //
 // Per-source strategy:
@@ -46150,9 +46792,14 @@ main().catch(console.error);
 import fs       from 'fs';
 import path     from 'path';
 import crypto   from 'crypto';
+import https    from 'https';
 import sharp    from 'sharp';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
+
+// designarchives.aiga.org has a self-signed / chain-incomplete SSL cert that
+// Node.js rejects. Use a custom agent with rejectUnauthorized:false for those URLs only.
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const ROOT       = path.join(__dirname, '..', '..');
@@ -46240,6 +46887,45 @@ function getConcurrency(domain) {
 
 async function fetchRaw(url, attempt = 0) {
   try {
+    // designarchives.aiga.org has a self-signed SSL cert Node.js rejects via fetch().
+    // Use https.get with rejectUnauthorized:false for those URLs only.
+    if (url.includes('designarchives.aiga.org')) {
+      return await new Promise((resolve) => {
+        const req = https.get(url, {
+          agent: insecureAgent,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+            'Accept':     'image/webp,image/jpeg,image/png,image/*,*/*',
+            'Referer':    'https://designarchives.aiga.org',
+          },
+        }, (res) => {
+          if (res.statusCode === 429 || res.statusCode === 503) {
+            res.resume();
+            if (attempt < MAX_RETRIES) {
+              setTimeout(() => fetchRaw(url, attempt + 1).then(resolve), (attempt + 1) * 3000);
+            } else {
+              resolve({ err: `fail:${res.statusCode}` });
+            }
+            return;
+          }
+          if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume();
+            resolve({ err: `fail:${res.statusCode}` });
+            return;
+          }
+          const chunks = [];
+          res.on('data', c => chunks.push(c));
+          res.on('end', () => {
+            const buf = Buffer.concat(chunks);
+            if (!isImage(buf)) { resolve({ err: 'fail:not-image' }); return; }
+            resolve({ buf });
+          });
+        });
+        req.on('error', (e) => resolve({ err: `fail:${e.code || e.message?.slice(0, 20)}` }));
+        req.setTimeout(20000, () => { req.destroy(); resolve({ err: 'fail:timeout' }); });
+      });
+    }
+
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
@@ -47463,6 +48149,126 @@ db.close();
 console.log(`✅ Done — ${files.length.toLocaleString()} Cooper Hewitt records restored to original classification.\n`);
 </file>
 
+<file path="src/scripts/revert-bad-years.mjs">
+// src/scripts/revert-bad-years.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+// Reverts two classes of bad data introduced by backfill-unknowns.mjs:
+//
+//   1. Met year ranges — backfill incorrectly used objectBeginDate/objectEndDate
+//      which are the ARTIST'S lifespan, not the artwork's date.
+//      Fix: revert any Met row whose year was changed to a "c. YYYY–YYYY" range
+//      back to 'n.d.' (honest unknown is better than wrong data)
+//
+//   2. Smithsonian inverted ranges — indexedStructured.date isn't reliably
+//      ordered begin→end, producing nonsense like "c. 1930–1850".
+//      Fix: revert any Smithsonian range where begin > end.
+//
+// Run: node src/scripts/revert-bad-years.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+
+import Database from 'better-sqlite3';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT      = path.join(__dirname, '..', '..');
+const DB_PATH   = path.join(ROOT, 'artworks.db');
+const LOG_PATH  = path.join(ROOT, 'data', 'backfill-log.json');
+
+function yearToSort(y) {
+  if (!y) return null;
+  const m = y.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+  return m ? parseInt(m[0]) : null;
+}
+
+function isInverted(yearStr) {
+  // matches "c. 1930–1850" style — range where begin > end
+  const m = yearStr.match(/c\.\s*(\d{4})[–-](\d{4})/);
+  if (!m) return false;
+  return parseInt(m[1]) > parseInt(m[2]);
+}
+
+async function main() {
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║  REVERT — Fixing bad Met years & inverted SI ranges       ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  if (!fs.existsSync(DB_PATH)) {
+    console.error(`❌  Database not found at ${DB_PATH}`);
+    process.exit(1);
+  }
+
+  const db     = new Database(DB_PATH);
+  const update = db.prepare(`UPDATE artworks SET year = ?, year_sort = ? WHERE id = ?`);
+
+  let metReverted = 0;
+  let siReverted  = 0;
+
+  // ── 1. Revert Met artist-lifespan ranges ──────────────────────────────────
+  // These were written as "c. YYYY–YYYY" where neither year was in objectDate.
+  // The safest revert: any Met row whose year is now a "c. YYYY–YYYY" range
+  // AND whose year_sort could not have come from objectDate (heuristic: if the
+  // year_sort matches the begin year of the range, it came from objectBeginDate).
+  // Simplest safe approach: revert ALL Met "c. YYYY–YYYY" rows, since the
+  // original transform would have set a real year if objectDate had one.
+
+  const metRanges = db.prepare(`
+    SELECT id, year FROM artworks
+    WHERE source = 'met'
+      AND year LIKE 'c. %–%'
+  `).all();
+
+  console.log(`Found ${metRanges.length} Met rows with range years to revert`);
+
+  const metBatch = db.transaction(() => {
+    for (const row of metRanges) {
+      update.run('n.d.', null, row.id);
+      metReverted++;
+    }
+  });
+  metBatch();
+
+  console.log(`✓ Reverted ${metReverted} Met rows → 'n.d.'\n`);
+
+  // ── 2. Revert inverted Smithsonian ranges ─────────────────────────────────
+  const siRanges = db.prepare(`
+    SELECT id, year FROM artworks
+    WHERE source = 'smithsonian'
+      AND year LIKE 'c. %–%'
+  `).all();
+
+  console.log(`Found ${siRanges.length} Smithsonian range rows, checking for inversions...`);
+
+  const siBatch = db.transaction(() => {
+    for (const row of siRanges) {
+      if (isInverted(row.year)) {
+        update.run('n.d.', null, row.id);
+        siReverted++;
+      }
+    }
+  });
+  siBatch();
+
+  console.log(`✓ Reverted ${siReverted} inverted Smithsonian ranges → 'n.d.'\n`);
+
+  // ── Summary ───────────────────────────────────────────────────────────────
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║  REVERT COMPLETE                                          ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+  console.log(`  Met rows reverted:          ${metReverted}`);
+  console.log(`  Smithsonian rows reverted:  ${siReverted}`);
+  console.log(`  Total reverted:             ${metReverted + siReverted}`);
+  console.log(`\n  Rows NOT reverted (kept as correct):`);
+  console.log(`    - V&A, ARTIC, Rijks, CooperHewitt range years (source date fields)`);
+  console.log(`    - Place-origin author values (France, Lucknow, etc.) — legitimate museum attribution\n`);
+
+  db.close();
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
+</file>
+
 <file path="src/scripts/rijks-debug.ts">
 // npx tsx src/scripts/rijks-debug.ts
 
@@ -47863,6 +48669,10 @@ export default nextConfig;
 import fs     from 'fs';
 import path   from 'path';
 import crypto from 'crypto';
+import https  from 'https';
+
+// designarchives.aiga.org has a self-signed SSL cert Node.js rejects via fetch().
+const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
 
 // TODO: Make sure this is compatable on all platforms!! (B-Lou Nuke)
@@ -47943,12 +48753,34 @@ export async function GET(request) {
 
   // 3. Fetch from museum
   try {
-    const res = await fetch(fetchUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!res.ok) return new Response('Upstream error', { status: 502 });
-    let buf = Buffer.from(await res.arrayBuffer());
+    let buf;
+
+    if (fetchUrl.includes('designarchives.aiga.org')) {
+      // designarchives.aiga.org has a bad SSL cert — use https.get with rejectUnauthorized:false
+      buf = await new Promise((resolve, reject) => {
+        const req = https.get(fetchUrl, {
+          agent: insecureAgent,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
+        }, (res) => {
+          if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume(); reject(new Error(`HTTP ${res.statusCode}`)); return;
+          }
+          const chunks = [];
+          res.on('data', c => chunks.push(c));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+        });
+        req.on('error', reject);
+        req.setTimeout(15000, () => { req.destroy(); reject(new Error('Timeout')); });
+      });
+    } else {
+      const res = await fetch(fetchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36', 'Accept': 'image/*,*/*' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) return new Response('Upstream error', { status: 502 });
+      buf = Buffer.from(await res.arrayBuffer());
+    }
+
     if (!isValidImage(buf)) return new Response('Not an image', { status: 502 });
     if (!isIiif && size) buf = await resizeBuffer(buf, size);
     fs.writeFileSync(cachePath, buf);
@@ -48204,94 +49036,6 @@ export default function ArtifactPage({ params }) {
       </div>
     </div>
   );
-}
-</file>
-
-<file path="src/app/globals.css">
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ── Design Tokens ─────────────────────────────────────────────── */
-:root {
-  /* Museum wall — warm, slightly chalky off-white */
-  --bg:           #f0ede8;
-  --bg-card:      #e8e5df;
-  --bg-hover:     #e2ded7;
-  --fg:           #0d0c0a;
-  --fg-muted:     rgba(13, 12, 10, 0.50);
-  --fg-faint:     rgba(13, 12, 10, 0.25);
-  --border:       rgba(13, 12, 10, 0.08);
-  --border-md:    rgba(13, 12, 10, 0.16);
-
-  /* Dark surface (modals, archive page) */
-  --dark-bg:      #0a0908;
-  --dark-surface: #111009;
-  --dark-border:  rgba(247, 246, 241, 0.07);
-  --dark-fg:      rgba(247, 246, 241, 0.88);
-  --dark-muted:   rgba(247, 246, 241, 0.38);
-  --dark-faint:   rgba(247, 246, 241, 0.18);
-
-  /* Typography */
-  --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
-  --font-sans:    var(--font-dm-sans), system-ui, -apple-system, sans-serif;
-  --font-mono:    var(--font-dm-mono), 'Courier New', monospace;
-}
-
-/* ── Reset ─────────────────────────────────────────────────────── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { height: 100%; width: 100%; }
-
-body {
-  min-height: 100%;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
-
-::selection { background: var(--fg); color: var(--bg); }
-
-::-webkit-scrollbar { width: 2px; height: 2px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 1px; }
-::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
-
-/* ── Keyframes ─────────────────────────────────────────────────── */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(1.06); }
-  to   { opacity: 1; transform: scale(1); }
-}
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.anim-fade-up  { animation: fade-up  0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.anim-fade-in  { animation: fade-in  0.55s ease both; }
-.anim-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-.d-0 { animation-delay: 0s; }
-.d-1 { animation-delay: 0.1s; }
-.d-2 { animation-delay: 0.2s; }
-.d-3 { animation-delay: 0.3s; }
-.d-4 { animation-delay: 0.45s; }
-.d-5 { animation-delay: 0.6s; }
-.d-6 { animation-delay: 0.75s; }
-.d-7 { animation-delay: 0.9s; }
-
-#vercel-live-feedback, [data-nextjs-toast], .vercel-badge, nextjs-portal {
-  display: none !important;
 }
 </file>
 
@@ -48590,6 +49334,94 @@ export async function fetchWikimedia(query, contentType = null) {
     "rootDir": "./src"
   },
   "include": ["src/**/*"]
+}
+</file>
+
+<file path="src/app/globals.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  /* Museum wall — warm, slightly chalky off-white */
+  --bg:           #f0ede8;
+  --bg-card:      #e8e5df;
+  --bg-hover:     #e2ded7;
+  --fg:           #0d0c0a;
+  --fg-muted:     rgba(13, 12, 10, 0.50);
+  --fg-faint:     rgba(13, 12, 10, 0.25);
+  --border:       rgba(13, 12, 10, 0.08);
+  --border-md:    rgba(13, 12, 10, 0.16);
+
+  /* Dark surface (modals, archive page) */
+  --dark-bg:      #0a0908;
+  --dark-surface: #111009;
+  --dark-border:  rgba(247, 246, 241, 0.07);
+  --dark-fg:      rgba(247, 246, 241, 0.88);
+  --dark-muted:   rgba(247, 246, 241, 0.38);
+  --dark-faint:   rgba(247, 246, 241, 0.18);
+
+  /* Typography */
+  --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
+  --font-sans:    var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  --font-mono:    var(--font-dm-mono), 'Courier New', monospace;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; width: 100%; }
+
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--fg); color: var(--bg); }
+
+::-webkit-scrollbar { width: 2px; height: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 1px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+/* ── Keyframes ─────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.anim-fade-up  { animation: fade-up  0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-fade-in  { animation: fade-in  0.55s ease both; }
+.anim-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.d-0 { animation-delay: 0s; }
+.d-1 { animation-delay: 0.1s; }
+.d-2 { animation-delay: 0.2s; }
+.d-3 { animation-delay: 0.3s; }
+.d-4 { animation-delay: 0.45s; }
+.d-5 { animation-delay: 0.6s; }
+.d-6 { animation-delay: 0.75s; }
+.d-7 { animation-delay: 0.9s; }
+
+#vercel-live-feedback, [data-nextjs-toast], .vercel-badge, nextjs-portal {
+  display: none !important;
 }
 </file>
 
@@ -49453,7 +50285,7 @@ export async function vaFetch(
 <file path="src/harvester/types.ts">
 // src/harvester/types.ts
 
-export type SourceName = 'met' | 'artic' | 'va' | 'rijks' | 'smithsonian' | 'cooperhewitt';
+export type SourceName = 'met' | 'artic' | 'va' | 'rijks' | 'smithsonian' | 'cooperhewitt' | 'designarchive';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RAW ITEM — exactly what the API returned, stored as-is in /data/raw/
@@ -49588,6 +50420,54 @@ scripts/moma_raw.json
 # Image cache - moved outside public for performance
 .img-cache/
 public/img-cache/
+</file>
+
+<file path="package.json">
+{
+  "name": "art-harvester-etl",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "harvest:met": "tsx src/scripts/harvest-met.ts",
+    "harvest:artic": "tsx src/scripts/harvest-artic.ts",
+    "harvest:va": "tsx src/scripts/harvest-va.ts",
+    "harvest:rijks": "tsx src/scripts/harvest-rijks.ts",
+    "harvest:smithsonian": "tsx src/scripts/harvest-smithsonian.ts",
+    "harvest:cooperhewitt": "tsx src/scripts/harvest-cooperhewitt.ts",
+    "harvest:all": "npm run harvest:met && npm run harvest:artic && npm run harvest:va && npm run harvest:rijks && npm run harvest:smithsonian",
+    "transform": "tsx src/scripts/02-transform.ts",
+    "load": "tsx src/scripts/03-load.ts",
+    "pipeline": "npm run harvest:all && npm run transform && npm run load",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "transform:designarchive": "tsx src/scripts/02-transform-designarchive.ts",
+    "load:designarchive": "tsx src/scripts/03-load-designarchive.ts",
+    "pipeline:designarchive": "npm run harvest:designarchive && npm run transform:designarchive && npm run load:designarchive"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.3.1",
+    "framer-motion": "^12.35.2",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.13.10",
+    "@types/react": "19.2.14",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
 </file>
 
 <file path="src/app/wander/page.js">
@@ -50203,51 +51083,6 @@ export default function WanderPage() {
 }
 </file>
 
-<file path="package.json">
-{
-  "name": "art-harvester-etl",
-  "version": "2.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "harvest:met": "tsx src/scripts/harvest-met.ts",
-    "harvest:artic": "tsx src/scripts/harvest-artic.ts",
-    "harvest:va": "tsx src/scripts/harvest-va.ts",
-    "harvest:rijks": "tsx src/scripts/harvest-rijks.ts",
-    "harvest:smithsonian": "tsx src/scripts/harvest-smithsonian.ts",
-    "harvest:cooperhewitt": "tsx src/scripts/harvest-cooperhewitt.ts",
-    "harvest:all": "npm run harvest:met && npm run harvest:artic && npm run harvest:va && npm run harvest:rijks && npm run harvest:smithsonian",
-    "transform": "tsx src/scripts/02-transform.ts",
-    "load": "tsx src/scripts/03-load.ts",
-    "pipeline": "npm run harvest:all && npm run transform && npm run load",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
-  },
-  "dependencies": {
-    "better-sqlite3": "^12.6.2",
-    "dotenv": "^17.3.1",
-    "framer-motion": "^12.35.2",
-    "next": "^16.1.6",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "sharp": "^0.34.5"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.1",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.13.10",
-    "@types/react": "19.2.14",
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
-    "tsx": "^4.19.3",
-    "typescript": "^5.7.3"
-  }
-}
-</file>
-
 <file path="src/app/api/search/route.js">
 // src/app/api/search/route.js
 import Database from 'better-sqlite3';
@@ -50837,7 +51672,7 @@ function GalleryInner() {
               {/* Image */}
               <div onClick={() => setSelectedIdx(null)}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', minWidth: 0, pointerEvents: 'all', cursor: 'default' }}>
-                <img key={selected.id} src={imgUrl(selected.imageUrl, 1600)} alt={selected.title}
+                <img key={selected.id} src={imgUrl(selected.imageUrl, 1200)} alt={selected.title}
                   onClick={e => e.stopPropagation()}
                   style={{ maxHeight: '88vh', maxWidth: '100%', objectFit: 'contain', cursor: 'default' }}
                 />
