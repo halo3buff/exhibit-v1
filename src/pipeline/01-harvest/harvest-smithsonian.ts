@@ -20,7 +20,7 @@ dotenv.config({ path: '.env.local' });
 //   Realistic yield with images: ~40k–60k items.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { smithsonianFetch } from '../harvester/adapters/smithsonian.js';
+import { smithsonianFetch } from '../../harvester/adapters/smithsonian.js';
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));

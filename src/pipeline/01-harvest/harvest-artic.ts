@@ -10,7 +10,7 @@
 // Raw JSON includes department_id, so the classifier sorts them later.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { articFetch } from '../harvester/adapters/artic.js';
+import { articFetch } from '../../harvester/adapters/artic.js';
 import * as fs from 'fs';
 import * as path from 'path';
 

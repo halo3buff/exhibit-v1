@@ -4,7 +4,7 @@
 // Strategy: Fetch entire departments, let the classifier filter later
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { metFetch } from '../harvester/adapters/met.js';
+import { metFetch } from '../../harvester/adapters/met.js';
 
 async function main() {
   console.log('╔═══════════════════════════════════════════════════════════╗');

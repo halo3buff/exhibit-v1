@@ -8,20 +8,33 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "harvest:met": "tsx src/scripts/harvest-met.ts",
-    "harvest:artic": "tsx src/scripts/harvest-artic.ts",
-    "harvest:va": "tsx src/scripts/harvest-va.ts",
-    "harvest:rijks": "tsx src/scripts/harvest-rijks.ts",
-    "harvest:smithsonian": "tsx src/scripts/harvest-smithsonian.ts",
-    "harvest:cooperhewitt": "tsx src/scripts/harvest-cooperhewitt.ts",
-    "harvest:all": "npm run harvest:met && npm run harvest:artic && npm run harvest:va && npm run harvest:rijks && npm run harvest:smithsonian",
-    "transform": "tsx src/scripts/02-transform.ts",
-    "load": "tsx src/scripts/03-load.ts",
-    "pipeline": "npm run harvest:all && npm run transform && npm run load",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "transform:designarchive": "tsx src/scripts/02-transform-designarchive.ts",
-    "load:designarchive": "tsx src/scripts/03-load-designarchive.ts",
-    "pipeline:designarchive": "npm run harvest:designarchive && npm run transform:designarchive && npm run load:designarchive"
+
+    "harvest:met":          "tsx src/pipeline/01-harvest/harvest-met.ts",
+    "harvest:artic":        "tsx src/pipeline/01-harvest/harvest-artic.ts",
+    "harvest:va":           "tsx src/pipeline/01-harvest/harvest-va.ts",
+    "harvest:rijks":        "tsx src/pipeline/01-harvest/harvest-rijks.ts",
+    "harvest:smithsonian":  "tsx src/pipeline/01-harvest/harvest-smithsonian.ts",
+    "harvest:cooperhewitt": "tsx src/pipeline/01-harvest/harvest-cooperhewitt.ts",
+    "harvest:designarchive":"tsx src/pipeline/01-harvest/harvest-designarchive.ts",
+    "harvest:all":          "npm run harvest:met && npm run harvest:artic && npm run harvest:va && npm run harvest:rijks && npm run harvest:smithsonian && npm run harvest:cooperhewitt && npm run harvest:designarchive",
+
+    "transform":                "tsx src/pipeline/02-transform/02-transform.ts",
+    "transform:designarchive":  "tsx src/pipeline/02-transform/02-transform-designarchive.ts",
+
+    "load":                     "tsx src/pipeline/03-load/03-load.ts",
+    "load:designarchive":       "tsx src/pipeline/03-load/03-load-designarchive.ts",
+
+    "pipeline":             "npm run harvest:all && npm run transform && npm run load",
+    "pipeline:designarchive": "npm run harvest:designarchive && npm run transform:designarchive && npm run load:designarchive",
+
+    "prewarm":              "node src/pipeline/maintenance/prewarm-cache.mjs",
+    "reclassify":           "node src/pipeline/maintenance/reclassify.mjs",
+    "reclassify:commit":    "node src/pipeline/maintenance/reclassify.mjs --commit",
+    "fix-failures":         "node src/pipeline/maintenance/fix-failures.mjs",
+    "remove-uncached":      "node src/pipeline/maintenance/remove-uncached.mjs",
+    "diagnose":             "node src/pipeline/maintenance/diagnose-categories.mjs",
+    "show-subcategories":   "node src/pipeline/maintenance/show-subcategories.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",

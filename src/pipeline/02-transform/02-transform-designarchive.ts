@@ -1,19 +1,18 @@
-// src/scripts/02-transform.ts
+// src/scripts/02-transform-designarchive.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// TRANSFORM PHASE: Classify raw items → processed ArchiveItems
-// Reads: /data/raw/{source}/*.json
-// Writes: /data/processed/{source}-{id}.json
-// Logs: /data/processed/audit-{source}.json
+// TRANSFORM PHASE: Classify designarchive raw items → processed ArchiveItems
+// Reads: /data/raw/designarchive/*.json
+// Writes: /data/processed/designarchive-{id}.json
+// Logs: /data/processed/audit-designarchive.json
 // ─────────────────────────────────────────────────────────────────────────────
-
 import * as fs from 'fs';
 import * as path from 'path';
-// FIX: types.ts exports SourceName, not Source
-import { SourceName } from '../harvester/types.js';
-import { classifyItem, CONFIG } from '../harvester/engine/classifier.js';
-import { listRawFiles, saveProcessedItem, ensureDir } from '../harvester/utils/fs.js';
+import { SourceName } from '../../harvester/types.js';
+import { classifyItem, CONFIG } from '../../harvester/engine/classifier.js';
+import { listRawFiles, saveProcessedItem, ensureDir } from '../../harvester/utils/fs.js';
 
 const PROCESSED_DIR = path.join(process.cwd(), 'data', 'processed');
+const SOURCE: SourceName = 'designarchive';
 
 interface SourceStats {
   total: number;
@@ -42,27 +41,27 @@ interface AuditLogEntry {
   title?: string;
 }
 
-async function transformSource(source: SourceName, stats: TransformStats): Promise<AuditLogEntry[]> {
-  console.log(`\n🔄 Processing ${source.toUpperCase()}...`);
-
-  const files = listRawFiles(source);
+async function transformDesignArchive(stats: TransformStats): Promise<AuditLogEntry[]> {
+  console.log(`\n🔄 Processing ${SOURCE.toUpperCase()}...`);
+  
+  const files = listRawFiles(SOURCE);
   if (files.length === 0) {
-    console.log(`   ⊘ No raw files found in /data/raw/${source}/`);
+    console.log(`⊘ No raw files found in /data/raw/${SOURCE}/`);
     return [];
   }
-
-  console.log(`   → Found ${files.length} raw files`);
-
+  
+  console.log(`→ Found ${files.length} raw files`);
+  
   const auditLog: AuditLogEntry[] = [];
-
+  
   for (const filePath of files) {
     try {
       const rawItem = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       const result = classifyItem(rawItem);
-
+      
       auditLog.push({
         id: rawItem.id,
-        source,
+        source: SOURCE,
         timestamp: new Date().toISOString(),
         inputFile: filePath,
         accepted: result.accepted,
@@ -70,67 +69,58 @@ async function transformSource(source: SourceName, stats: TransformStats): Promi
         reasons: result.reasons,
         title: (result.item?.title) || (rawItem.data as Record<string, unknown>)?.title as string,
       });
-
+      
       stats.total++;
-      stats.bySource[source].total++;
-
+      stats.bySource[SOURCE].total++;
+      
       if (result.accepted && result.item) {
         // REJECT items without images — can't display art without an image
         if (!result.item.imageUrl) {
-          stats.bySource[source].noImage++;
+          stats.bySource[SOURCE].noImage++;
           stats.rejected++;
-          stats.bySource[source].rejected++;
-          continue; // Skip saving this item
+          stats.bySource[SOURCE].rejected++;
+          continue;
         }
         
         saveProcessedItem(result.item);
         stats.accepted++;
-        stats.bySource[source].accepted++;
+        stats.bySource[SOURCE].accepted++;
         stats.scoreSum += result.score;
-      
+        
         const cat = result.item.mainCategory;
         stats.byCategory[cat] = (stats.byCategory[cat] || 0) + 1;
-
+        
         if (stats.accepted % 100 === 0) {
           console.log(`   ✓ Processed ${stats.accepted} accepted items...`);
         }
       } else {
         stats.rejected++;
-        stats.bySource[source].rejected++;
+        stats.bySource[SOURCE].rejected++;
       }
-
+      
     } catch (e: any) {
       console.warn(`   ⊘ Error processing ${path.basename(filePath)}: ${e.message}`);
       stats.rejected++;
-      stats.bySource[source].rejected++;
+      stats.bySource[SOURCE].rejected++;
     }
   }
-
-  const sourceAuditPath = path.join(PROCESSED_DIR, `audit-${source}.json`);
+  
+  const sourceAuditPath = path.join(PROCESSED_DIR, `audit-${SOURCE}.json`);
   fs.writeFileSync(sourceAuditPath, JSON.stringify(auditLog, null, 2));
-
-  console.log(`   ✅ ${source}: ${stats.bySource[source].accepted} accepted, ${stats.bySource[source].rejected} rejected`);
-
-  if (source === 'rijks') {
-    const rejectedLowScore = auditLog.filter(
-      e => !e.accepted && e.reasons.some(r => r.includes('Below threshold'))
-    ).length;
-    console.log(`   📊 Rijks Debug:`);
-    console.log(`      Rejected (low score): ${rejectedLowScore}`);
-    console.log(`      💡 Check audit-rijks.json for detailed rejection reasons`);
-  }
-
+  
+  console.log(`✅ ${SOURCE}: ${stats.bySource[SOURCE].accepted} accepted, ${stats.bySource[SOURCE].rejected} rejected`);
+  
   return auditLog;
 }
 
 async function main() {
   console.log('╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  TRANSFORM PHASE — Classifying Raw Items                  ║');
-  console.log(`║  Threshold: ${CONFIG.THRESHOLD} | Output: /data/processed/              ║`);
+  console.log('║  DESIGN ARCHIVE TRANSFORM — Classifying Raw Items        ║');
+  console.log(`║ Threshold: ${CONFIG.THRESHOLD} | Output: /data/processed/ ║`);
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
-
+  
   ensureDir(PROCESSED_DIR);
-
+  
   const stats: TransformStats = {
     total: 0,
     accepted: 0,
@@ -143,59 +133,48 @@ async function main() {
       rijks:        { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       smithsonian:  { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       cooperhewitt: { total: 0, accepted: 0, rejected: 0, noImage: 0 },
-      designarchive: { total: 0, accepted: 0, rejected: 0, noImage: 0 }
+      designarchive:{ total: 0, accepted: 0, rejected: 0, noImage: 0 },
     },
     byCategory: {},
   };
-
-  const sources: SourceName[] = ['met', 'artic', 'va', 'rijks', 'smithsonian', 'cooperhewitt'];
-
-  for (const source of sources) {
-    await transformSource(source, stats);
-  }
-
+  
+  await transformDesignArchive(stats);
+  
   const avgScore  = stats.accepted > 0 ? (stats.scoreSum / stats.accepted).toFixed(1) : '0';
   const acceptPct = stats.total > 0 ? ((stats.accepted / stats.total) * 100).toFixed(1) : '0';
-
+  
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
   console.log('║  TRANSFORM COMPLETE                                       ║');
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
-
+  
   console.log(`📊 Overall:`);
-  console.log(`   Total:     ${stats.total}`);
-  console.log(`   Accepted:  ${stats.accepted} (${acceptPct}%)`);
-  console.log(`   Rejected:  ${stats.rejected}`);
-  console.log(`   Avg score: ${avgScore}`);
-
+  console.log(`Total: ${stats.total}`);
+  console.log(`Accepted: ${stats.accepted} (${acceptPct}%)`);
+  console.log(`Rejected: ${stats.rejected}`);
+  console.log(`Avg score: ${avgScore}`);
+  
   console.log(`\n📁 By Source:`);
-  for (const [src, s] of Object.entries(stats.bySource)) {
-    if (s.total === 0) continue;
+  const s = stats.bySource[SOURCE];
+  if (s.total > 0) {
     const pct = ((s.accepted / s.total) * 100).toFixed(1);
-    console.log(`   ${src.padEnd(12)}: ${s.accepted}/${s.total} accepted (${pct}%), ${s.noImage} no image`);
+    console.log(`${SOURCE.padEnd(12)}: ${s.accepted}/${s.total} accepted (${pct}%), ${s.noImage} no image`);
   }
-
-  console.log(`\n🏷️  By Category:`);
+  
+  console.log(`\n🏷️ By Category:`);
   Object.entries(stats.byCategory)
     .sort((a, b) => b[1] - a[1])
     .forEach(([cat, count]) => {
-      console.log(`   ${cat.padEnd(25)}: ${count}`);
+      console.log(`${cat.padEnd(25)}: ${count}`);
     });
-
+  
   console.log(`\n📁 Output: /data/processed/ (${stats.accepted} items)`);
-  console.log(`   Per-source audit logs: audit-{source}.json`);
-
+  console.log(`Audit log: audit-designarchive.json`);
+  
   if (stats.rejected > stats.accepted) {
     console.log(`\n💡 High rejection rate — tips:`);
-    console.log(`   1. Lower CONFIG.THRESHOLD in classifier.ts (currently ${CONFIG.THRESHOLD})`);
-    console.log(`   2. Review audit-{source}.json to see rejection reasons`);
-    console.log(`   3. Add missing objectType/medium values to taxonomy mappings`);
-  }
-
-  const rijksAccepted = stats.bySource.rijks.accepted;
-  if (rijksAccepted > 0) {
-    const withImages = rijksAccepted - stats.bySource.rijks.noImage;
-    console.log(`\n🖼️  Rijks Image Check:`);
-    console.log(`   Items with images: ${withImages}/${rijksAccepted} (${((withImages / rijksAccepted) * 100).toFixed(1)}%)\n`);
+    console.log(`1. Lower CONFIG.THRESHOLD in classifier.ts (currently ${CONFIG.THRESHOLD})`);
+    console.log(`2. Review audit-designarchive.json to see rejection reasons`);
+    console.log(`3. Add missing discipline/format values to taxonomy mappings`);
   }
 }
 

@@ -16,7 +16,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-import { rijksFetch } from '../harvester/adapters/rijks.js';
+import { rijksFetch } from '../../harvester/adapters/rijks.js';
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 

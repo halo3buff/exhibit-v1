@@ -6,7 +6,7 @@
 // id_category with THES IDs returns 0 results — do not use.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { vaFetch } from '../harvester/adapters/va.js';
+import { vaFetch } from '../../harvester/adapters/va.js';
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));
