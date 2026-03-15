@@ -1,0 +1,11 @@
+import Database from 'better-sqlite3';
+const db = new Database('artworks.db', { readonly: true });
+const rows = db.prepare("SELECT imageUrl FROM artworks WHERE imageUrl IS NOT NULL").all();
+const lfa = rows.filter(r => r.imageUrl.includes('letterformarchive')).length;
+const dr  = rows.filter(r => r.imageUrl.includes('designreviewed')).length;
+const aiga = rows.filter(r => r.imageUrl.includes('designarchives')).length;
+console.log('LFA:           ', lfa, '× 2 =', lfa*2, 'cache entries');
+console.log('DesignReviewed:', dr,  '× 2 =', dr*2,  'cache entries');
+console.log('AIGA:          ', aiga,'× 2 =', aiga*2,'cache entries');
+console.log('Total failing: ', (lfa+dr+aiga)*2);
+db.close();

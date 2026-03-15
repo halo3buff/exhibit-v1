@@ -1,6 +1,6 @@
 // src/harvester/types.ts
 
-export type SourceName = 'met' | 'artic' | 'va' | 'rijks' | 'smithsonian' | 'cooperhewitt' | 'designarchive';
+export type SourceName = 'met' | 'artic' | 'va' | 'rijks' | 'smithsonian' | 'cooperhewitt' | 'designarchive' | 'letterformarchive' | 'designreviewed' | 'tdr' | 'europeana' | 'gallica' | 'nypl';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RAW ITEM — exactly what the API returned, stored as-is in /data/raw/

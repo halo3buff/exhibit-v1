@@ -81,7 +81,7 @@ export async function GET(request) {
   const page        = pageParam ? Math.max(1, parseInt(pageParam)) : null;
 
   try {
-    const baseWhere = `imageUrl IS NOT NULL AND imageUrl != ''`;
+    const baseWhere = `imageUrl IS NOT NULL AND imageUrl != '' AND source NOT IN ('letterformarchive', 'europeana')`;
     let ids;
 
     if (contentType && contentType !== 'all' && subCategory) {

@@ -610,8 +610,8 @@ let   noSignal  = 0;
 let   confirmed = 0;
 
 // Count changes/confirmations per source
-const changeCounts  = { met: 0, artic: 0, va: 0, smithsonian: 0, rijks: 0, cooperhewitt: 0 };
-const confirmCounts = { met: 0, artic: 0, va: 0, smithsonian: 0, rijks: 0, cooperhewitt: 0 };
+const changeCounts  = { met: 0, artic: 0, va: 0, smithsonian: 0, rijks: 0, cooperhewitt: 0, designarchive: 0, letterformarchive: 0, designreviewed: 0 };
+const confirmCounts = { met: 0, artic: 0, va: 0, smithsonian: 0, rijks: 0, cooperhewitt: 0, designarchive: 0, letterformarchive: 0, designreviewed: 0 };
 
 // ── Pre-build Cooper Hewitt ID lookup ─────────────────────────────────────────
 // CH files are named cooperhewitt-000001.json (sequential index), not by object

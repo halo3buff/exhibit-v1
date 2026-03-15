@@ -7,12 +7,12 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const ROOT    = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const RAW_DIR = path.join(ROOT, 'data', 'raw');
 const OUT     = path.join(ROOT, 'raw-samples.json');
 
-const SAMPLE = 15;
-const sources = ['met', 'artic', 'va', 'smithsonian', 'rijks'];
+const SAMPLE = 5;
+const sources = ['met', 'artic', 'va', 'smithsonian', 'rijks', 'letterformarchive', 'designreviewed'];
 const output  = {};
 
 for (const source of sources) {

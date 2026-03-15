@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: false,
 
+  serverExternalPackages: ['better-sqlite3', 'puppeteer', 'sharp'],
+
+  turbopack: {},
+
   async headers() {
     return [
       {
@@ -12,18 +16,6 @@ const nextConfig = {
       },
     ];
   },
-
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.watchOptions = {
-        ...config.watchOptions,
-        ignored: ['**/.img-cache/**', '**/public/img-cache/**', '**/node_modules/**'],
-      };
-    }
-    return config;
-  },
-
-  turbopack: {},
 };
 
 export default nextConfig;

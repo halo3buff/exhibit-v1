@@ -134,6 +134,8 @@ async function main() {
       smithsonian:  { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       cooperhewitt: { total: 0, accepted: 0, rejected: 0, noImage: 0 },
       designarchive:{ total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      letterformarchive:{ total: 0, accepted: 0, rejected: 0, noImage: 0 },
+      designreviewed:{ total: 0, accepted: 0, rejected: 0, noImage: 0 },
     },
     byCategory: {},
   };

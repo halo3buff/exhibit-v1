@@ -32,10 +32,14 @@ export function classifyItem(raw: RawItem): ClassificationResult {
     case 'va':           return classifyVa(data as Record<string, unknown>, raw);
     case 'rijks':        return classifyRijks(data as Record<string, unknown>, raw);
     case 'smithsonian':  return classifySmithsonian(data as Record<string, unknown>, raw);
-    // CH files are saved flat (no .data wrapper), so pass raw itself as the data object
     case 'cooperhewitt':   return classifyCooperHewitt(raw as unknown as Record<string, unknown>, raw);
-    // DA files are also saved flat (no .data wrapper) — fields live at root level
     case 'designarchive':  return classifyDesignArchive(raw as unknown as Record<string, unknown>, raw);
+    case 'letterformarchive': return classifyLetterformArchive(raw as unknown as Record<string, unknown>, raw);
+    case 'designreviewed':    return classifyDesignReviewed(raw as unknown as Record<string, unknown>, raw);
+    case 'tdr':               return classifyArena(raw as unknown as Record<string, unknown>, raw);
+    case 'europeana':         return classifyEuropeana(raw as unknown as Record<string, unknown>, raw);
+    case 'nypl':              return classifyNypl(raw as unknown as Record<string, unknown>, raw);
+    case 'gallica':           return classifyGallica(raw as unknown as Record<string, unknown>, raw);
     default:
       return { accepted: false, score: 0, reasons: [`Unknown source: ${source}`] };
   }
@@ -96,7 +100,6 @@ function classifyMet(data: Record<string, unknown>, raw: RawItem): Classificatio
       const medScore = (rules as any).mediumScores[medium];
       categoryScore += medScore;
       catReasons.push(`Medium '${medium}' (+${medScore})`);
-      // Set a default subCategory for the category if not already set by objectName
       if (!bestSubCategory && (rules as any).defaultSubCategory) {
         bestSubCategory = (rules as any).defaultSubCategory;
       }
@@ -211,7 +214,6 @@ function classifyArtic(data: Record<string, unknown>, raw: RawItem): Classificat
     reasons.push(`Has date (+${CONFIG.HAS_DATE_BONUS})`);
   }
 
-  // If no artworkType/classification matched, assign default subCategory by department
   if (!bestSubCategory) {
     const deptDefaults: Record<string, string> = {
       'Prints and Drawings':               'Etching/Woodcut/Lithograph',
@@ -342,7 +344,7 @@ function extractVaImageUrl(data: Record<string, unknown>): string | null {
     return `${images.iiif_url}/full/!1280,1280/0/default.jpg`;
   }
   if (images._primary_thumbnail) {
-    return String(images._primary_thumbnail).replace(/\/full\/![\\d,]+\//, '/full/!1280,1280/');
+    return String(images._primary_thumbnail).replace(/\/full\/![\d,]+\//, '/full/!1280,1280/');
   }
   return null;
 }
@@ -548,8 +550,6 @@ function classifySmithsonian(data: Record<string, unknown>, raw: RawItem): Class
     reasons.push(`Has date (+${CONFIG.HAS_DATE_BONUS})`);
   }
 
-  // If item passed via unitCode but had no objectType match,
-  // assign the institution's default subCategory
   if (!bestSubCategory) {
     const unitCodeDefaults: Record<string, string> = {
       'CHNDM':  'Posters & Advertising',
@@ -595,19 +595,8 @@ function classifySmithsonian(data: Record<string, unknown>, raw: RawItem): Class
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COOPER HEWITT CLASSIFIER
-//
-// CH files are saved flat by harvest-cooperhewitt.ts — NOT the standard
-// {id, source, fetchedAt, data} wrapper. Shape is:
-//   { id, source, title, medium, date, imageUrl, url, department, objectType, raw: {...github obj} }
-//
-// In classifyItem, `data = raw.data` will be undefined for CH files.
-// We handle this by passing `raw` itself as the data argument in the dispatch.
-//
-// The GitHub JSON object (data.raw) has a clean `type` field: "Poster", "Drawing", etc.
-// That is the primary classification signal.
 // ─────────────────────────────────────────────────────────────────────────────
 const CH_TYPE_MAP: Record<string, { subCategory: string; score: number }> = {
-  // Graphic Design
   'poster':              { subCategory: 'Posters & Advertising',  score: 25 },
   'posters':             { subCategory: 'Posters & Advertising',  score: 25 },
   'advertisement':       { subCategory: 'Posters & Advertising',  score: 22 },
@@ -638,7 +627,6 @@ const CH_TYPE_MAP: Record<string, { subCategory: string; score: number }> = {
   'label':               { subCategory: 'Packaging',              score: 25 },
   'packaging':           { subCategory: 'Packaging',              score: 25 },
   'wrapper':             { subCategory: 'Packaging',              score: 22 },
-  // Prints & Drawings
   'print':               { subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
   'prints':              { subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
   'etching':             { subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
@@ -655,21 +643,17 @@ const CH_TYPE_MAP: Record<string, { subCategory: string; score: number }> = {
   'drawings':            { subCategory: 'Drawings',                   score: 25 },
   'sketch':              { subCategory: 'Drawings',                   score: 22 },
   'collage':             { subCategory: 'Collage',                    score: 25 },
-  // Photography
   'photograph':          { subCategory: 'Photograph', score: 25 },
   'photography':         { subCategory: 'Photograph', score: 25 },
   'daguerreotype':       { subCategory: 'Photograph', score: 25 },
   'tintype':             { subCategory: 'Photograph', score: 25 },
   'cyanotype':           { subCategory: 'Photograph', score: 25 },
-  // Painting
   'painting':            { subCategory: 'Oil',                score: 22 },
   'watercolor':          { subCategory: 'Watercolor/Gouache', score: 22 },
   'watercolour':         { subCategory: 'Watercolor/Gouache', score: 22 },
 };
 
 function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
-  // data = the whole CH file object (flat, not wrapped in .data)
-  // data.raw = the GitHub JSON with the clean `type` field
   const ch     = ((data as any).raw ?? {}) as Record<string, any>;
   const type   = str(ch.type).toLowerCase();
   const medium = str((data as any).medium || ch.medium).toLowerCase();
@@ -680,7 +664,6 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
   const reasons: string[] = [];
   let bestSubCategory: string | null = null;
 
-  // 1. Try exact type match
   if (type && CH_TYPE_MAP[type]) {
     const { subCategory, score: typeScore } = CH_TYPE_MAP[type];
     bestSubCategory = subCategory;
@@ -688,19 +671,17 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
     reasons.push(`CH type "${ch.type}" → ${subCategory} (+${typeScore})`);
   }
 
-  // 2. Try partial type match (handles compound types like "letterpress printing")
   if (!bestSubCategory && type) {
     for (const [key, rule] of Object.entries(CH_TYPE_MAP)) {
       if (type.includes(key)) {
         bestSubCategory = rule.subCategory;
-        score += rule.score - 3; // slight penalty for partial match
+        score += rule.score - 3;
         reasons.push(`CH type "${ch.type}" ~ "${key}" → ${rule.subCategory} (+${rule.score - 3})`);
         break;
       }
     }
   }
 
-  // 3. Medium fallback
   if (!bestSubCategory) {
     if (/gelatin silver|albumen|daguerreotype|chromogenic|cyanotype|platinum print/.test(medium)) {
       bestSubCategory = 'Photograph';
@@ -719,8 +700,6 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
       score += 15;
       reasons.push(`medium oil → Oil (+15)`);
     } else {
-      // Everything else in this dept defaults to Posters & Advertising
-      // (GD dept has no furniture/ceramics/textiles)
       bestSubCategory = 'Posters & Advertising';
       score += 12;
       reasons.push(`GD dept fallback → Posters & Advertising (+12)`);
@@ -773,15 +752,8 @@ function classifyCooperHewitt(data: Record<string, unknown>, raw: RawItem): Clas
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UTILITY: SubCategory → MainCategory
-// ─────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
 // DESIGN ARCHIVE (AIGA)
-// Raw files are saved flat (same shape as the harvest record, no .data wrapper).
-// Key fields: title, author, year, imageUrl, url, discipline, formats[], collections[]
 // ─────────────────────────────────────────────────────────────────────────────
-
-// discipline → subCategory
 const DA_DISCIPLINE_MAP: Record<string, { subCategory: string; score: number }> = {
   'Advertising':                   { subCategory: 'Posters & Advertising',  score: 22 },
   'Poster':                        { subCategory: 'Posters & Advertising',  score: 25 },
@@ -801,7 +773,6 @@ const DA_DISCIPLINE_MAP: Record<string, { subCategory: string; score: number }> 
   'Illustration':                  { subCategory: 'Posters & Advertising',  score: 16 },
 };
 
-// format keywords → subCategory (applied when discipline doesn't match)
 const DA_FORMAT_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
   { keyword: 'poster',       subCategory: 'Posters & Advertising',  score: 22 },
   { keyword: 'advertisement',subCategory: 'Posters & Advertising',  score: 20 },
@@ -830,7 +801,6 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
   const reasons: string[] = [];
   let bestSubCategory: string | null = null;
 
-  // 1. Discipline exact match
   const disciplineKey = Object.keys(DA_DISCIPLINE_MAP).find(
     k => k.toLowerCase() === discipline.toLowerCase()
   );
@@ -841,7 +811,6 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
     reasons.push(`discipline "${discipline}" → ${subCategory} (+${s})`);
   }
 
-  // 2. Discipline partial match (handles values like "Identity / Branding Programs")
   if (!bestSubCategory && discipline) {
     for (const [key, rule] of Object.entries(DA_DISCIPLINE_MAP)) {
       if (discipline.toLowerCase().includes(key.toLowerCase())) {
@@ -853,7 +822,6 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
     }
   }
 
-  // 3. Formats array scan
   if (!bestSubCategory && formats.length > 0) {
     for (const fmt of formats) {
       const fmtLower = fmt.toLowerCase();
@@ -867,7 +835,6 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
     }
   }
 
-  // 4. Title keyword fallback (weak signal)
   if (!bestSubCategory) {
     for (const r of DA_FORMAT_MAP) {
       if (title.includes(r.keyword)) {
@@ -879,26 +846,15 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
     }
   }
 
-  // 5. AIGA is a graphic design archive — if we still have nothing, default
   if (!bestSubCategory) {
     bestSubCategory = 'Posters & Advertising';
     score += 15;
     reasons.push(`AIGA archive default → Posters & Advertising (+15)`);
   }
 
-  // Bonuses
-  if (imageUrl) {
-    score += CONFIG.HAS_IMAGE_BONUS;
-    reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`);
-  }
-  if (author && author !== 'Unknown') {
-    score += CONFIG.HAS_CREATOR_BONUS;
-    reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`);
-  }
-  if (year && year !== 'n.d.') {
-    score += CONFIG.HAS_DATE_BONUS;
-    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`);
-  }
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (author && author !== 'Unknown') { score += CONFIG.HAS_CREATOR_BONUS; reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`); }
+  if (year && year !== 'n.d.') { score += CONFIG.HAS_DATE_BONUS; reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
 
   if (score < CONFIG.THRESHOLD) {
     return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
@@ -927,6 +883,705 @@ function classifyDesignArchive(data: Record<string, unknown>, raw: RawItem): Cla
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LETTERFORM ARCHIVE CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const LFA_WORKTYPE_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'type specimen',   subCategory: 'Typography & Lettering', score: 28 },
+  { keyword: 'type ephemera',   subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'typeface',        subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'lettering',       subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'calligraphy',     subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'manuscript',      subCategory: 'Typography & Lettering', score: 20 },
+  { keyword: 'book cover',      subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'book',            subCategory: 'Editorial/Publication',  score: 18 },
+  { keyword: 'periodical',      subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'newspaper',       subCategory: 'Editorial/Publication',  score: 18 },
+  { keyword: 'magazine',        subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'journal',         subCategory: 'Editorial/Publication',  score: 18 },
+  { keyword: 'poster',          subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'advertisement',   subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'postcard',        subCategory: 'Posters & Advertising',  score: 18 },
+  { keyword: 'brochure',        subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'broadside',       subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'flyer',           subCategory: 'Posters & Advertising',  score: 18 },
+  { keyword: 'logo',            subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'identity',        subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'signage',         subCategory: 'Identity & Branding',    score: 20 },
+  { keyword: 'label',           subCategory: 'Packaging',              score: 20 },
+  { keyword: 'packaging',       subCategory: 'Packaging',              score: 22 },
+  { keyword: 'photograph',      subCategory: 'Photograph',             score: 20 },
+  { keyword: 'drawing',         subCategory: 'Drawings',               score: 16 },
+  { keyword: 'print',           subCategory: 'Etching/Woodcut/Lithograph', score: 16 },
+];
+
+const LFA_DISCIPLINE_BONUS: Record<string, { subCategory: string; bonus: number }> = {
+  'lettering':      { subCategory: 'Typography & Lettering', bonus: 8 },
+  'typography':     { subCategory: 'Typography & Lettering', bonus: 8 },
+  'calligraphy':    { subCategory: 'Typography & Lettering', bonus: 8 },
+  'graphic design': { subCategory: 'Posters & Advertising',  bonus: 5 },
+  'cover design':   { subCategory: 'Editorial/Publication',  bonus: 8 },
+  'poster design':  { subCategory: 'Posters & Advertising',  bonus: 8 },
+  'book design':    { subCategory: 'Editorial/Publication',  bonus: 8 },
+};
+
+function classifyLetterformArchive(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const title     = str((data as any).title).toLowerCase();
+  const imageUrl  = str((data as any).imageUrl) || null;
+  const author    = str((data as any).author).replace(/\s*;\s*/g, ', ').trim();
+  const rawYear   = str((data as any).year);
+  const year      = rawYear === '-' ? '' : rawYear;
+  const worktypes = ((data as any).worktypes ?? []) as string[];
+  const subjects  = ((data as any).subjects  ?? []) as string[];
+  const countries = ((data as any).countries ?? []) as string[];
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const wt of worktypes) {
+    const wtLower = wt.toLowerCase();
+    const hit = LFA_WORKTYPE_MAP.find(r => wtLower.includes(r.keyword));
+    if (hit && !bestSubCategory) {
+      bestSubCategory = hit.subCategory;
+      score += hit.score;
+      reasons.push(`worktype "${wt}" → ${hit.subCategory} (+${hit.score})`);
+    }
+  }
+
+  for (const subj of subjects) {
+    const lower = subj.toLowerCase();
+    if (!lower.startsWith('discipline:')) continue;
+    const disc = lower.replace('discipline:', '').trim();
+    const hit = LFA_DISCIPLINE_BONUS[disc];
+    if (hit) {
+      if (!bestSubCategory) bestSubCategory = hit.subCategory;
+      score += hit.bonus;
+      reasons.push(`discipline subject "${disc}" (+${hit.bonus})`);
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const r of LFA_WORKTYPE_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += Math.floor(r.score * 0.6);
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${Math.floor(r.score * 0.6)})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    bestSubCategory = 'Typography & Lettering';
+    score += 18;
+    reasons.push('LFA archive default → Typography & Lettering (+18)');
+  }
+
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (author && author !== 'Unknown' && author !== '-') {
+    score += CONFIG.HAS_CREATOR_BONUS;
+    reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`);
+  }
+  if (year) { score += CONFIG.HAS_DATE_BONUS; reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  const origin = countries.filter(c => c !== '-').join(', ') || undefined;
+
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'letterformarchive' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          str((data as any).title) || 'Untitled',
+      author:         (author && author !== '-') ? author : 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     'Typography & Graphic Design',
+      classification: worktypes.join(', ') || 'Unknown',
+      medium:         worktypes.join(', ') || 'Unknown',
+      objectType:     worktypes[0] || 'Unknown',
+      origin,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN REVIEWED CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const DR_FORMAT_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'graphis',              subCategory: 'Editorial/Publication',  score: 28 },
+  { keyword: 'idea',                 subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'typographica',         subCategory: 'Editorial/Publication',  score: 28 },
+  { keyword: 'typografia',           subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'gebrauchsgraphik',     subCategory: 'Editorial/Publication',  score: 28 },
+  { keyword: 'architectural design', subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'neue grafik',          subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'projekt',              subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'rassegna',             subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'magazine',             subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'periodical',           subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'annual report',        subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'catalogue',            subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'catalog',              subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'journal',              subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'brochure',             subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'book',                 subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'type specimen',        subCategory: 'Typography & Lettering', score: 28 },
+  { keyword: 'type-specimen',        subCategory: 'Typography & Lettering', score: 28 },
+  { keyword: 'typeface',             subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'typography',           subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'lettering',            subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'font',                 subCategory: 'Typography & Lettering', score: 20 },
+  { keyword: 'poster',               subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'record',               subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'album',                subCategory: 'Posters & Advertising',  score: 18 },
+  { keyword: 'stamp',                subCategory: 'Posters & Advertising',  score: 18 },
+  { keyword: 'matchbox',             subCategory: 'Packaging',              score: 22 },
+  { keyword: 'label',                subCategory: 'Packaging',              score: 20 },
+  { keyword: 'packaging',            subCategory: 'Packaging',              score: 22 },
+  { keyword: 'identity',             subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'logo',                 subCategory: 'Identity & Branding',    score: 22 },
+];
+
+function extractYearFromTitle(title: string): string {
+  const m = title.match(/\b(1[89]\d{2}|20[0-2]\d)\b/g);
+  if (!m) return '';
+  return m[m.length - 1];
+}
+
+function looksLikePersonName(s: string): boolean {
+  const words = s.trim().split(/\s+/);
+  if (words.length < 2 || words.length > 4) return false;
+  if (/\d/.test(s)) return false;
+  return words.every(w => /^[A-ZÁÉÍÓÚÀÈÌÒÙÄÖÜÑ]/.test(w));
+}
+
+function classifyDesignReviewed(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const rawTitle = str((data as any).title);
+  const title    = rawTitle
+    .replace(/&amp;/g, '&').replace(/&#8211;/g, '–').replace(/&#[0-9]+;/g, ' ')
+    .toLowerCase().trim();
+  const slug     = str((data as any).slug).toLowerCase();
+  const imageUrl = str((data as any).imageUrl) || null;
+  const tags     = ((data as any).formats ?? []) as string[];
+
+  const authorTag = tags.find(looksLikePersonName) ?? '';
+  const year = extractYearFromTitle(rawTitle);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const r of DR_FORMAT_MAP) {
+    if (title.includes(r.keyword)) {
+      bestSubCategory = r.subCategory;
+      score += r.score;
+      reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${r.score})`);
+      break;
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const r of DR_FORMAT_MAP) {
+      const slugKw = r.keyword.replace(/\s+/g, '-');
+      if (slug.includes(slugKw)) {
+        bestSubCategory = r.subCategory;
+        score += r.score - 2;
+        reasons.push(`slug keyword "${slugKw}" → ${r.subCategory} (+${r.score - 2})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    bestSubCategory = 'Editorial/Publication';
+    score += 18;
+    reasons.push('Design Reviewed archive default → Editorial/Publication (+18)');
+  }
+
+  if (imageUrl)  { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (authorTag) { score += CONFIG.HAS_CREATOR_BONUS; reasons.push(`Has author tag (+${CONFIG.HAS_CREATOR_BONUS})`); }
+  if (year)      { score += CONFIG.HAS_DATE_BONUS;    reasons.push(`Year in title (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'designreviewed' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          rawTitle
+                        .replace(/&amp;/g, '&').replace(/&#8211;/g, '–')
+                        .replace(/&#[0-9]+;/g, ' ').trim() || 'Untitled',
+      author:         authorTag || 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     'Graphic Design',
+      classification: bestSubCategory,
+      medium:         'Printed Matter',
+      objectType:     bestSubCategory,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ARE.NA / TDR CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const ARENA_CHANNEL_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'designers republic',  subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'swiss',               subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'bauhaus',             subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'constructiv',         subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'poster',              subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'psychedelic',         subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'album',               subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'warp',                subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'brutalist',           subCategory: 'Posters & Advertising',  score: 20 },
+  { keyword: 'graphic design',      subCategory: 'Posters & Advertising',  score: 18 },
+  { keyword: 'type',                subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'typograph',           subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'lettering',           subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'font',                subCategory: 'Typography & Lettering', score: 20 },
+  { keyword: 'book',                subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'editorial',           subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'magazine',            subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'packaging',           subCategory: 'Packaging',              score: 22 },
+  { keyword: 'identity',            subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'branding',            subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'corporate',           subCategory: 'Identity & Branding',    score: 20 },
+];
+
+function classifyArena(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const title       = str((data as any).title).toLowerCase().trim();
+  const channelDesc = str((data as any).channelDesc).toLowerCase();
+  const tags        = ((data as any).tags ?? []) as string[];
+  const imageUrl    = str((data as any).imageUrl) || null;
+  const year        = str((data as any).year);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const r of ARENA_CHANNEL_MAP) {
+    if (channelDesc.includes(r.keyword)) {
+      bestSubCategory = r.subCategory;
+      score += r.score;
+      reasons.push(`channel "${channelDesc}" → ${r.subCategory} (+${r.score})`);
+      break;
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const r of ARENA_CHANNEL_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += r.score - 2;
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${r.score - 2})`);
+        break;
+      }
+    }
+  }
+
+  for (const tag of tags) {
+    const tagLower = tag.toLowerCase();
+    for (const r of ARENA_CHANNEL_MAP) {
+      if (tagLower.includes(r.keyword)) {
+        if (!bestSubCategory) bestSubCategory = r.subCategory;
+        score += Math.floor(r.score * 0.4);
+        reasons.push(`tag "${tag}" (+${Math.floor(r.score * 0.4)})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    bestSubCategory = 'Posters & Advertising';
+    score += 18;
+    reasons.push('Are.na graphic design channel default → Posters & Advertising (+18)');
+  }
+
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (year)     { score += CONFIG.HAS_DATE_BONUS;    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'tdr' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          str((data as any).title) || 'Untitled',
+      author:         str((data as any).author) || 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     'Graphic Design',
+      classification: bestSubCategory,
+      medium:         'Digital Image',
+      objectType:     bestSubCategory,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EUROPEANA CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const EUROPEANA_TYPE_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'poster',          subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'affiche',         subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'plakat',          subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'advertisement',   subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'broadside',       subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'trade card',      subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'type specimen',   subCategory: 'Typography & Lettering', score: 28 },
+  { keyword: 'typography',      subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'lettering',       subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'typeface',        subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'logo',            subCategory: 'Identity & Branding',    score: 25 },
+  { keyword: 'trademark',       subCategory: 'Identity & Branding',    score: 25 },
+  { keyword: 'identity',        subCategory: 'Identity & Branding',    score: 22 },
+  { keyword: 'book cover',      subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'magazine',        subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'periodical',      subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'packaging',       subCategory: 'Packaging',              score: 25 },
+  { keyword: 'label',           subCategory: 'Packaging',              score: 22 },
+  { keyword: 'lithograph',      subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'etching',         subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'woodcut',         subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'engraving',       subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'print',           subCategory: 'Etching/Woodcut/Lithograph', score: 20 },
+  { keyword: 'drawing',         subCategory: 'Drawings',               score: 22 },
+  { keyword: 'photograph',      subCategory: 'Photograph',             score: 25 },
+  { keyword: 'photography',     subCategory: 'Photograph',             score: 25 },
+  { keyword: 'painting',        subCategory: 'Oil',                    score: 22 },
+  { keyword: 'watercolor',      subCategory: 'Watercolor/Gouache',     score: 22 },
+  { keyword: 'watercolour',     subCategory: 'Watercolor/Gouache',     score: 22 },
+  { keyword: 'ceramic',         subCategory: 'Ceramics & Glass',       score: 22 },
+  { keyword: 'textile',         subCategory: 'Textiles & Fashion',     score: 22 },
+  { keyword: 'furniture',       subCategory: 'Furniture',              score: 22 },
+];
+
+function classifyEuropeana(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const title     = str((data as any).title).toLowerCase();
+  const dcType    = ((data as any).dcType ?? []) as string[];
+  const dcSubject = ((data as any).dcSubject ?? []) as string[];
+  const imageUrl  = str((data as any).imageUrl) || null;
+  const author    = str((data as any).author);
+  const year      = str((data as any).year);
+  const country   = str((data as any).country);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const t of dcType) {
+    const tLower = t.toLowerCase();
+    const hit = EUROPEANA_TYPE_MAP.find(r => tLower.includes(r.keyword));
+    if (hit && !bestSubCategory) {
+      bestSubCategory = hit.subCategory;
+      score += hit.score;
+      reasons.push(`dcType "${t}" → ${hit.subCategory} (+${hit.score})`);
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const s of dcSubject) {
+      const sLower = s.toLowerCase();
+      const hit = EUROPEANA_TYPE_MAP.find(r => sLower.includes(r.keyword));
+      if (hit) {
+        bestSubCategory = hit.subCategory;
+        score += hit.score - 3;
+        reasons.push(`dcSubject "${s}" → ${hit.subCategory} (+${hit.score - 3})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const r of EUROPEANA_TYPE_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += r.score - 5;
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${r.score - 5})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    bestSubCategory = 'Posters & Advertising';
+    score += 15;
+    reasons.push('Europeana IMAGE default → Posters & Advertising (+15)');
+  }
+
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (author)   { score += CONFIG.HAS_CREATOR_BONUS; reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`); }
+  if (year)     { score += CONFIG.HAS_DATE_BONUS;    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'europeana' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          str((data as any).title) || 'Untitled',
+      author:         author || 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     str((data as any).provider) || 'Europeana',
+      classification: dcType[0] || bestSubCategory,
+      medium:         dcType[0] || 'Unknown',
+      objectType:     dcType[0] || bestSubCategory,
+      origin:         country || undefined,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NYPL CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const NYPL_TITLE_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'poster',          subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'broadside',       subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'advertisement',   subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'trade card',      subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'menu',            subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'type specimen',   subCategory: 'Typography & Lettering', score: 28 },
+  { keyword: 'typeface',        subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'book cover',      subCategory: 'Editorial/Publication',  score: 25 },
+  { keyword: 'magazine',        subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'catalog',         subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'catalogue',       subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'packaging',       subCategory: 'Packaging',              score: 25 },
+  { keyword: 'label',           subCategory: 'Packaging',              score: 22 },
+  { keyword: 'lithograph',      subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'etching',         subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'engraving',       subCategory: 'Etching/Woodcut/Lithograph', score: 22 },
+  { keyword: 'woodcut',         subCategory: 'Etching/Woodcut/Lithograph', score: 22 },
+  { keyword: 'photograph',      subCategory: 'Photograph',             score: 22 },
+  { keyword: 'portrait',        subCategory: 'Photograph',             score: 18 },
+  { keyword: 'drawing',         subCategory: 'Drawings',               score: 20 },
+  { keyword: 'map',             subCategory: 'Drawings',               score: 18 },
+  { keyword: 'ephemera',        subCategory: 'Posters & Advertising',  score: 18 },
+];
+
+function classifyNypl(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const title          = str((data as any).title).toLowerCase();
+  const typeOfResource = str((data as any).typeOfResource).toLowerCase();
+  const imageUrl       = str((data as any).imageUrl) || null;
+  const author         = str((data as any).author);
+  const year           = str((data as any).year);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const r of NYPL_TITLE_MAP) {
+    if (title.includes(r.keyword)) {
+      bestSubCategory = r.subCategory;
+      score += r.score;
+      reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${r.score})`);
+      break;
+    }
+  }
+
+  if (!bestSubCategory) {
+    if (typeOfResource.includes('still image')) {
+      bestSubCategory = 'Posters & Advertising';
+      score += 18;
+      reasons.push('typeOfResource "still image" → Posters & Advertising (+18)');
+    } else if (typeOfResource.includes('text')) {
+      bestSubCategory = 'Editorial/Publication';
+      score += 15;
+      reasons.push('typeOfResource "text" → Editorial/Publication (+15)');
+    } else {
+      bestSubCategory = 'Posters & Advertising';
+      score += 12;
+      reasons.push('NYPL default → Posters & Advertising (+12)');
+    }
+  }
+
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (author)   { score += CONFIG.HAS_CREATOR_BONUS; reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`); }
+  if (year)     { score += CONFIG.HAS_DATE_BONUS;    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'nypl' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          str((data as any).title) || 'Untitled',
+      author:         author || 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     'New York Public Library',
+      classification: typeOfResource || bestSubCategory,
+      medium:         typeOfResource || 'Unknown',
+      objectType:     bestSubCategory,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GALLICA CLASSIFIER
+// ─────────────────────────────────────────────────────────────────────────────
+const GALLICA_SUBJECT_MAP: Array<{ keyword: string; subCategory: string; score: number }> = [
+  { keyword: 'affiche',         subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'poster',          subCategory: 'Posters & Advertising',  score: 28 },
+  { keyword: 'publicité',       subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'réclame',         subCategory: 'Posters & Advertising',  score: 25 },
+  { keyword: 'lithograph',      subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'lithographie',    subCategory: 'Etching/Woodcut/Lithograph', score: 25 },
+  { keyword: 'gravure',         subCategory: 'Etching/Woodcut/Lithograph', score: 22 },
+  { keyword: 'estampe',         subCategory: 'Etching/Woodcut/Lithograph', score: 22 },
+  { keyword: 'typographie',     subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'typography',      subCategory: 'Typography & Lettering', score: 25 },
+  { keyword: 'caractère',       subCategory: 'Typography & Lettering', score: 22 },
+  { keyword: 'illustration',    subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'magazine',        subCategory: 'Editorial/Publication',  score: 22 },
+  { keyword: 'revue',           subCategory: 'Editorial/Publication',  score: 20 },
+  { keyword: 'photographie',    subCategory: 'Photograph',             score: 22 },
+  { keyword: 'photograph',      subCategory: 'Photograph',             score: 22 },
+  { keyword: 'dessin',          subCategory: 'Drawings',               score: 20 },
+  { keyword: 'drawing',         subCategory: 'Drawings',               score: 20 },
+  { keyword: 'peinture',        subCategory: 'Oil',                    score: 20 },
+  { keyword: 'painting',        subCategory: 'Oil',                    score: 20 },
+  { keyword: 'aquarelle',       subCategory: 'Watercolor/Gouache',     score: 22 },
+  { keyword: 'art nouveau',     subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'art déco',        subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'graphisme',       subCategory: 'Posters & Advertising',  score: 22 },
+  { keyword: 'packaging',       subCategory: 'Packaging',              score: 22 },
+  { keyword: 'étiquette',       subCategory: 'Packaging',              score: 20 },
+];
+
+function classifyGallica(data: Record<string, unknown>, raw: RawItem): ClassificationResult {
+  const title    = str((data as any).title).toLowerCase();
+  const type     = str((data as any).type).toLowerCase();
+  const subjects = ((data as any).subject ?? []) as string[];
+  const imageUrl = str((data as any).imageUrl) || null;
+  const author   = str((data as any).author);
+  const year     = str((data as any).year);
+
+  let score = 0;
+  const reasons: string[] = [];
+  let bestSubCategory: string | null = null;
+
+  for (const subj of subjects) {
+    const sLower = subj.toLowerCase();
+    const hit = GALLICA_SUBJECT_MAP.find(r => sLower.includes(r.keyword));
+    if (hit && !bestSubCategory) {
+      bestSubCategory = hit.subCategory;
+      score += hit.score;
+      reasons.push(`subject "${subj}" → ${hit.subCategory} (+${hit.score})`);
+      break;
+    }
+  }
+
+  if (!bestSubCategory) {
+    for (const r of GALLICA_SUBJECT_MAP) {
+      if (title.includes(r.keyword)) {
+        bestSubCategory = r.subCategory;
+        score += r.score - 4;
+        reasons.push(`title keyword "${r.keyword}" → ${r.subCategory} (+${r.score - 4})`);
+        break;
+      }
+    }
+  }
+
+  if (!bestSubCategory) {
+    if (type.includes('estampe') || type.includes('image')) {
+      bestSubCategory = 'Posters & Advertising';
+      score += 15;
+      reasons.push(`type "${type}" → Posters & Advertising (+15)`);
+    } else if (type.includes('monographie') || type.includes('fascicule')) {
+      bestSubCategory = 'Editorial/Publication';
+      score += 15;
+      reasons.push(`type "${type}" → Editorial/Publication (+15)`);
+    } else {
+      bestSubCategory = 'Posters & Advertising';
+      score += 12;
+      reasons.push('Gallica default → Posters & Advertising (+12)');
+    }
+  }
+
+  if (imageUrl) { score += CONFIG.HAS_IMAGE_BONUS;   reasons.push(`Has image (+${CONFIG.HAS_IMAGE_BONUS})`); }
+  if (author)   { score += CONFIG.HAS_CREATOR_BONUS; reasons.push(`Has author (+${CONFIG.HAS_CREATOR_BONUS})`); }
+  if (year)     { score += CONFIG.HAS_DATE_BONUS;    reasons.push(`Has year (+${CONFIG.HAS_DATE_BONUS})`); }
+
+  if (score < CONFIG.THRESHOLD) {
+    return { accepted: false, score, reasons: [...reasons, `Below threshold (${CONFIG.THRESHOLD})`] };
+  }
+
+  const mainCategory = mapSubToMain(bestSubCategory);
+  return {
+    accepted: true, score, reasons,
+    item: {
+      id:             str((data as any).id),
+      source:         'gallica' as SourceName,
+      link:           str((data as any).url) || '',
+      title:          str((data as any).title) || 'Untitled',
+      author:         author || 'Unknown',
+      year:           year || 'n.d.',
+      imageUrl,
+      department:     'Bibliothèque nationale de France',
+      classification: subjects[0] || bestSubCategory,
+      medium:         type || 'Unknown',
+      objectType:     bestSubCategory,
+      mainCategory,
+      subCategory:           bestSubCategory,
+      confidenceScore:       score,
+      classificationReasons: reasons,
+    } as ArchiveItem,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY: SubCategory → MainCategory
 // ─────────────────────────────────────────────────────────────────────────────
 function mapSubToMain(subCategory: string | null): string {
   if (!subCategory) return 'Uncategorized';
