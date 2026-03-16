@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import SaveToExhibit from '@/components/SaveToExhibit';
 
 const SUB_MAP = {
   'Graphic Design':    ['Posters & Advertising', 'Typography & Lettering', 'Identity & Branding', 'Editorial/Publication', 'Packaging'],
@@ -586,6 +587,10 @@ function GalleryInner() {
                     View at source →
                   </a>
                 )}
+
+                <div style={{ marginTop: '1.5rem' }}>
+                  <SaveToExhibit artworkId={selected.id} />
+                </div>
 
                 {/* Prev / Next */}
                 <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--dark-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -1,5 +1,7 @@
+// src/app/layout.js
 import { Cormorant_Garamond, DM_Sans, DM_Mono } from 'next/font/google';
-import "./globals.css";
+import Nav from '@/components/Nav';
+import './globals.css';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -23,8 +25,8 @@ const dmMono = DM_Mono({
 });
 
 export const metadata = {
-  title: "Exhibit",
-  description: "A place to keep the work that shapes your taste.",
+  title: 'Exhibit',
+  description: 'A place to keep the work that shapes your taste.',
 };
 
 export default function RootLayout({ children }) {
@@ -33,7 +35,10 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }
