@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSFW Review — Exhibit</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f0ede8;
+    color: #0d0c0a;
+    min-height: 100vh;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f0ede8;
+    border-bottom: 1px solid rgba(13,12,10,0.12);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .header-left { display: flex; align-items: baseline; gap: 20px; }
+
+  h1 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .stats {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(13,12,10,0.45);
+  }
+
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  .filter-btns { display: flex; gap: 4px; }
+
+  .filter-btn {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border: 1px solid rgba(13,12,10,0.2);
+    background: transparent;
+    cursor: pointer;
+    color: rgba(13,12,10,0.5);
+    transition: all 0.12s;
+  }
+  .filter-btn.active {
+    background: #0d0c0a;
+    color: #f0ede8;
+    border-color: #0d0c0a;
+  }
+
+  .export-btn {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 7px 18px;
+    background: #0d0c0a;
+    color: #f0ede8;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .export-btn:hover { opacity: 0.8; }
+
+  .instructions {
+    padding: 12px 32px;
+    background: rgba(13,12,10,0.04);
+    border-bottom: 1px solid rgba(13,12,10,0.08);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: rgba(13,12,10,0.5);
+  }
+  .instructions strong { color: rgba(13,12,10,0.75); font-weight: 500; }
+
+  #drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    padding: 48px;
+    text-align: center;
+  }
+
+  #drop-zone h2 {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: rgba(13,12,10,0.7);
+  }
+
+  #drop-zone p {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(13,12,10,0.35);
+  }
+
+  #file-input { display: none; }
+
+  .upload-btn {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 10px 28px;
+    border: 1px solid rgba(13,12,10,0.3);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: rgba(13,12,10,0.6);
+  }
+  .upload-btn:hover { background: #0d0c0a; color: #f0ede8; border-color: #0d0c0a; }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 3px;
+    padding: 24px 24px 80px;
+  }
+
+  .card {
+    position: relative;
+    background: rgba(13,12,10,0.05);
+    cursor: pointer;
+    overflow: hidden;
+    aspect-ratio: 1;
+    transition: opacity 0.15s;
+  }
+
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+  .card:hover img { transform: scale(1.03); }
+
+  /* KEEP = green overlay */
+  .card.kept { outline: 3px solid #2ecc71; outline-offset: -3px; }
+  .card.kept::after {
+    content: '✓ KEEP';
+    position: absolute;
+    top: 8px; left: 8px;
+    background: #2ecc71;
+    color: white;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+
+  /* DELETE = red overlay */
+  .card.deleted { outline: 3px solid #e74c3c; outline-offset: -3px; opacity: 0.5; }
+  .card.deleted::after {
+    content: '✕ DELETE';
+    position: absolute;
+    top: 8px; left: 8px;
+    background: #e74c3c;
+    color: white;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+
+  .card-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 28px 10px 10px;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+    color: white;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: transform 0.2s ease;
+  }
+  .card:hover .card-info { transform: translateY(0); }
+
+  .card-title {
+    font-size: 10px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .card-meta {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-trigger {
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-top: 3px;
+  }
+
+  /* Detail modal */
+  #modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0,0,0,0.9);
+    align-items: center;
+    justify-content: center;
+  }
+  #modal.open { display: flex; }
+
+  .modal-inner {
+    display: flex;
+    max-width: 90vw;
+    max-height: 90vh;
+    gap: 0;
+  }
+
+  .modal-img-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    cursor: pointer;
+  }
+
+  .modal-img-wrap img {
+    max-height: 85vh;
+    max-width: 60vw;
+    object-fit: contain;
+  }
+
+  .modal-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: rgba(15,14,12,0.6);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255,255,255,0.07);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .modal-source {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .modal-title {
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.4;
+  }
+
+  .modal-field label {
+    display: block;
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 3px;
+  }
+  .modal-field span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.4;
+  }
+
+  .modal-detections {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .detection-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .detection-label { color: rgba(255,255,255,0.5); letter-spacing: 0.06em; }
+  .detection-score {
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+  .score-high { background: rgba(231,76,60,0.3); color: #e74c3c; }
+  .score-med  { background: rgba(241,196,15,0.3); color: #f1c40f; }
+  .score-low  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: auto; }
+
+  .modal-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-weight: 500;
+  }
+  .modal-btn:hover { opacity: 0.85; }
+  .btn-keep   { background: #2ecc71; color: white; }
+  .btn-delete { background: #e74c3c; color: white; }
+  .btn-close  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); flex: 0.5; }
+
+  .modal-link {
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .modal-link:hover { color: rgba(255,255,255,0.5); }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 32px;
+    color: rgba(13,12,10,0.35);
+    font-size: 13px;
+    font-weight: 300;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>NSFW Review</h1>
+    <span class="stats" id="stats">Load nsfw-flagged.json to begin</span>
+  </div>
+  <div class="header-right">
+    <div class="filter-btns">
+      <button class="filter-btn active" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" onclick="setFilter('unreviewed')">Unreviewed</button>
+      <button class="filter-btn" onclick="setFilter('kept')">Keeping</button>
+      <button class="filter-btn" onclick="setFilter('deleted')">Deleting</button>
+    </div>
+    <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+  </div>
+</header>
+
+<div class="instructions">
+  <strong>Click</strong> any image to review · <strong>Green = Keep</strong> (false positive, remove from flagged list) · <strong>Red = Delete</strong> (confirm NSFW, will be purged) · Unreviewed items are deleted by default · <strong>Export JSON</strong> when done, replace nsfw-flagged.json, then run <code>node scripts/nsfw-purge.mjs</code>
+</div>
+
+<div id="drop-zone">
+  <h2>Visual NSFW Review</h2>
+  <p>Load your flagged items JSON to begin</p>
+  <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+    Load nsfw-flagged.json
+  </button>
+  <input type="file" id="file-input" accept=".json" onchange="loadFile(event)">
+  <p style="margin-top:8px; font-size:9px;">Or drag & drop the file anywhere on this page</p>
+</div>
+
+<div id="grid" style="display:none"></div>
+
+<div id="modal">
+  <div class="modal-inner">
+    <div class="modal-img-wrap" onclick="closeModal()">
+      <img id="modal-img" src="" alt="">
+    </div>
+    <div class="modal-sidebar">
+      <div>
+        <div class="modal-source" id="modal-source"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <div class="modal-field"><label>Author</label><span id="modal-author"></span></div>
+      <div class="modal-field"><label>Year</label><span id="modal-year"></span></div>
+      <div class="modal-field"><label>Category</label><span id="modal-category"></span></div>
+      <div class="modal-field" id="kw-field" style="display:none">
+        <label>Keyword Match</label><span id="modal-keyword"></span>
+      </div>
+      <div>
+        <div class="modal-field" style="margin-bottom:8px"><label>Detections</label></div>
+        <div class="modal-detections" id="modal-detections"></div>
+      </div>
+      <a id="modal-link" href="#" target="_blank" class="modal-link">View at source →</a>
+      <div class="modal-actions">
+        <button class="modal-btn btn-keep"   onclick="markCurrent('kept')">✓ Keep</button>
+        <button class="modal-btn btn-delete" onclick="markCurrent('deleted')">✕ Delete</button>
+        <button class="modal-btn btn-close"  onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let items      = [];
+let states     = {}; // id -> 'kept' | 'deleted' | null
+let currentId  = null;
+let filter     = 'all';
+
+// ── File loading ─────────────────────────────────────────────────────────────
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseJSON(e.target.result);
+  reader.readAsText(file);
+}
+
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => parseJSON(ev.target.result);
+  reader.readAsText(file);
+});
+
+function parseJSON(text) {
+  try {
+    const data = JSON.parse(text);
+    items = data.flagged || [];
+    // Default all to 'deleted' — they're flagged, user marks keeps
+    states = {};
+    items.forEach(item => { states[item.id] = 'deleted'; });
+    document.getElementById('drop-zone').style.display = 'none';
+    document.getElementById('grid').style.display = 'grid';
+    renderGrid();
+    updateStats();
+  } catch (err) {
+    alert('Could not parse JSON: ' + err.message);
+  }
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const filtered = items.filter(item => {
+    const s = states[item.id];
+    if (filter === 'all')        return true;
+    if (filter === 'unreviewed') return !s || s === 'deleted'; // all start as deleted
+    if (filter === 'kept')       return s === 'kept';
+    if (filter === 'deleted')    return s === 'deleted';
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No items in this view</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => {
+    const state    = states[item.id] || 'deleted';
+    const imgSrc   = item.imageUrl ? `/api/img?url=${encodeURIComponent(item.imageUrl)}&size=400` : '';
+    const triggers = (item.triggeredBy || []).filter(t => !t.startsWith('keyword')).join(', ');
+
+    return `
+      <div class="card ${state}" data-id="${item.id}" onclick="openModal('${item.id}')">
+        <img src="${imgSrc}" alt="${escHtml(item.title || '')}" loading="lazy"
+             onerror="this.style.opacity='0.2'">
+        <div class="card-info">
+          <div class="card-title">${escHtml(item.title || 'Untitled')}</div>
+          <div class="card-meta">${escHtml(item.author || '')}${item.year ? ', ' + item.year : ''}</div>
+          ${triggers ? `<div class="card-trigger">${escHtml(triggers)}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStats() {
+  const total   = items.length;
+  const kept    = Object.values(states).filter(s => s === 'kept').length;
+  const deleted = Object.values(states).filter(s => s === 'deleted').length;
+  document.getElementById('stats').textContent =
+    `${total} flagged · ${kept} keeping · ${deleted} deleting`;
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['all','unreviewed','kept','deleted'][i] === f);
+  });
+  renderGrid();
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  currentId = id;
+
+  document.getElementById('modal-img').src =
+    item.imageUrl ? `/api/img?url=${encodeURIComponent(item.imageUrl)}&size=1200` : '';
+  document.getElementById('modal-source').textContent   = item.source || '';
+  document.getElementById('modal-title').textContent    = item.title  || 'Untitled';
+  document.getElementById('modal-author').textContent   = item.author || '—';
+  document.getElementById('modal-year').textContent     = item.year   || '—';
+  document.getElementById('modal-category').textContent = item.category || '—';
+  document.getElementById('modal-link').href            = item.link   || '#';
+
+  if (item.keywordMatch) {
+    document.getElementById('kw-field').style.display  = '';
+    document.getElementById('modal-keyword').textContent = item.keywordMatch;
+  } else {
+    document.getElementById('kw-field').style.display  = 'none';
+  }
+
+  const dets = document.getElementById('modal-detections');
+  if (item.detections && item.detections.length > 0) {
+    dets.innerHTML = item.detections.map(d => {
+      const score = d.score;
+      const cls   = score >= 0.7 ? 'score-high' : score >= 0.5 ? 'score-med' : 'score-low';
+      return `
+        <div class="detection-row">
+          <span class="detection-label">${escHtml(d.label.replace(/_/g,' '))}</span>
+          <span class="detection-score ${cls}">${(score * 100).toFixed(0)}%</span>
+        </div>`;
+    }).join('');
+  } else {
+    dets.innerHTML = '<div class="detection-row"><span class="detection-label" style="opacity:0.4">Keyword match only</span></div>';
+  }
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentId = null;
+}
+
+function markCurrent(state) {
+  if (!currentId) return;
+  states[currentId] = state;
+  // Update card in grid
+  const card = document.querySelector(`[data-id="${currentId}"]`);
+  if (card) { card.className = `card ${state}`; }
+  updateStats();
+  closeModal();
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (!currentId) return;
+  if (e.key === 'k' || e.key === 'K') markCurrent('kept');
+  if (e.key === 'd' || e.key === 'D') markCurrent('deleted');
+});
+
+// ── Export ─────────────────────────────────────────────────────────────────────
+function exportJSON() {
+  if (items.length === 0) { alert('Load a JSON file first.'); return; }
+
+  // Only export items marked for deletion
+  const toDelete = items.filter(item => states[item.id] === 'deleted');
+  const kept     = items.filter(item => states[item.id] === 'kept');
+
+  const output = {
+    exportedAt:   new Date().toISOString(),
+    totalFlagged: items.length,
+    kept:         kept.length,
+    flaggedCount: toDelete.length,
+    flagged:      toDelete,
+  };
+
+  const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'nsfw-flagged.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  alert(`Exported ${toDelete.length} items to delete.\n${kept.length} items marked as keep (removed from list).\n\nReplace scripts/nsfw-flagged.json with the downloaded file, then run:\nnode scripts/nsfw-purge.mjs`);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

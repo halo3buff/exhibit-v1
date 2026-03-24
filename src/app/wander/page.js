@@ -34,55 +34,59 @@ function hqUrl(url) {
   return `/api/img?url=${encodeURIComponent(url)}&size=1200`;
 }
 
-// Generates 4 random positions fresh on every image load.
-// Tries to avoid overlaps via a simple rejection-sampling approach.
 function generateSlots() {
   const slots = [];
   const widths = Array.from({ length: 4 }, () => 14 + Math.random() * 12);
-
   for (let i = 0; i < 4; i++) {
     const w = widths[i];
-    const h = w * (0.9 + Math.random() * 0.6); // rough height estimate in vh
-
+    const h = w * (0.9 + Math.random() * 0.6);
     let left, top, placed = false;
-
     for (let a = 0; a < 200; a++) {
       left = 2 + Math.random() * (94 - w);
       top  = 3 + Math.random() * (84 - h);
-
       const overlap = slots.some(s => {
         const dx = Math.abs(left - s.left);
         const dy = Math.abs(top  - s.top);
         return dx < (w + s.w) / 2 + 4 && dy < (h + s.h) / 2 + 4;
       });
-
       if (!overlap) { placed = true; break; }
     }
-
-    if (!placed) {
-      left = 2 + Math.random() * (94 - w);
-      top  = 3 + Math.random() * (84 - h);
-    }
-
+    if (!placed) { left = 2 + Math.random() * (94 - w); top = 3 + Math.random() * (84 - h); }
     slots.push({ left, top, w, h });
   }
-
   return slots;
 }
 
 export default function WanderPage() {
   const router = useRouter();
 
-  const [counts,      setCounts]      = useState({});
-  const [totalCount,  setTotalCount]  = useState(0);
-  const [expandedCat, setExpandedCat] = useState(null);
-  const [panelImgs,   setPanelImgs]   = useState([]);
-  const [slots,       setSlots]       = useState(() => generateSlots());
-  const [activeKey,   setActiveKey]   = useState(null);
-  const [hoveredCat,  setHoveredCat]  = useState(null);
+  const [counts,       setCounts]       = useState({});
+  const [totalCount,   setTotalCount]   = useState(0);
+  const [expandedCat,  setExpandedCat]  = useState(null);
+  const [panelImgs,    setPanelImgs]    = useState([]);
+  const [slots,        setSlots]        = useState(() => generateSlots());
+  const [activeKey,    setActiveKey]    = useState(null);
+  const [hoveredCat,   setHoveredCat]   = useState(null);
+  const [user,         setUser]         = useState(null);
+  const [exhibitCount, setExhibitCount] = useState(null);
 
   const imgCacheRef   = useRef({});
   const fetchAbortRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : { user: null })
+      .then(d => {
+        setUser(d.user);
+        if (d.user) {
+          fetch('/api/exhibits')
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d?.exhibits) setExhibitCount(d.exhibits.length); })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/search?counts=1')
@@ -121,10 +125,7 @@ export default function WanderPage() {
       setActiveKey(key);
       return;
     }
-    if (fetchAbortRef.current) {
-      fetchAbortRef.current.abort();
-      fetchAbortRef.current = null;
-    }
+    if (fetchAbortRef.current) { fetchAbortRef.current.abort(); fetchAbortRef.current = null; }
     const ctrl = new AbortController();
     fetchAbortRef.current = ctrl;
     fetch(apiUrl, { signal: ctrl.signal })
@@ -145,27 +146,18 @@ export default function WanderPage() {
   }, [activeKey]);
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '280px 1fr',
-      height: '100vh',
-      overflow: 'hidden',
-      background: 'var(--bg)',
-    }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
 
-      {/* LEFT */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '52px 32px 48px 48px',
-        height: '100vh',
-        overflow: 'hidden',
-      }}>
+      {/* ── LEFT ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', padding: '52px 32px 48px 48px', height: '100vh', overflow: 'hidden' }}>
+
+        {/* Wordmark */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 600, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'var(--fg)', marginBottom: 5 }}>EXHIBIT</div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Archive Index</div>
         </div>
 
+        {/* Count */}
         {totalCount > 0 && (
           <div style={{ marginBottom: 44 }}>
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 38, fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--fg)', marginBottom: 6 }}>{totalCount.toLocaleString()}</div>
@@ -173,12 +165,36 @@ export default function WanderPage() {
           </div>
         )}
 
+        {/* ── My Exhibits — above categories, separated ── */}
+        <div style={{ marginBottom: 28, paddingBottom: 22, borderBottom: '1px solid var(--border)' }}>
+          <div
+            onClick={() => router.push(user ? '/exhibits' : '/login')}
+            onMouseEnter={() => setHoveredCat('__exhibits__')}
+            onMouseLeave={() => setHoveredCat(null)}
+            style={{
+              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+              cursor: 'pointer', userSelect: 'none',
+              opacity: (hoveredCat && hoveredCat !== '__exhibits__') ? 0.22 : 1,
+              transition: 'opacity 0.12s ease',
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 400, color: 'var(--fg)', letterSpacing: '0.01em' }}>
+              My Exhibits
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-faint)', letterSpacing: '0.04em' }}>
+              {user ? (exhibitCount !== null ? exhibitCount : '—') : '→'}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Categories ── */}
         <div style={{ flex: 1, overflow: 'hidden' }}>
           {CATS.map(cat => {
             const subs   = SUB_MAP[cat.id] || [];
             const count  = counts[cat.id];
             const isOpen = expandedCat === cat.id;
-            const dimmed = hoveredCat && hoveredCat !== cat.id;
+            const dimmed = hoveredCat && hoveredCat !== cat.id && hoveredCat !== '__exhibits__';
+
             return (
               <div key={cat.id}>
                 <div
@@ -213,6 +229,7 @@ export default function WanderPage() {
           })}
         </div>
 
+        {/* Collections */}
         <div style={{ paddingTop: 28 }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 10 }}>Collections</div>
           {SOURCES.map(src => (
@@ -221,7 +238,7 @@ export default function WanderPage() {
         </div>
       </div>
 
-      {/* RIGHT: full images, random positions */}
+      {/* ── RIGHT ── */}
       <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
         <AnimatePresence mode="sync">
           {panelImgs.map((img, i) => {
@@ -230,24 +247,11 @@ export default function WanderPage() {
             return (
               <motion.div
                 key={`${activeKey}-${i}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.22, ease: 'easeOut', delay: i * 0.04 }}
-                style={{
-                  position: 'absolute',
-                  top: `${slot.top}vh`,
-                  left: `${slot.left}%`,
-                  width: `${slot.w}%`,
-                }}
+                style={{ position: 'absolute', top: `${slot.top}vh`, left: `${slot.left}%`, width: `${slot.w}%` }}
               >
-                {/* height: auto = full image, never cropped */}
-                <img
-                  src={hqUrl(img.url)}
-                  alt={img.title || ''}
-                  style={{ width: '100%', height: 'auto', display: 'block' }}
-                  onError={e => { e.target.style.opacity = '0'; }}
-                />
+                <img src={hqUrl(img.url)} alt={img.title || ''} style={{ width: '100%', height: 'auto', display: 'block' }} onError={e => { e.target.style.opacity = '0'; }} />
                 {img.title && (
                   <div style={{ marginTop: 6 }}>
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 300, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>{img.title}</div>
@@ -263,7 +267,6 @@ export default function WanderPage() {
           })}
         </AnimatePresence>
       </div>
-
     </div>
   );
 }

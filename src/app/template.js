@@ -1,19 +1,19 @@
 'use client';
-import { motion, AnimatePresence } from 'framer-motion';
+// src/app/template.js
+// Fade through --bg on every route change.
+// Content fades out to the wall color, new content fades back in.
 
-// template.js re-mounts on every navigation, giving us a clean
-// enter animation without needing to manage AnimatePresence state.
-// exit animations are handled by the outgoing template's unmount.
+import { motion } from 'framer-motion';
 
 export default function Template({ children }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{
-        duration: 0.45,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.3,
+        ease: 'easeInOut',
       }}
     >
       {children}

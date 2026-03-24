@@ -1,9 +1,7 @@
 // src/components/Placard.js
 'use client';
-
 export default function Placard({ item, onClick }) {
   if (!item) return null; // prevent crash if item is undefined
-
   return (
     <div
       onClick={() => item && onClick(item)}
@@ -34,7 +32,6 @@ export default function Placard({ item, onClick }) {
           {item.description || 'No description available.'}
         </p>
       </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }} 
            className="opacity-50 group-hover:opacity-80 transition-opacity">
         <span className="text-[9px] uppercase tracking-[0.2em] font-medium">

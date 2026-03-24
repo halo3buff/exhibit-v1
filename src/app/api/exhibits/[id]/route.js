@@ -5,17 +5,6 @@ import { requireAuth } from '@/lib/auth';
 
 const DB_PATH = path.join(process.cwd(), 'artworks.db');
 
-function getExhibit(db, id, userId) {
-  return db.prepare(`
-    SELECT e.*, COUNT(ei.id) as itemCount
-    FROM exhibits e
-    LEFT JOIN exhibit_items ei ON ei.exhibitId = e.id
-    WHERE e.id = ? AND e.userId = ?
-    GROUP BY e.id
-  `).get(id, userId);
-}
-
-// GET /api/exhibits/[id] — get exhibit with all items
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
@@ -28,9 +17,11 @@ export async function GET(request, { params }) {
       db.close(); return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // wallTransform MUST be in this SELECT or positions are lost on reload
     const items = db.prepare(`
       SELECT
         ei.id, ei.artworkId, ei.note, ei.position, ei.addedAt,
+        ei.wallTransform,
         a.title, a.author, a.year, a.imageUrl, a.source,
         a.mainCategory as type, a.subCategory, a.medium, a.link
       FROM exhibit_items ei
@@ -47,7 +38,6 @@ export async function GET(request, { params }) {
   }
 }
 
-// PATCH /api/exhibits/[id] — update title, description, isPublic
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params;
@@ -63,20 +53,16 @@ export async function PATCH(request, { params }) {
 
     const fields = [];
     const values = [];
-
     if (body.title       !== undefined) { fields.push('title = ?');       values.push(body.title.trim()); }
     if (body.description !== undefined) { fields.push('description = ?'); values.push(body.description.trim()); }
     if (body.isPublic    !== undefined) { fields.push('isPublic = ?');    values.push(body.isPublic ? 1 : 0); }
-
     if (fields.length === 0) { db.close(); return Response.json({ error: 'Nothing to update' }, { status: 400 }); }
 
     fields.push(`updatedAt = datetime('now')`);
     values.push(id);
-
     db.prepare(`UPDATE exhibits SET ${fields.join(', ')} WHERE id = ?`).run(...values);
     const updated = db.prepare(`SELECT * FROM exhibits WHERE id = ?`).get(id);
     db.close();
-
     return Response.json({ exhibit: updated });
   } catch (err) {
     if (err instanceof Response) return err;
@@ -84,7 +70,6 @@ export async function PATCH(request, { params }) {
   }
 }
 
-// DELETE /api/exhibits/[id]
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
@@ -98,7 +83,6 @@ export async function DELETE(request, { params }) {
 
     db.prepare(`DELETE FROM exhibits WHERE id = ?`).run(id);
     db.close();
-
     return Response.json({ ok: true });
   } catch (err) {
     if (err instanceof Response) return err;
