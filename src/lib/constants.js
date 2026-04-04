@@ -1,0 +1,112 @@
+// src/lib/constants.js
+// Shared constants used across gallery, exhibit canvas, and archive pages.
+// Single source of truth — edit here and all pages update automatically.
+
+export const SOURCE_LABELS = {
+    moma:               'MoMA',
+    met:                'The Met',
+    artic:              'Art Institute of Chicago',
+    cooperhewitt:       'Cooper Hewitt',
+    va:                 'Victoria & Albert Museum',
+    rijks:              'Rijksmuseum',
+    smithsonian:        'Smithsonian',
+    zurich:             'Museum für Gestaltung Zürich',
+    designarchive:      'AIGA Design Archives',
+    letterformarchive:  'Letterform Archive',
+    designreviewed:     'Design Reviewed',
+    europeana:          'Europeana',
+    nypl:               'New York Public Library',
+    gallica:            'Bibliothèque nationale de France',
+    tdr:                'Are.na / TDR',
+  };
+  
+  export const TOOLTIP_SCHEMA = {
+    met: [
+      ['Artist',         'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Medium',         'medium'],
+      ['Object Type',    'objectType'],
+      ['Classification', 'classification'],
+      ['Department',     'department'],
+      ['Collection',     'collection'],
+    ],
+    artic: [
+      ['Artist',         'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Medium',         'medium'],
+      ['Artwork Type',   'objectType'],
+      ['Classification', 'classification'],
+      ['Department',     'department'],
+      ['Collection',     'collection'],
+    ],
+    va: [
+      ['Maker',          'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Materials',      'medium'],
+      ['Object Type',    'classification'],
+      ['Collection',     'collection'],
+    ],
+    rijks: [
+      ['Artist',         'author'],
+      ['Origin',         'origin'],
+      ['Dating',         'year'],
+      ['Technique',      'medium'],
+      ['Object Type',    'objectType'],
+      ['Category',       'subCategory'],
+      ['Collection',     'collection'],
+    ],
+    smithsonian: [
+      ['Creator',        'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Object Type',    'objectType'],
+      ['Medium',         'medium'],
+      ['Collection',     'collection'],
+    ],
+    cooperhewitt: [
+      ['Designer',       'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Medium',         'medium'],
+      ['Object Type',    'objectType'],
+      ['Function',       'subCategory'],
+      ['Collection',     'collection'],
+    ],
+    moma: [
+      ['Artist',         'author'],
+      ['Origin',         'origin'],
+      ['Date',           'year'],
+      ['Medium',         'medium'],
+      ['Classification', 'classification'],
+      ['Department',     'department'],
+      ['Collection',     'collection'],
+    ],
+    designarchive: [
+      ['Designer',       'author'],
+      ['Year',           'year'],
+      ['Category',       'subCategory'],
+      ['Medium',         'medium'],
+      ['Collection',     'collection'],
+    ],
+    default: [
+      ['Artist',         'author'],
+      ['Origin',         'origin'],
+      ['Year',           'year'],
+      ['Medium',         'medium'],
+      ['Category',       'type'],
+      ['Sub-category',   'subCategory'],
+      ['Classification', 'classification'],
+      ['Collection',     'collection'],
+    ],
+  };
+  
+  export const SUB_MAP = {
+    'Graphic Design':    ['Posters & Advertising', 'Typography & Lettering', 'Identity & Branding', 'Editorial/Publication', 'Packaging'],
+    'Painting':          ['Oil', 'Watercolor/Gouache', 'Tempera/Fresco'],
+    'Prints & Drawings': ['Etching/Woodcut/Lithograph', 'Drawings', 'Collage'],
+    'Photography':       ['Photograph'],
+    'Decorative Arts':   ['Ceramics & Glass', 'Furniture', 'Textiles & Fashion', 'Metalwork & Jewelry'],
+  };

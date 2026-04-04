@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { SOURCE_LABELS } from '@/lib/constants';
 
 export default function ArtifactPage({ params }) {
   const resolvedParams = use(params);
@@ -17,13 +18,6 @@ export default function ArtifactPage({ params }) {
       })
       .catch(() => setNotFound(true));
   }, [artifactId]);
-
-  const SOURCE_LABELS = {
-    moma: 'MoMA', met: 'The Met', artic: 'Art Institute of Chicago',
-    cooperhewitt: 'Cooper Hewitt', va: 'Victoria & Albert',
-    rijks: 'Rijksmuseum', smithsonian: 'Smithsonian',
-    zurich: 'Museum für Gestaltung Zürich',
-  };
 
   if (notFound) return (
     <div style={{

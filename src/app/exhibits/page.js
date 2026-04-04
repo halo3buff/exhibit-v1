@@ -1,98 +1,179 @@
 // src/app/exhibits/page.js
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
-function coverImgUrl(url) {
-  if (!url) return null;
-  return `/api/img?url=${encodeURIComponent(url)}&size=400`;
+function hqUrl(url) {
+  if (!url) return '';
+  return `/api/img?url=${encodeURIComponent(url)}&size=1200`;
 }
 
-function ExhibitCard({ exhibit, onClick }) {
-  const year = new Date(exhibit.createdAt).getFullYear();
-  return (
-    <div className="exhibit-card" onClick={() => onClick(exhibit)}>
-      {/* Image — three stacked layers like loose prints */}
-      <div className="card-image-stack">
-        {exhibit.itemCount > 2 && <div className="stack-back" />}
-        {exhibit.itemCount > 1 && <div className="stack-mid" />}
-        <div className="stack-front">
-          {exhibit.coverImageUrl ? (
-            <img
-              src={coverImgUrl(exhibit.coverImageUrl)}
-              alt={exhibit.title}
-              className="cover-img"
-            />
-          ) : (
-            <div className="cover-empty">
-              <span>Empty</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Caption block — Taschen style */}
-      <div className="card-caption">
-        <div className="caption-top">
-          <h3 className="caption-title">{exhibit.title}</h3>
-          {exhibit.description && (
-            <p className="caption-desc">{exhibit.description}</p>
-          )}
-        </div>
-        <div className="caption-meta">
-          <span className="caption-count">{exhibit.itemCount} {exhibit.itemCount === 1 ? 'piece' : 'pieces'}</span>
-          <span className="caption-year">{year}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
+// ── Create modal ──────────────────────────────────────────────────────────────
 function CreateModal({ onSubmit, onCancel, creating }) {
   const [title, setTitle] = useState('');
   const [desc,  setDesc]  = useState('');
-
   return (
-    <div className="create-overlay" onClick={onCancel}>
-      <div className="create-modal" onClick={e => e.stopPropagation()}>
-        <p className="create-eyebrow">New Exhibit</p>
-        <input
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="Title"
-          autoFocus
+    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(240,237,232,0.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg)', border: '1px solid var(--border-md)', padding: '40px 44px', width: 400, boxShadow: '0 12px 56px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', margin: 0 }}>New Exhibit</p>
+        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" autoFocus
           onKeyDown={e => { if (e.key === 'Enter' && title.trim()) onSubmit(title, desc); if (e.key === 'Escape') onCancel(); }}
-          className="create-title-input"
-        />
-        <input
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="Description (optional)"
+          style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--fg)', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-md)', outline: 'none', width: '100%', padding: '4px 0' }} />
+        <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Description (optional)"
           onKeyDown={e => { if (e.key === 'Enter' && title.trim()) onSubmit(title, desc); if (e.key === 'Escape') onCancel(); }}
-          className="create-desc-input"
-        />
-        <div className="create-actions">
-          <button
-            onClick={() => title.trim() && onSubmit(title, desc)}
-            disabled={creating || !title.trim()}
-            className="create-submit"
-          >
+          style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontStyle: 'italic', fontWeight: 300, color: 'var(--fg-muted)', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', outline: 'none', width: '100%', padding: '4px 0' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 }}>
+          <button onClick={() => title.trim() && onSubmit(title, desc)} disabled={creating || !title.trim()}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: '1px solid var(--border-md)', padding: '9px 24px', cursor: creating || !title.trim() ? 'default' : 'pointer', opacity: creating || !title.trim() ? 0.35 : 1, transition: 'all 0.15s' }}>
             {creating ? 'Creating…' : 'Create'}
           </button>
-          <button onClick={onCancel} className="create-cancel">Cancel</button>
+          <button onClick={onCancel} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-faint)', background: 'none', border: 'none', cursor: 'pointer' }}>Cancel</button>
         </div>
       </div>
     </div>
   );
 }
 
+// ── Preview panel ─────────────────────────────────────────────────────────────
+function PreviewPanel({ exhibit }) {
+  const images = exhibit?.previewImages?.length > 0
+    ? exhibit.previewImages
+    : exhibit?.coverImageUrl ? [exhibit.coverImageUrl] : [];
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, padding: '40px', display: 'flex', flexDirection: 'column' }}>
+      <AnimatePresence mode="wait">
+        {exhibit ? (
+          <motion.div
+            key={exhibit.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}
+          >
+            {/* ── Title block: Keeps its clean editorial position ── */}
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: 0.04 }}
+              style={{
+                textAlign:     'right',
+                flexShrink:    0,
+                borderBottom: '1px solid var(--border)',
+                paddingBottom: '16px'
+              }}
+            >
+              <div style={{
+                fontFamily:    'var(--font-display)',
+                fontSize:      'clamp(1.4rem, 2vw, 2rem)',
+                fontWeight:    700,
+                letterSpacing: '0.025em',
+                lineHeight:    1.05,
+                color:         'var(--fg)',
+              }}>
+                {exhibit.title}
+              </div>
+              {exhibit.description && (
+                <div style={{
+                  fontFamily:  'var(--font-display)',
+                  fontSize:    '0.8rem',
+                  fontWeight:  400,
+                  fontStyle:   'italic',
+                  color:       'var(--fg-muted)',
+                  marginTop:   7,
+                  lineHeight:  1.6,
+                }}>
+                  {exhibit.description}
+                </div>
+              )}
+            </motion.div>
+
+            {/* ── Image spread: Viewport-aware containment ── */}
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '28px',
+              alignContent: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden' // Bulletproof screen containment
+            }}>
+              {images.map((url, i) => {
+                // Dynamically adjust size based on the total number of images to prevent overflow
+                const maxDim = images.length <= 2 ? '42vh' : images.length <= 4 ? '35vh' : '25vh';
+                
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: i * 0.06 }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      maxHeight: maxDim, // Caps height relative to viewport
+                      maxWidth: images.length === 1 ? '100%' : '45%',
+                    }}
+                  >
+                    <img
+                      src={hqUrl(url)}
+                      alt=""
+                      style={{
+                        maxHeight: '100%',
+                        maxWidth: '100%',
+                        width: 'auto',
+                        height: 'auto',
+                        objectFit: 'contain', // Preserves natural dimensions without stretching
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                        border: '1px solid var(--border-md)'
+                      }}
+                      draggable={false}
+                      onError={e => { e.target.parentElement.style.display = 'none'; }}
+                    />
+                  </motion.div>
+                );
+              })}
+
+              {images.length === 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 300, color: 'var(--fg-faint)', margin: 0 }}>Empty exhibit</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
+          >
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1rem, 1.4vw, 1.3rem)', fontWeight: 300, color: 'var(--fg-faint)', margin: 0, letterSpacing: '-0.02em', userSelect: 'none' }}>
+              Hover an exhibit
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function ExhibitsPage() {
   const router = useRouter();
-  const [exhibits, setExhibits] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+
+  const [exhibits,       setExhibits]       = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [creating,       setCreating]       = useState(false);
+  const [showForm,       setShowForm]       = useState(false);
+  const [hoveredId,      setHoveredId]      = useState(null);
+  const [hoveredExhibit, setHoveredExhibit] = useState(null);
 
   useEffect(() => {
     fetch('/api/exhibits')
@@ -112,246 +193,115 @@ export default function ExhibitsPage() {
     if (res.ok) router.push(`/exhibits/${data.exhibit.id}`);
   }
 
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  }
+
+  const onEnter = useCallback((ex) => {
+    setHoveredId(ex.id);
+    setHoveredExhibit(ex);
+  }, []);
+
+  const onLeave = useCallback(() => {
+    setHoveredId(null);
+  }, []);
+
   if (loading) return (
-    <div style={{ height: 'calc(100vh - 44px)', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.22)' }}>Loading</p>
+    <div style={{ height: 'calc(100vh - 44px)', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading</p>
     </div>
   );
 
   return (
-    <main className="exhibits-root">
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', height: 'calc(100vh - 44px)', overflow: 'hidden', background: 'var(--bg)' }}>
 
-      {/* ── Header ── */}
-      <div className="exhibits-header">
-        <div>
-          <p className="header-eyebrow">Personal Archive</p>
-          <h1 className="header-title">Exhibits</h1>
-          <p className="header-count">{exhibits.length} {exhibits.length === 1 ? 'exhibit' : 'exhibits'}</p>
+      {/* ── LEFT 280px ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', padding: '52px 32px 48px 48px', height: 'calc(100vh - 44px)', overflow: 'hidden', borderRight: '1px solid var(--border)' }}>
+
+        <div style={{ marginBottom: 32, flexShrink: 0 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 6 }}>Personal Archive</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 600, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'var(--fg)' }}>Exhibits</div>
         </div>
-        <button onClick={() => setShowForm(true)} className="new-btn">
-          + New Exhibit
-        </button>
+
+        <div style={{ height: 1, background: 'var(--border)', flexShrink: 0 }} />
+
+        {exhibits.length === 0 && (
+          <div style={{ paddingTop: 32, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 300, color: 'var(--fg-muted)', margin: 0 }}>No exhibits yet</p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--fg-faint)', margin: 0 }}>
+              Create one below, then save pieces from the{' '}
+              <Link href="/gallery?type=Graphic+Design" style={{ color: 'var(--fg-muted)', textDecoration: 'none', borderBottom: '1px solid var(--border-md)', paddingBottom: 1 }}>gallery</Link>
+            </p>
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+          {exhibits.map((ex, i) => {
+            const isHovered = hoveredId === ex.id;
+            const dimmed    = !!hoveredId && !isHovered;
+            return (
+              <div
+                key={ex.id}
+                onMouseEnter={() => onEnter(ex)}
+                onMouseLeave={onLeave}
+                onClick={() => router.push(`/exhibits/${ex.id}`)}
+                style={{ display: 'grid', gridTemplateColumns: '2.6rem 1fr auto', gap: '0 14px', alignItems: 'baseline', padding: '13px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', opacity: dimmed ? 0.22 : 1, transition: 'opacity 0.12s ease', animation: `toc-rise 0.45s cubic-bezier(0.16,1,0.3,1) ${i * 0.04}s both` }}
+              >
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.1rem, 1.4vw, 1.5rem)', fontWeight: 300, color: isHovered ? 'var(--fg-muted)' : 'var(--fg-faint)', lineHeight: 1, letterSpacing: '-0.03em', transition: 'color 0.2s', userSelect: 'none', paddingTop: 2 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 400, letterSpacing: '0.01em', color: isHovered ? 'var(--fg)' : 'var(--fg-muted)', transition: 'color 0.15s', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 3 }}>{ex.title}</div>
+                  {ex.description && (
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontStyle: 'italic', fontWeight: 300, color: 'var(--fg-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>{ex.description}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--fg-faint)' }}>{ex.itemCount} {ex.itemCount === 1 ? 'piece' : 'pieces'}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--fg-faint)', opacity: 0.7 }}>{formatDate(ex.updatedAt || ex.createdAt)}</span>
+                  </div>
+                </div>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isHovered ? 'var(--fg-muted)' : 'rgba(0,0,0,0)', transition: 'color 0.15s', userSelect: 'none' }}>→</span>
+              </div>
+            );
+          })}
+
+          <button
+            onClick={() => setShowForm(true)}
+            style={{ display: 'grid', gridTemplateColumns: '2.6rem 1fr', gap: '0 14px', alignItems: 'baseline', padding: '13px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', width: '100%', opacity: hoveredId ? 0.22 : 1, transition: 'opacity 0.12s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.querySelector('.new-label').style.color = 'var(--fg-muted)'; e.currentTarget.querySelector('.new-num').style.color = 'var(--fg-faint)'; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = hoveredId ? '0.22' : '1'; e.currentTarget.querySelector('.new-label').style.color = 'var(--fg-faint)'; e.currentTarget.querySelector('.new-num').style.color = 'var(--border-md)'; }}
+          >
+            <span className="new-num" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.1rem, 1.4vw, 1.5rem)', fontWeight: 300, color: 'var(--border-md)', lineHeight: 1, letterSpacing: '-0.03em', transition: 'color 0.2s', paddingTop: 2 }}>
+              {String(exhibits.length + 1).padStart(2, '0')}
+            </span>
+            <span className="new-label" style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 400, color: 'var(--fg-faint)', letterSpacing: '0.01em', transition: 'color 0.15s' }}>
+              + New Exhibit
+            </span>
+          </button>
+        </div>
+
+        {exhibits.length > 0 && (
+          <div style={{ paddingTop: 16, flexShrink: 0 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
+              {exhibits.length} {exhibits.length === 1 ? 'exhibit' : 'exhibits'}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="header-rule" />
+      {/* ── RIGHT: editorial spread ── */}
+      <div style={{ position: 'relative', height: 'calc(100vh - 44px)', overflow: 'hidden' }}>
+        <PreviewPanel exhibit={hoveredId ? hoveredExhibit : null} />
+      </div>
 
-      {/* ── Empty ── */}
-      {exhibits.length === 0 && (
-        <div className="empty-state">
-          <p className="empty-title">No exhibits yet</p>
-          <p className="empty-sub">
-            Create one, then save pieces from the{' '}
-            <Link href="/gallery?type=Graphic+Design" className="empty-link">gallery</Link>
-          </p>
-        </div>
-      )}
-
-      {/* ── Grid ── */}
-      {exhibits.length > 0 && (
-        <div className="exhibits-grid">
-          {exhibits.map((ex, i) => (
-            <div
-              key={ex.id}
-              style={{ animation: `rise 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.05}s both` }}
-            >
-              <ExhibitCard exhibit={ex} onClick={() => router.push(`/exhibits/${ex.id}`)} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Create modal ── */}
-      {showForm && (
-        <CreateModal
-          onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
-          creating={creating}
-        />
-      )}
+      {showForm && <CreateModal onSubmit={handleCreate} onCancel={() => setShowForm(false)} creating={creating} />}
 
       <style>{`
-        .exhibits-root {
-          min-height: calc(100vh - 44px);
-          background: #fafaf8;
-          padding: 52px 56px 80px;
-        }
-        .exhibits-header {
-          display: flex; align-items: flex-end;
-          justify-content: space-between; margin-bottom: 24px;
-        }
-        .header-eyebrow {
-          font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.3em;
-          text-transform: uppercase; color: rgba(0,0,0,0.25); margin: 0 0 10px;
-        }
-        .header-title {
-          font-family: var(--font-sans); font-size: clamp(2rem, 3vw, 2.75rem);
-          font-weight: 300; letter-spacing: -0.03em; color: rgba(0,0,0,0.82);
-          line-height: 1; margin: 0 0 8px;
-        }
-        .header-count {
-          font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
-          text-transform: uppercase; color: rgba(0,0,0,0.25); margin: 0;
-        }
-        .new-btn {
-          font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em;
-          text-transform: uppercase; background: transparent;
-          color: rgba(0,0,0,0.55); border: 1px solid rgba(0,0,0,0.18);
-          padding: 10px 22px; cursor: pointer; transition: all 0.15s;
-        }
-        .new-btn:hover {
-          background: rgba(0,0,0,0.82); color: #fafaf8;
-          border-color: rgba(0,0,0,0.82);
-        }
-        .header-rule {
-          height: 1px; background: rgba(0,0,0,0.07); margin-bottom: 52px;
-        }
-        .empty-state {
-          display: flex; flex-direction: column; align-items: center;
-          justify-content: center; padding: 100px 0; gap: 10px;
-        }
-        .empty-title {
-          font-family: var(--font-sans); font-size: 15px; font-weight: 300;
-          color: rgba(0,0,0,0.4); margin: 0;
-        }
-        .empty-sub {
-          font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
-          color: rgba(0,0,0,0.25); margin: 0;
-        }
-        .empty-link {
-          color: rgba(0,0,0,0.4); text-decoration: none;
-          border-bottom: 1px solid rgba(0,0,0,0.15); padding-bottom: 1px;
-        }
-        .exhibits-grid {
-          display: flex; flex-wrap: wrap; gap: 52px 36px; align-items: flex-start;
-        }
-
-        /* ── Exhibit card ── */
-        .exhibit-card {
-          cursor: pointer; display: flex; flex-direction: column;
-          transition: opacity 0.2s;
-        }
-        .exhibit-card:hover { opacity: 0.9; }
-
-        .card-image-stack {
-          position: relative; width: 280px; padding-bottom: 10px;
-        }
-        .stack-back, .stack-mid {
-          position: absolute; bottom: 0; left: 0; right: 0; aspect-ratio: 4/3;
-        }
-        .stack-back {
-          background: rgba(0,0,0,0.06);
-          transform: rotate(3deg) translate(5px, 0);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .stack-mid {
-          background: rgba(0,0,0,0.04);
-          transform: rotate(1.2deg) translate(2px, 0);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .stack-front {
-          position: relative; aspect-ratio: 4/3;
-          background: rgba(0,0,0,0.03); overflow: hidden;
-          box-shadow: 0 3px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
-        }
-        .cover-img {
-          width: 100%; height: 100%; object-fit: cover; display: block;
-          transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-        }
-        .exhibit-card:hover .cover-img { transform: scale(1.02); }
-        .cover-empty {
-          width: 100%; height: 100%; display: flex;
-          align-items: center; justify-content: center;
-        }
-        .cover-empty span {
-          font-family: var(--font-mono); font-size: 8px;
-          letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,0,0,0.2);
-        }
-
-        /* Caption */
-        .card-caption {
-          width: 280px; padding-top: 14px;
-          display: flex; flex-direction: column; gap: 8px;
-        }
-        .caption-top {}
-        .caption-title {
-          font-family: var(--font-sans); font-size: 14px; font-weight: 400;
-          color: rgba(0,0,0,0.72); margin: 0 0 4px; line-height: 1.3;
-        }
-        .caption-desc {
-          font-family: var(--font-sans); font-size: 11px; font-style: italic;
-          font-weight: 300; color: rgba(0,0,0,0.4); margin: 0; line-height: 1.4;
-        }
-        .caption-meta {
-          display: flex; justify-content: space-between; align-items: center;
-          padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.07);
-        }
-        .caption-count {
-          font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em;
-          color: rgba(0,0,0,0.28);
-        }
-        .caption-year {
-          font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em;
-          color: rgba(0,0,0,0.22);
-        }
-
-        /* ── Create modal ── */
-        .create-overlay {
-          position: fixed; inset: 0; z-index: 200;
-          background: rgba(250,250,248,0.85);
-          backdrop-filter: blur(6px);
-          display: flex; align-items: center; justify-content: center;
-        }
-        .create-modal {
-          background: #fafaf8; border: 1px solid rgba(0,0,0,0.1);
-          padding: 36px 40px; width: 380px;
-          box-shadow: 0 8px 48px rgba(0,0,0,0.1);
-          display: flex; flex-direction: column; gap: 16px;
-        }
-        .create-eyebrow {
-          font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.3em;
-          text-transform: uppercase; color: rgba(0,0,0,0.3); margin: 0 0 4px;
-        }
-        .create-title-input {
-          font-family: var(--font-sans); font-size: 22px; font-weight: 300;
-          letter-spacing: -0.02em; color: rgba(0,0,0,0.8);
-          background: transparent; border: none;
-          border-bottom: 1px solid rgba(0,0,0,0.15);
-          outline: none; width: 100%; padding: 4px 0;
-        }
-        .create-title-input::placeholder { color: rgba(0,0,0,0.18); }
-        .create-desc-input {
-          font-family: var(--font-sans); font-size: 13px; font-style: italic;
-          font-weight: 300; color: rgba(0,0,0,0.55);
-          background: transparent; border: none;
-          border-bottom: 1px solid rgba(0,0,0,0.08);
-          outline: none; width: 100%; padding: 4px 0;
-        }
-        .create-desc-input::placeholder { color: rgba(0,0,0,0.18); }
-        .create-actions {
-          display: flex; justify-content: space-between;
-          align-items: center; padding-top: 8px;
-        }
-        .create-submit {
-          font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em;
-          text-transform: uppercase; color: rgba(0,0,0,0.78);
-          background: none; border: 1px solid rgba(0,0,0,0.25);
-          padding: 9px 22px; cursor: pointer; transition: all 0.15s;
-        }
-        .create-submit:hover:not(:disabled) {
-          background: rgba(0,0,0,0.82); color: #fafaf8;
-        }
-        .create-submit:disabled { opacity: 0.3; cursor: default; }
-        .create-cancel {
-          font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em;
-          text-transform: uppercase; color: rgba(0,0,0,0.28);
-          background: none; border: none; cursor: pointer;
-        }
-
-        @keyframes rise {
-          from { opacity: 0; transform: translateY(14px); }
+        @keyframes toc-rise {
+          from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-    </main>
+    </div>
   );
 }

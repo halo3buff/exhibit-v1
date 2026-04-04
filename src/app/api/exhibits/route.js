@@ -26,8 +26,23 @@ export async function GET(request) {
       ORDER BY e.updatedAt DESC
     `).all(user.id);
 
+    // Attach up to 8 preview image URLs per exhibit for the scatter panel
+    const previewStmt = db.prepare(`
+      SELECT a.imageUrl
+      FROM exhibit_items ei
+      JOIN artworks a ON a.id = ei.artworkId
+      WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+      ORDER BY ei.addedAt ASC
+      LIMIT 8
+    `);
+
+    const result = exhibits.map(ex => ({
+      ...ex,
+      previewImages: previewStmt.all(ex.id).map(r => r.imageUrl),
+    }));
+
     db.close();
-    return Response.json({ exhibits });
+    return Response.json({ exhibits: result });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ error: err.message }, { status: 500 });

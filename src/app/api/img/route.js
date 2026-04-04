@@ -6,11 +6,106 @@ import https  from 'https';
 
 const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
-// TODO: Make sure this is compatible on all platforms!! (B-Lou Nuke)
-const CACHE_DIR = 'C:\\Users\\ameen\\Desktop\\.img-cache';
+const CACHE_DIR = path.join(process.cwd(), '..', '.img-cache');
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
-// In-memory LRU: keep 1000 most-used images in RAM
+// ── SSRF allowlist — only domains we actually serve images from ────────────────
+// Add a new entry here whenever a new source is added to the pipeline.
+const ALLOWED_DOMAINS = new Set([
+  // ── Metropolitan Museum of Art ──────────────────────────────────────────────
+  'images.metmuseum.org',
+  'collectionapi.metmuseum.org',
+
+  // ── Art Institute of Chicago ────────────────────────────────────────────────
+  'www.artic.edu',
+  'iiif.micr.io',                        // ARTIC IIIF CDN
+
+  // ── Victoria & Albert Museum ────────────────────────────────────────────────
+  'framemark.vam.ac.uk',
+  'collections.vam.ac.uk',
+
+  // ── Smithsonian Institution ──────────────────────────────────────────────────
+  'fids.si.edu',
+  'ids.lib.harvard.edu',
+  'media.smithsonianmag.com',
+  'media.si.edu',
+  'americanart.si.edu',
+  'npg.si.edu',
+  'edan.si.edu',
+  'ids.si.edu',
+
+  // ── Cooper Hewitt ────────────────────────────────────────────────────────────
+  'images.collection.cooperhewitt.org',
+
+  // ── Rijksmuseum ──────────────────────────────────────────────────────────────
+  'www.rijksmuseum.nl',
+  'lh3.rijksmuseum.nl',
+  'lh5.rijksmuseum.nl',
+  'lh6.rijksmuseum.nl',
+  'lh3.googleusercontent.com',
+  'lh5.ggpht.com',
+  'lh6.ggpht.com',
+  'lh3.ggpht.com',
+
+  // ── NYPL ────────────────────────────────────────────────────────────────────
+  'iiif.nypl.org',
+  'images.nypl.org',
+  'digitalcollections.nypl.org',
+  'iiif.digitalcommonwealth.org',
+
+  // ── Gallica / BnF ────────────────────────────────────────────────────────────
+  'gallica.bnf.fr',
+  'iiif.gallicarama.bnf.fr',
+  'gallica.bnf.fr',
+
+  // ── Europeana ────────────────────────────────────────────────────────────────
+  'europeana.eu',
+  'api.europeana.eu',
+  'iiif.europeana.eu',
+  'thumbnail.europeana.eu',
+  'images.europeana.eu',
+
+  // ── Letterform Archive ───────────────────────────────────────────────────────
+  'oa.letterformarchive.org',
+  'letterformarchive.org',
+
+  // ── Design Reviewed ──────────────────────────────────────────────────────────
+  'designreviewed.com',
+
+  // ── AIGA Design Archives ──────────────────────────────────────────────────────
+  'designarchives.aiga.org',
+
+  // ── Are.na / TDR ─────────────────────────────────────────────────────────────
+  'api.are.na',
+  'd2w9rnfcy7mm78.cloudfront.net',
+  'payload.are.na',
+  'arena-attachments.s3.amazonaws.com',
+  'arena-attachments.s3.us-east-1.amazonaws.com',
+
+  // ── Wikimedia / general image CDNs ───────────────────────────────────────────
+  'upload.wikimedia.org',
+  'commons.wikimedia.org',
+]);
+
+function isAllowedUrl(rawUrl) {
+  try {
+    const u = new URL(rawUrl);
+    // Must be https — never fetch http or other schemes
+    if (u.protocol !== 'https:') return false;
+    // Must be an exact hostname match or subdomain of an allowed domain
+    const host = u.hostname.toLowerCase();
+    if (ALLOWED_DOMAINS.has(host)) return true;
+    // Allow subdomains: e.g. iiif.europeana.eu matches europeana.eu
+    for (const allowed of ALLOWED_DOMAINS) {
+      if (host.endsWith(`.${allowed}`)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+// ── In-memory LRU: keep 1000 most-used images in RAM ─────────────────────────
 const LRU_MAX = 1000;
 const lru = new Map();
 function lruGet(k) {
@@ -115,7 +210,13 @@ export async function GET(request) {
   const params   = new URL(request.url).searchParams;
   const imageUrl = params.get('url');
   const size     = params.get('size') ? parseInt(params.get('size')) : null;
+
   if (!imageUrl) return new Response('Missing url', { status: 400 });
+
+  // ── SSRF guard — reject anything not in the allowlist ─────────────────────
+  if (!isAllowedUrl(imageUrl)) {
+    return new Response('Forbidden', { status: 403 });
+  }
 
   const headers = { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=31536000, immutable' };
 

@@ -4,6 +4,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import SaveToExhibit from '@/components/SaveToExhibit';
 import Sidebar, { SidebarSection, SidebarDivider, useSidebar } from '@/components/Sidebar';
+import { SOURCE_LABELS, TOOLTIP_SCHEMA, SUB_MAP } from '@/lib/constants';
+
+const PAGE_SIZE = 50;
 
 // ── Seeded pseudo-random (stable layout per item index) ──────────────────────
 function seededRand(seed) {
@@ -147,121 +150,9 @@ function ScatterGrid({ items, onOpen, showTooltip, hideTooltip }) {
           </div>
         );
       })}
-      <style>{`
-        @keyframes scatter-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
-
-
-const SUB_MAP = {
-  'Graphic Design':    ['Posters & Advertising', 'Typography & Lettering', 'Identity & Branding', 'Editorial/Publication', 'Packaging'],
-  'Painting':          ['Oil', 'Watercolor/Gouache', 'Tempera/Fresco'],
-  'Prints & Drawings': ['Etching/Woodcut/Lithograph', 'Drawings', 'Collage'],
-  'Photography':       ['Photograph'],
-  'Decorative Arts':   ['Ceramics & Glass', 'Furniture', 'Textiles & Fashion', 'Metalwork & Jewelry'],
-};
-
-const PAGE_SIZE = 50;
-
-const SOURCE_LABELS = {
-  moma:               'MoMA',
-  met:                'The Met',
-  artic:              'Art Institute of Chicago',
-  cooperhewitt:       'Cooper Hewitt',
-  va:                 'Victoria & Albert Museum',
-  rijks:              'Rijksmuseum',
-  smithsonian:        'Smithsonian',
-  zurich:             'Museum für Gestaltung Zürich',
-  designarchive:      'AIGA Design Archives',
-};
-
-const TOOLTIP_SCHEMA = {
-  met: [
-    ['Artist',         'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Medium',         'medium'],
-    ['Object Type',    'objectType'],
-    ['Classification', 'classification'],
-    ['Department',     'department'],
-    ['Collection',     'collection'],
-  ],
-  artic: [
-    ['Artist',         'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Medium',         'medium'],
-    ['Artwork Type',   'objectType'],
-    ['Classification', 'classification'],
-    ['Department',     'department'],
-    ['Collection',     'collection'],
-  ],
-  va: [
-    ['Maker',          'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Materials',      'medium'],
-    ['Object Type',    'classification'],
-    ['Collection',     'collection'],
-  ],
-  rijks: [
-    ['Artist',         'author'],
-    ['Origin',         'origin'],
-    ['Dating',         'year'],
-    ['Technique',      'medium'],
-    ['Object Type',    'objectType'],
-    ['Category',       'subCategory'],
-    ['Collection',     'collection'],
-  ],
-  smithsonian: [
-    ['Creator',        'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Object Type',    'objectType'],
-    ['Medium',         'medium'],
-    ['Collection',     'collection'],
-  ],
-  cooperhewitt: [
-    ['Designer',       'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Medium',         'medium'],
-    ['Object Type',    'objectType'],
-    ['Function',       'subCategory'],
-    ['Collection',     'collection'],
-  ],
-  moma: [
-    ['Artist',         'author'],
-    ['Origin',         'origin'],
-    ['Date',           'year'],
-    ['Medium',         'medium'],
-    ['Classification', 'classification'],
-    ['Department',     'department'],
-    ['Collection',     'collection'],
-  ],
-  designarchive: [
-    ['Designer',       'author'],
-    ['Year',           'year'],
-    ['Category',       'subCategory'],
-    ['Medium',         'medium'],
-    ['Collection',     'collection'],
-  ],
-  default: [
-    ['Artist',         'author'],
-    ['Origin',         'origin'],
-    ['Year',           'year'],
-    ['Medium',         'medium'],
-    ['Category',       'type'],
-    ['Sub-category',   'subCategory'],
-    ['Classification', 'classification'],
-    ['Collection',     'collection'],
-  ],
-};
 
 function getTooltipRows(item) {
   const source      = (item.source || '').toLowerCase();
@@ -586,7 +477,6 @@ function GalleryInner() {
     if (loadingRef.current) return;
     loadingRef.current = true;
     if (page > 1) setLoadingMore(true);
-    // Build URL — no `page` param so API uses pickRandom (preserves random order)
     const q = new URLSearchParams({ type: typeParam, limit: PAGE_SIZE });
     if (subParam)     q.set('sub',     subParam);
     if (sourceParam)  q.set('source',  sourceParam);
@@ -607,9 +497,6 @@ function GalleryInner() {
       })
       .catch(() => { setLoading(false); setLoadingMore(false); loadingRef.current = false; });
   }, [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, page]);
-
-
-
 
   const subs = SUB_MAP[typeParam] || [];
 
@@ -704,7 +591,6 @@ function GalleryInner() {
       <AnimatePresence>
         {selected && (
           <>
-            {/* Warm milky blur backdrop — clicks outside to close */}
             <motion.div
               key="backdrop"
               initial={{ opacity: 0 }}
@@ -723,7 +609,6 @@ function GalleryInner() {
               }}
             />
 
-            {/* Content layer — image left of center, metadata floats right */}
             <motion.div
               key="modal"
               initial={{ opacity: 0, y: 16 }}
@@ -742,7 +627,7 @@ function GalleryInner() {
                 gap:            '5vw',
               }}
             >
-              {/* Image — slightly left of center */}
+              {/* Image */}
               <div
                 onClick={e => e.stopPropagation()}
                 style={{
@@ -769,7 +654,7 @@ function GalleryInner() {
                 />
               </div>
 
-              {/* Floating metadata — no box, no border, pure typography */}
+              {/* Floating metadata */}
               <div
                 onClick={e => e.stopPropagation()}
                 style={{
@@ -783,7 +668,6 @@ function GalleryInner() {
                   gap:           0,
                 }}
               >
-                {/* Source institution */}
                 <p style={{
                   fontFamily:    'var(--font-mono)',
                   fontSize:      8,
@@ -796,7 +680,6 @@ function GalleryInner() {
                   {SOURCE_LABELS[selected.source?.toLowerCase()] || selected.source}
                 </p>
 
-                {/* Title */}
                 <h2 style={{
                   fontFamily:    'var(--font-sans)',
                   fontSize:      '1.25rem',
@@ -810,7 +693,6 @@ function GalleryInner() {
                   {selected.title}
                 </h2>
 
-                {/* Metadata pairs — generous spacing, no container */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem', marginBottom: '2rem' }}>
                   {[
                     ['Artist',     selected.author],
@@ -849,7 +731,6 @@ function GalleryInner() {
                   }
                 </div>
 
-                {/* Source link */}
                 {selected.link && (
                   <a
                     href={selected.link}
@@ -873,16 +754,15 @@ function GalleryInner() {
                   </a>
                 )}
 
-                {/* Save to exhibit */}
                 <div style={{ marginBottom: '2.5rem' }}>
                   <SaveToExhibit artworkId={selected.id} />
                 </div>
 
-                {/* spacer so metadata column doesn't feel cut off */}
                 <div style={{ paddingBottom: '1rem' }} />
               </div>
             </motion.div>
-            {/* ── Prev / Next — fixed bottom corners ── */}
+
+            {/* ── Prev / Next ── */}
             <motion.div
               key="prevnext"
               initial={{ opacity: 0 }}
@@ -894,51 +774,19 @@ function GalleryInner() {
               <button
                 onClick={() => setSelectedIdx(i => Math.max(i - 1, 0))}
                 disabled={selectedIdx === 0}
-                style={{
-                  fontFamily:    'var(--font-mono)',
-                  fontSize:      9,
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color:         'rgba(0,0,0,0.72)',
-                  background:    'none',
-                  border:        'none',
-                  cursor:        selectedIdx === 0 ? 'default' : 'pointer',
-                  opacity:       selectedIdx === 0 ? 0.3 : 1,
-                  pointerEvents: 'all',
-                  padding:       0,
-                  transition:    'color 0.15s',
-                }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.72)', background: 'none', border: 'none', cursor: selectedIdx === 0 ? 'default' : 'pointer', opacity: selectedIdx === 0 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
                 onMouseEnter={e => { if (selectedIdx > 0) e.target.style.color = 'rgba(0,0,0,0.9)'; }}
                 onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.72)'}
               >
                 ← Prev
               </button>
-              <span style={{
-                fontFamily:    'var(--font-mono)',
-                fontSize:      8,
-                color:         'rgba(0,0,0,0.25)',
-                letterSpacing: '0.1em',
-                pointerEvents: 'none',
-              }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'rgba(0,0,0,0.25)', letterSpacing: '0.1em', pointerEvents: 'none' }}>
                 {selectedIdx + 1} / {items.length}
               </span>
               <button
                 onClick={() => setSelectedIdx(i => Math.min(i + 1, items.length - 1))}
                 disabled={selectedIdx === items.length - 1}
-                style={{
-                  fontFamily:    'var(--font-mono)',
-                  fontSize:      9,
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color:         'rgba(0,0,0,0.72)',
-                  background:    'none',
-                  border:        'none',
-                  cursor:        selectedIdx === items.length - 1 ? 'default' : 'pointer',
-                  opacity:       selectedIdx === items.length - 1 ? 0.3 : 1,
-                  pointerEvents: 'all',
-                  padding:       0,
-                  transition:    'color 0.15s',
-                }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.72)', background: 'none', border: 'none', cursor: selectedIdx === items.length - 1 ? 'default' : 'pointer', opacity: selectedIdx === items.length - 1 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
                 onMouseEnter={e => { if (selectedIdx < items.length - 1) e.target.style.color = 'rgba(0,0,0,0.9)'; }}
                 onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.72)'}
               >
@@ -948,11 +796,6 @@ function GalleryInner() {
           </>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .scatter-thumb { will-change: opacity, transform; transition: opacity 0.2s ease; }
-        .scatter-card:hover .scatter-thumb { opacity: 0.82; }
-      `}</style>
     </>
   );
 }

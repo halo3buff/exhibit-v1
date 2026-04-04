@@ -11,7 +11,10 @@ export async function GET(request, { params }) {
     const user = await requireAuth();
     const db = new Database(DB_PATH, { readonly: true });
 
-    const exhibit = db.prepare(`SELECT * FROM exhibits WHERE id = ?`).get(id);
+    const exhibit = db.prepare(`
+      SELECT id, userId, title, description, isPublic, createdAt, updatedAt
+      FROM exhibits WHERE id = ?
+    `).get(id);
     if (!exhibit) { db.close(); return Response.json({ error: 'Not found' }, { status: 404 }); }
     if (exhibit.userId !== user.id && !exhibit.isPublic) {
       db.close(); return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -61,7 +64,11 @@ export async function PATCH(request, { params }) {
     fields.push(`updatedAt = datetime('now')`);
     values.push(id);
     db.prepare(`UPDATE exhibits SET ${fields.join(', ')} WHERE id = ?`).run(...values);
-    const updated = db.prepare(`SELECT * FROM exhibits WHERE id = ?`).get(id);
+
+    const updated = db.prepare(`
+      SELECT id, userId, title, description, isPublic, createdAt, updatedAt
+      FROM exhibits WHERE id = ?
+    `).get(id);
     db.close();
     return Response.json({ exhibit: updated });
   } catch (err) {

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SUB_MAP, SOURCE_LABELS } from '@/lib/constants';
 
 const CATS = [
   { id: 'Graphic Design'    },
@@ -11,23 +12,12 @@ const CATS = [
   { id: 'Decorative Arts'   },
 ];
 
-const SUB_MAP = {
-  'Graphic Design':    ['Posters & Advertising', 'Typography & Lettering', 'Identity & Branding', 'Editorial/Publication', 'Packaging'],
-  'Painting':          ['Oil', 'Watercolor/Gouache', 'Tempera/Fresco'],
-  'Prints & Drawings': ['Etching/Woodcut/Lithograph', 'Drawings', 'Collage'],
-  'Photography':       ['Photograph'],
-  'Decorative Arts':   ['Ceramics & Glass', 'Furniture', 'Textiles & Fashion', 'Metalwork & Jewelry'],
-};
-
+// Ordered list of sources to display in the Collections panel.
+// Derived from SOURCE_LABELS so there's a single source of truth.
 const SOURCES = [
-  { id: 'met',           label: 'The Met'                  },
-  { id: 'artic',         label: 'Art Institute of Chicago' },
-  { id: 'cooperhewitt',  label: 'Cooper Hewitt'            },
-  { id: 'va',            label: 'Victoria & Albert Museum' },
-  { id: 'rijks',         label: 'Rijksmuseum'              },
-  { id: 'smithsonian',   label: 'Smithsonian'              },
-  { id: 'designarchive', label: 'AIGA Design Archives'     },
-];
+  'met', 'artic', 'cooperhewitt', 'va',
+  'rijks', 'smithsonian', 'designarchive',
+].map(id => ({ id, label: SOURCE_LABELS[id] || id }));
 
 function hqUrl(url) {
   if (!url) return '';

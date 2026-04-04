@@ -1,12 +1,14 @@
 // src/lib/auth.js
 // Session-based auth utilities — no external auth library needed.
 // Uses httpOnly cookies + sessions table in artworks.db.
+// Session tokens are cryptographically random hex strings (not sequential IDs).
 
 import Database from 'better-sqlite3';
-import path from 'path';
+import crypto   from 'crypto';
+import path     from 'path';
 import { cookies } from 'next/headers';
 
-const DB_PATH = path.join(process.cwd(), 'artworks.db');
+const DB_PATH        = path.join(process.cwd(), 'artworks.db');
 const SESSION_COOKIE = 'exhibit_session';
 const SESSION_DAYS   = 30;
 
@@ -19,43 +21,41 @@ function getDb() {
 
 // ── Create a new session and set the cookie ───────────────────────
 export async function createSession(userId) {
-  const db = getDb();
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000)
-    .toISOString();
+  const db        = getDb();
+  const token     = crypto.randomBytes(32).toString('hex'); // 64-char random hex
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  const sessionId = db
-    .prepare(`INSERT INTO sessions (userId, expiresAt) VALUES (?, ?) RETURNING id`)
-    .get(userId, expiresAt).id;
-
+  db.prepare(`INSERT INTO sessions (id, userId, expiresAt) VALUES (?, ?, ?)`)
+    .run(token, userId, expiresAt);
   db.close();
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, sessionId, {
+  cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure:   process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    expires: new Date(expiresAt),
-    path: '/',
+    expires:  new Date(expiresAt),
+    path:     '/',
   });
 
-  return sessionId;
+  return token;
 }
 
 // ── Get the current user from the session cookie ──────────────────
 // Returns user object or null
 export async function getSession() {
   const cookieStore = await cookies();
-  const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!sessionId) return null;
+  const token       = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
 
-  const db = getDb();
+  const db  = getDb();
   const row = db.prepare(`
     SELECT u.id, u.email, u.displayName, u.createdAt, s.expiresAt
     FROM sessions s
     JOIN users u ON u.id = s.userId
     WHERE s.id = ?
       AND s.expiresAt > datetime('now')
-  `).get(sessionId);
+  `).get(token);
   db.close();
 
   return row || null;
@@ -64,11 +64,11 @@ export async function getSession() {
 // ── Delete the session (logout) ───────────────────────────────────
 export async function destroySession() {
   const cookieStore = await cookies();
-  const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
+  const token       = cookieStore.get(SESSION_COOKIE)?.value;
 
-  if (sessionId) {
+  if (token) {
     const db = getDb();
-    db.prepare(`DELETE FROM sessions WHERE id = ?`).run(sessionId);
+    db.prepare(`DELETE FROM sessions WHERE id = ?`).run(token);
     db.close();
   }
 
@@ -80,9 +80,17 @@ export async function requireAuth() {
   const user = await getSession();
   if (!user) {
     throw new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
+      status:  401,
       headers: { 'Content-Type': 'application/json' },
     });
   }
   return user;
+}
+
+// ── Prune expired sessions (call this occasionally) ───────────────
+export function pruneExpiredSessions() {
+  const db = getDb();
+  const { changes } = db.prepare(`DELETE FROM sessions WHERE expiresAt <= datetime('now')`).run();
+  db.close();
+  return changes;
 }
