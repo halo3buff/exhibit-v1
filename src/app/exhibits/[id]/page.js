@@ -667,7 +667,6 @@ export default function ExhibitPage() {
 
   // ── Canvas mousedown: pan, draw, or nothing ───────────────────────────────
   const onCanvasMouseDown = useCallback((e) => {
-    if (e.target !== spreadRef.current && !e.target.classList.contains('canvas-bg-inner')) return;
     if (e.button === 1 || (e.button === 0 && spaceDown)) {
       // Pan
       e.preventDefault();
@@ -691,6 +690,7 @@ export default function ExhibitPage() {
       return;
     }
 
+    if (e.target !== spreadRef.current && !e.target.classList.contains('canvas-bg-inner')) return;
     if (e.button !== 0) return;
 
     if (qMode) {
@@ -965,7 +965,7 @@ export default function ExhibitPage() {
             )}
 
             {/* ── World transform container — everything inside pans/zooms ── */}
-            <div style={{ position: 'absolute', inset: 0, transformOrigin: '0 0', transform: worldTransform, willChange: 'transform' }}>
+            <div style={{ position: 'absolute', inset: 0, transformOrigin: '0 0', transform: worldTransform }}>
 
               {/* SVG stroke layer */}
               <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6, overflow: 'visible' }}>

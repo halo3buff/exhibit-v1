@@ -1,9 +1,10 @@
 // src/app/exhibits/page.js
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { selectFormation } from '@/lib/formations';
 
 function hqUrl(url) {
   if (!url) return '';
@@ -36,14 +37,122 @@ function CreateModal({ onSubmit, onCancel, creating }) {
   );
 }
 
+// ── Formation slot ────────────────────────────────────────────────────────────
+// Images are NEVER given an explicit height — the browser resolves aspect ratio
+// naturally. maxHeight is the only vertical constraint, derived from viewport.
+// This guarantees zero overflow regardless of image dimensions.
+
+function FormationSlot({ url, slotStyle, index }) {
+  const rowCount = slotStyle._rowCount || 1;
+  // Allocate viewport height per row, minus gap and title block overhead
+  const maxH = `calc((100vh - 44px - 120px - ${(rowCount - 1) * 20}px) / ${rowCount})`;
+
+  return (
+    <motion.div
+      style={{
+        gridArea:     slotStyle.area,
+        alignSelf:    slotStyle.alignSelf    || 'center',
+        justifySelf:  slotStyle.justifySelf  || 'center',
+        width:        slotStyle.width        || '100%',
+        marginTop:    slotStyle.marginTop    || 0,
+        marginBottom: slotStyle.marginBottom || 0,
+        minWidth:     0,
+        minHeight:    0,
+        display:      'flex',
+        justifyContent: 'center',
+        overflow:     'hidden',
+      }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <img
+        src={hqUrl(url)}
+        alt=""
+        style={{
+          width:     'auto',
+          height:    'auto',
+          maxWidth:  '100%',
+          maxHeight: maxH,
+          objectFit: 'contain',
+          display:   'block',
+        }}
+        draggable={false}
+        onError={e => { e.currentTarget.style.opacity = '0'; }}
+      />
+    </motion.div>
+  );
+}
+
+// ── Formation grid ────────────────────────────────────────────────────────────
+// Outer wrapper is strictly height-bounded by the panel.
+// Grid rows use minmax(0, 1fr) so they NEVER push outside their allocation.
+
+function FormationGrid({ images }) {
+  if (!images || images.length === 0) return null;
+
+  const imageData = images.map(img => ({
+    url:    img.url,
+    width:  img.width  || 3,
+    height: img.height || 4,
+  }));
+
+  const result = selectFormation(imageData);
+  if (!result) return null;
+
+  const { formation, slotMap } = result;
+  const { grid, container, slots } = formation;
+
+  // Count how many distinct grid rows the template uses
+  const rowCount = (grid.areas || '"A"').trim().split('"').filter((s, i) => i % 2 === 1).length || 1;
+
+  // Force all row tracks to be equal fractional, bounded by container
+  const safeRows = Array(rowCount).fill('minmax(0, 1fr)').join(' ');
+
+  return (
+    <div style={{
+      display:             'grid',
+      gridTemplateColumns: grid.cols,
+      gridTemplateRows:    safeRows,
+      gridTemplateAreas:   grid.areas,
+      gap:                 grid.gap,
+      width:               container.maxWidth || '88%',
+      maxWidth:            container.maxWidth || '88%',
+      height:              '100%',
+      margin:              container.margin   || '0 auto',
+      alignContent:        'center',
+      boxSizing:           'border-box',
+      overflow:            'hidden',
+    }}>
+      {slots.map((slotStyle, i) => {
+        const label    = ['A','B','C','D','E','F'][i];
+        const imgEntry = slotMap[label];
+        if (!imgEntry) return null;
+        return (
+          <FormationSlot
+            key={`${imgEntry.url}-${i}`}
+            url={imgEntry.url}
+            slotStyle={{ ...slotStyle, _rowCount: rowCount }}
+            index={i}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Preview panel ─────────────────────────────────────────────────────────────
 function PreviewPanel({ exhibit }) {
-  const images = exhibit?.previewImages?.length > 0
+  const rawImages = exhibit?.previewImages?.length > 0
     ? exhibit.previewImages
     : exhibit?.coverImageUrl ? [exhibit.coverImageUrl] : [];
 
+  const images = rawImages.map(img =>
+    typeof img === 'string' ? { url: img, width: null, height: null } : img
+  );
+
   return (
-    <div style={{ position: 'absolute', inset: 0, padding: '40px', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
       <AnimatePresence mode="wait">
         {exhibit ? (
           <motion.div
@@ -51,10 +160,10 @@ function PreviewPanel({ exhibit }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}
+            transition={{ duration: 0.18 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '40px', overflow: 'hidden' }}
           >
-            {/* ── Title block: Keeps its clean editorial position ── */}
+            {/* ── Title block ── */}
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -62,8 +171,9 @@ function PreviewPanel({ exhibit }) {
               style={{
                 textAlign:     'right',
                 flexShrink:    0,
-                borderBottom: '1px solid var(--border)',
-                paddingBottom: '16px'
+                borderBottom:  '1px solid var(--border)',
+                paddingBottom: '16px',
+                marginBottom:  '28px',
               }}
             >
               <div style={{
@@ -78,71 +188,25 @@ function PreviewPanel({ exhibit }) {
               </div>
               {exhibit.description && (
                 <div style={{
-                  fontFamily:  'var(--font-display)',
-                  fontSize:    '0.8rem',
-                  fontWeight:  400,
-                  fontStyle:   'italic',
-                  color:       'var(--fg-muted)',
-                  marginTop:   7,
-                  lineHeight:  1.6,
+                  fontFamily: 'var(--font-display)',
+                  fontSize:   '0.8rem',
+                  fontWeight: 400,
+                  fontStyle:  'italic',
+                  color:      'var(--fg-muted)',
+                  marginTop:  7,
+                  lineHeight: 1.6,
                 }}>
                   {exhibit.description}
                 </div>
               )}
             </motion.div>
 
-            {/* ── Image spread: Viewport-aware containment ── */}
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '28px',
-              alignContent: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden' // Bulletproof screen containment
-            }}>
-              {images.map((url, i) => {
-                // Dynamically adjust size based on the total number of images to prevent overflow
-                const maxDim = images.length <= 2 ? '42vh' : images.length <= 4 ? '35vh' : '25vh';
-                
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: i * 0.06 }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      maxHeight: maxDim, // Caps height relative to viewport
-                      maxWidth: images.length === 1 ? '100%' : '45%',
-                    }}
-                  >
-                    <img
-                      src={hqUrl(url)}
-                      alt=""
-                      style={{
-                        maxHeight: '100%',
-                        maxWidth: '100%',
-                        width: 'auto',
-                        height: 'auto',
-                        objectFit: 'contain', // Preserves natural dimensions without stretching
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                        border: '1px solid var(--border-md)'
-                      }}
-                      draggable={false}
-                      onError={e => { e.target.parentElement.style.display = 'none'; }}
-                    />
-                  </motion.div>
-                );
-              })}
-
-              {images.length === 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 300, color: 'var(--fg-faint)', margin: 0 }}>Empty exhibit</p>
-                </div>
-              )}
+            {/* ── Formation spread — fills remaining height ── */}
+            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {images.length > 0
+                ? <FormationGrid images={images} />
+                : <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 300, color: 'var(--fg-faint)', margin: 0 }}>Empty exhibit</p>
+              }
             </div>
           </motion.div>
         ) : (
@@ -197,14 +261,8 @@ export default function ExhibitsPage() {
     return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   }
 
-  const onEnter = useCallback((ex) => {
-    setHoveredId(ex.id);
-    setHoveredExhibit(ex);
-  }, []);
-
-  const onLeave = useCallback(() => {
-    setHoveredId(null);
-  }, []);
+  const onEnter = useCallback((ex) => { setHoveredId(ex.id); setHoveredExhibit(ex); }, []);
+  const onLeave = useCallback(() => { setHoveredId(null); }, []);
 
   if (loading) return (
     <div style={{ height: 'calc(100vh - 44px)', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

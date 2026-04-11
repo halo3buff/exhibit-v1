@@ -1,15 +1,38 @@
 // src/app/api/exhibits/route.js
+//
+// UPDATED: previewImages now returns objects { url, width, height } instead of
+// plain URL strings. Dimensions are read from the artworks.db `imageWidth` and
+// `imageHeight` columns if they exist, with a graceful fallback to null.
+// If your DB doesn't have those columns yet, run the backfill script:
+//   node scripts/backfill-dimensions.mjs
+// Until then the formation engine falls back to its bucket defaults.
+
 import Database from 'better-sqlite3';
 import path from 'path';
 import { requireAuth } from '@/lib/auth';
 
 const DB_PATH = path.join(process.cwd(), 'artworks.db');
 
+// Check once whether the dimension columns exist
+let _hasDimensions = null;
+function hasDimensionColumns(db) {
+  if (_hasDimensions !== null) return _hasDimensions;
+  try {
+    const info = db.prepare(`PRAGMA table_info(artworks)`).all();
+    const cols  = new Set(info.map(c => c.name));
+    _hasDimensions = cols.has('imageWidth') && cols.has('imageHeight');
+  } catch {
+    _hasDimensions = false;
+  }
+  return _hasDimensions;
+}
+
 // GET /api/exhibits — list current user's exhibits
 export async function GET(request) {
   try {
     const user = await requireAuth();
     const db = new Database(DB_PATH, { readonly: true });
+    const withDims = hasDimensionColumns(db);
 
     const exhibits = db.prepare(`
       SELECT
@@ -26,19 +49,34 @@ export async function GET(request) {
       ORDER BY e.updatedAt DESC
     `).all(user.id);
 
-    // Attach up to 8 preview image URLs per exhibit for the scatter panel
-    const previewStmt = db.prepare(`
-      SELECT a.imageUrl
-      FROM exhibit_items ei
-      JOIN artworks a ON a.id = ei.artworkId
-      WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-      ORDER BY ei.addedAt ASC
-      LIMIT 8
-    `);
+    // Attach preview images with dimension metadata when available
+    const previewStmt = withDims
+      ? db.prepare(`
+          SELECT a.imageUrl, a.imageWidth as width, a.imageHeight as height
+          FROM exhibit_items ei
+          JOIN artworks a ON a.id = ei.artworkId
+          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+          ORDER BY ei.addedAt ASC
+          LIMIT 8
+        `)
+      : db.prepare(`
+          SELECT a.imageUrl, NULL as width, NULL as height
+          FROM exhibit_items ei
+          JOIN artworks a ON a.id = ei.artworkId
+          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+          ORDER BY ei.addedAt ASC
+          LIMIT 8
+        `);
 
     const result = exhibits.map(ex => ({
       ...ex,
-      previewImages: previewStmt.all(ex.id).map(r => r.imageUrl),
+      // previewImages: array of { url, width, height }
+      // width/height may be null if backfill hasn't been run yet
+      previewImages: previewStmt.all(ex.id).map(r => ({
+        url:    r.imageUrl,
+        width:  r.width  || null,
+        height: r.height || null,
+      })),
     }));
 
     db.close();
