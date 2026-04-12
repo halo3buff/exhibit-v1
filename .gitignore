@@ -61,3 +61,4 @@ scripts/moma_raw.json
 # Image cache - moved outside public for performance
 .img-cache/
 public/img-cache/
+.aider*

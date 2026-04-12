@@ -57,7 +57,6 @@ export async function GET(request) {
           JOIN artworks a ON a.id = ei.artworkId
           WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
           ORDER BY ei.addedAt ASC
-          LIMIT 8
         `)
       : db.prepare(`
           SELECT a.imageUrl, NULL as width, NULL as height
@@ -65,7 +64,6 @@ export async function GET(request) {
           JOIN artworks a ON a.id = ei.artworkId
           WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
           ORDER BY ei.addedAt ASC
-          LIMIT 8
         `);
 
     const result = exhibits.map(ex => ({
