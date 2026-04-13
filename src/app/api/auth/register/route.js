@@ -1,11 +1,8 @@
 // src/app/api/auth/register/route.js
-import Database  from 'better-sqlite3';
-import bcrypt    from 'bcryptjs';
-import path      from 'path';
+import bcrypt from 'bcryptjs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { createSession } from '@/lib/auth';
-
-const DB_PATH = path.join(process.cwd(), 'artworks.db');
+import { withDb } from '@/lib/db';
 
 // 5 registrations per IP per hour
 const rateLimiter = new RateLimiterMemory({
@@ -37,32 +34,33 @@ export async function POST(request) {
       return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     }
 
-    const db = new Database(DB_PATH);
-    db.pragma('foreign_keys = ON');
+    const normalizedEmail = email.toLowerCase().trim();
+    const name = displayName?.trim() || email.split('@')[0];
 
-    const existing = db.prepare(`SELECT id FROM users WHERE email = ?`).get(email.toLowerCase().trim());
+    // Check for existing user (DB closed before async bcrypt)
+    const existing = withDb(db =>
+      db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail),
+      { readonly: true }
+    );
     if (existing) {
-      db.close();
       return Response.json({ error: 'An account with this email already exists.' }, { status: 409 });
     }
 
+    // Hash password (no DB connection held during this async operation)
     const hash = await bcrypt.hash(password, 12);
-    const name = displayName?.trim() || email.split('@')[0];
 
-    const userId = db.prepare(`
-      INSERT INTO users (email, password, displayName)
-      VALUES (?, ?, ?)
-      RETURNING id
-    `).get(email.toLowerCase().trim(), hash, name).id;
-
-    db.close();
+    // Create user
+    const userId = withDb(db =>
+      db.prepare('INSERT INTO users (email, password, displayName) VALUES (?, ?, ?) RETURNING id')
+        .get(normalizedEmail, hash, name).id
+    );
 
     await createSession(userId);
 
-    return Response.json({ ok: true, user: { id: userId, email, displayName: name } });
+    return Response.json({ ok: true, user: { id: userId, email: normalizedEmail, displayName: name } });
 
   } catch (err) {
     console.error('[register]', err);
-    return Response.json({ error: 'Registration failed.' }, { status: 500 })
+    return Response.json({ error: 'Registration failed.' }, { status: 500 });
   }
 }

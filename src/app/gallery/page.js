@@ -3,347 +3,15 @@ import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import SaveToExhibit from '@/components/SaveToExhibit';
-import Sidebar, { SidebarSection, SidebarDivider, useSidebar } from '@/components/Sidebar';
-import { SOURCE_LABELS, TOOLTIP_SCHEMA, SUB_MAP } from '@/lib/constants';
+import Sidebar from '@/components/Sidebar';
+import { SOURCE_LABELS } from '@/lib/constants';
+import { imgUrl } from '@/lib/images';
+import { getArtworkFields } from '@/lib/artwork-fields';
+import ScatterGrid from '@/components/gallery/ScatterGrid';
+import TooltipPortal from '@/components/gallery/TooltipPortal';
+import GallerySidebar from '@/components/gallery/GallerySidebar';
 
 const PAGE_SIZE = 50;
-
-// ── Seeded pseudo-random (stable layout per item index) ──────────────────────
-function seededRand(seed) {
-  const x = Math.sin(seed + 1) * 43758.5453123;
-  return x - Math.floor(x);
-}
-
-// ── Scatter layout engine ─────────────────────────────────────────────────────
-// Gravity-packer: N loose columns, each item placed in shortest column with
-// slight x-jitter. Size varies by seeded random. No overlaps.
-function useScatterLayout(items, containerWidth) {
-  const [positions, setPositions] = useState([]);
-  const [canvasHeight, setCanvasHeight] = useState(0);
-  const aspectsRef = useRef({});  // itemId → measured aspect ratio
-
-  const recompute = useCallback(() => {
-    if (!containerWidth || items.length === 0) return;
-
-    const GAP        = 28;
-    const MIN_W      = 200;
-    const JITTER     = 18;   // max horizontal scatter pixels
-    const SIZE_RANGE = 0.28; // ±28% size variation
-
-    const cols     = Math.max(2, Math.floor((containerWidth + GAP) / (MIN_W + GAP)));
-    const baseW    = (containerWidth - GAP * (cols - 1)) / cols;
-    const colTops  = new Array(cols).fill(0);
-    // Each column has a fixed x base
-    const colX     = Array.from({ length: cols }, (_, c) => c * (baseW + GAP));
-
-    const newPositions = items.map((item, idx) => {
-      const rand      = seededRand(idx);
-      const sizeScale = 1 - SIZE_RANGE / 2 + rand * SIZE_RANGE; // 0.86 – 1.14
-      const w         = Math.round(baseW * sizeScale);
-      const aspect    = aspectsRef.current[item.id] || 1.3; // default until measured
-      const h         = Math.round(w / aspect) + 36; // 36px for caption
-
-      // Find shortest column
-      let shortestCol = 0;
-      for (let c = 1; c < cols; c++) {
-        if (colTops[c] < colTops[shortestCol]) shortestCol = c;
-      }
-
-      // Jitter x within ±JITTER without going outside canvas
-      const jitter    = seededRand(idx + 999) * JITTER * 2 - JITTER;
-      const x         = Math.max(0, Math.min(colX[shortestCol] + jitter, containerWidth - w));
-      const y         = colTops[shortestCol];
-      const colZone   = shortestCol; // for stagger animation
-
-      colTops[shortestCol] += h + GAP;
-
-      return { id: item.id, x, y, w, colZone };
-    });
-
-    setPositions(newPositions);
-    setCanvasHeight(Math.max(...colTops));
-  }, [items, containerWidth]);
-
-  // Recompute when items or width changes
-  useEffect(() => { recompute(); }, [recompute]);
-
-  const onImageLoad = useCallback((itemId, naturalW, naturalH) => {
-    if (naturalW && naturalH) {
-      const prev = aspectsRef.current[itemId];
-      const next = naturalW / naturalH;
-      if (!prev || Math.abs(prev - next) > 0.05) {
-        aspectsRef.current[itemId] = next;
-        recompute();
-      }
-    }
-  }, [recompute]);
-
-  return { positions, canvasHeight, onImageLoad };
-}
-
-// ── ScatterGrid component ─────────────────────────────────────────────────────
-function ScatterGrid({ items, onOpen, showTooltip, hideTooltip }) {
-  const containerRef  = useRef(null);
-  const [containerW, setContainerW] = useState(0);
-
-  // Measure container width
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const ro = new ResizeObserver(entries => {
-      const w = entries[0]?.contentRect.width;
-      if (w) setContainerW(Math.floor(w));
-    });
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  const { positions, canvasHeight, onImageLoad } = useScatterLayout(items, containerW);
-
-  // Build position map for O(1) lookup
-  const posMap = {};
-  positions.forEach(p => { posMap[p.id] = p; });
-
-  return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: canvasHeight || 'auto', minHeight: 400 }}>
-      {items.map((item, idx) => {
-        const pos = posMap[item.id];
-        if (!pos) return null;
-
-        // Stagger delay by column zone so items fade in column by column
-        const delay = pos.colZone * 0.06 + (idx % 8) * 0.018;
-
-        return (
-          <div
-            key={item.id}
-            className="scatter-card"
-            style={{
-              position:  'absolute',
-              left:       pos.x,
-              top:        pos.y,
-              width:      pos.w,
-              cursor:    'pointer',
-              animation: `scatter-in 0.5s cubic-bezier(0.16,1,0.3,1) ${Math.min(delay, 0.7)}s both`,
-            }}
-            onClick={() => { hideTooltip(); onOpen(item); }}
-            onMouseEnter={() => showTooltip(item)}
-            onMouseLeave={hideTooltip}
-          >
-            <img
-              src={imgUrl(item.imageUrl, 1200)}
-              alt={item.title}
-              className="scatter-thumb"
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-              loading={idx < 20 ? 'eager' : 'lazy'}
-              decoding="async"
-              onLoad={e => onImageLoad(item.id, e.target.naturalWidth, e.target.naturalHeight)}
-            />
-            <div style={{ marginTop: 7 }}>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 300, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
-                {item.title}
-              </div>
-              {item.author && item.author !== 'Unknown' && (
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, letterSpacing: '0.02em' }}>
-                  {item.author}{item.year && item.year !== 'n.d.' ? `, ${item.year}` : ''}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function getTooltipRows(item) {
-  const source      = (item.source || '').toLowerCase();
-  const schema      = TOOLTIP_SCHEMA[source] || TOOLTIP_SCHEMA.default;
-  const sourceLabel = SOURCE_LABELS[source] || item.source || '';
-  return schema
-    .map(([label, field]) => {
-      const val = field === 'collection' ? sourceLabel : item[field];
-      return [label, val];
-    })
-    .filter(([, v]) => v?.toString().trim() && v !== 'Unknown' && v !== 'n.d.' && v !== 'Uncategorized' && v !== '');
-}
-
-function imgUrl(url, size) {
-  if (!url) return '';
-  return `/api/img?url=${encodeURIComponent(url)}&size=${size}`;
-}
-
-// ── Tooltip portal ────────────────────────────────────────────────
-function TooltipPortal({ tooltipRef }) {
-  return (
-    <div ref={tooltipRef} style={{
-      position: 'fixed', top: 0, left: 0, zIndex: 9999,
-      pointerEvents: 'none', width: 280, display: 'none', willChange: 'transform',
-    }}>
-      <div style={{ background: 'var(--dark-bg)', color: 'var(--dark-fg)', boxShadow: '0 8px 48px rgba(0,0,0,0.4)' }}>
-        <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid var(--dark-border)' }}>
-          <p className="tt-title" style={{
-            fontSize: 11, fontFamily: 'var(--font-sans)', fontWeight: 400,
-            letterSpacing: '0.01em', lineHeight: 1.45, color: 'var(--dark-fg)', margin: 0,
-            display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }} />
-        </div>
-        <div className="tt-fields" style={{ padding: '8px 0' }} />
-        <div style={{ padding: '8px 16px', borderTop: '1px solid var(--dark-border)', display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--dark-faint)' }}>
-            Click to expand
-          </span>
-          <span className="tt-source" style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dark-faint)' }} />
-        </div>
-      </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, rgba(247,246,241,0.3) 0%, rgba(247,246,241,0.06) 100%)' }} />
-    </div>
-  );
-}
-
-// ── Filter link ───────────────────────────────────────────────────
-function FilterLink({ children, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: active ? 500 : 400,
-        letterSpacing: '0.18em', textTransform: 'uppercase',
-        color: active ? 'var(--fg)' : 'var(--fg-faint)',
-        background: 'none', border: 'none', padding: '0', cursor: 'pointer', transition: 'color 0.12s ease',
-      }}
-      onMouseEnter={e => { if (!active) e.target.style.color = 'var(--fg-muted)'; }}
-      onMouseLeave={e => { if (!active) e.target.style.color = 'var(--fg-faint)'; }}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ── Year range dual-handle slider ─────────────────────────────────
-function YearSlider({ min, max, value, onChange }) {
-  const [lo, hi] = value;
-  const trackRef = useRef(null);
-  const pct = (v) => ((v - min) / (max - min)) * 100;
-  const dragHandle = (which, e) => {
-    e.preventDefault();
-    const track = trackRef.current; if (!track) return;
-    const move = (ev) => {
-      const rect = track.getBoundingClientRect();
-      const raw  = ((ev.clientX - rect.left) / rect.width) * (max - min) + min;
-      const snapped = Math.round(Math.max(min, Math.min(max, raw)) / 10) * 10;
-      if (which === 'lo') onChange([Math.min(snapped, hi - 10), hi]);
-      else                onChange([lo, Math.max(snapped, lo + 10)]);
-    };
-    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', up);
-  };
-  return (
-    <div style={{ padding: '4px 20px 16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.06em' }}>{lo}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.06em' }}>{hi}</span>
-      </div>
-      <div ref={trackRef} style={{ position: 'relative', height: 2, background: 'rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-        <div style={{ position: 'absolute', top: 0, height: '100%', left: `${pct(lo)}%`, right: `${100 - pct(hi)}%`, background: 'rgba(0,0,0,0.45)' }} />
-        {[['lo', lo], ['hi', hi]].map(([which, val]) => (
-          <div key={which} onMouseDown={(e) => dragHandle(which, e)}
-            style={{ position: 'absolute', top: '50%', left: `${pct(val)}%`, transform: 'translate(-50%,-50%)', width: 12, height: 12, borderRadius: '50%', background: '#fafaf8', border: '1.5px solid rgba(0,0,0,0.4)', cursor: 'grab', zIndex: 2 }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Sidebar content ───────────────────────────────────────────────
-function GallerySidebar({
-  typeParam, subParam, onSubChange,
-  availableSources, selectedSources, onSourceToggle,
-  yearRange, yearValue, onYearChange,
-  noDate, onNoDateChange,
-  onBack, itemCount,
-}) {
-  const { open } = useSidebar();
-  const subs = SUB_MAP[typeParam] || [];
-
-  return (
-    <>
-      {/* ── Back link + count ── */}
-      <div style={{ padding: open ? '0 20px 16px' : '0 0 16px', borderBottom: '1px solid rgba(0,0,0,0.06)', marginBottom: 16 }}>
-        <button
-          onClick={onBack}
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.52)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'color 0.15s', display: open ? 'block' : 'none' }}
-          onMouseEnter={e => e.target.style.color = 'rgba(0,0,0,0.6)'}
-          onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.52)'}
-        >
-          ← Index
-        </button>
-        {open && itemCount > 0 && (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.1em', color: 'rgba(0,0,0,0.40)', marginTop: 6, textTransform: 'uppercase' }}>
-            {itemCount.toLocaleString()} items
-          </p>
-        )}
-      </div>
-
-      {/* Subcategory */}
-      {subs.length > 0 && (
-        <>
-          <SidebarSection label="Category">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {['All', ...subs].map(sub => {
-                const isActive = sub === 'All' ? !subParam : subParam === sub;
-                return (
-                  <button key={sub} onClick={() => onSubChange(sub === 'All' ? '' : sub)} title={sub}
-                    style={{ padding: open ? '6px 20px' : '6px 0', textAlign: open ? 'left' : 'center', background: isActive ? 'rgba(0,0,0,0.05)' : 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 8.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: isActive ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.52)', fontWeight: isActive ? 500 : 400, transition: 'all 0.12s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
-                    {open ? sub : sub[0]}
-                  </button>
-                );
-              })}
-            </div>
-          </SidebarSection>
-          <SidebarDivider />
-        </>
-      )}
-
-      {/* Source institution filter */}
-      {open && availableSources.length > 0 && (
-        <>
-          <SidebarSection label="Source">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {availableSources.map(({ source, n }) => {
-                const isActive = selectedSources.includes(source);
-                const label = SOURCE_LABELS[source] || source;
-                return (
-                  <button key={source} onClick={() => onSourceToggle(source)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 20px', background: isActive ? 'rgba(0,0,0,0.05)' : 'none', border: 'none', cursor: 'pointer', transition: 'all 0.12s', gap: 8 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: isActive ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.52)', fontWeight: isActive ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, color: 'rgba(0,0,0,0.36)', flexShrink: 0 }}>{n.toLocaleString()}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </SidebarSection>
-          <SidebarDivider />
-        </>
-      )}
-
-      {/* Year range */}
-      {open && yearRange && (
-        <SidebarSection label="Year">
-          <YearSlider min={yearRange[0]} max={yearRange[1]} value={yearValue} onChange={onYearChange} />
-          <button onClick={() => onNoDateChange(!noDate)}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 20px', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}>
-            <span style={{ width: 12, height: 12, flexShrink: 0, border: '1px solid rgba(0,0,0,0.3)', background: noDate ? 'rgba(0,0,0,0.65)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>
-              {noDate && <span style={{ color: '#fff', fontSize: 8, lineHeight: 1 }}>✓</span>}
-            </span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.55)' }}>Include undated</span>
-          </button>
-        </SidebarSection>
-      )}
-    </>
-  );
-}
-
 
 // ── Gallery inner ─────────────────────────────────────────────────
 function GalleryInner() {
@@ -411,14 +79,13 @@ function GalleryInner() {
     });
   }, [typeParam]);
 
-
   // ── Tooltip ───────────────────────────────────────────────────
   const showTooltip = useCallback((item) => {
     const el = tooltipRef.current; if (!el) return;
     const sourceLabel = SOURCE_LABELS[item.source?.toLowerCase()] || item.source || '';
     el.querySelector('.tt-title').textContent  = item.title || '';
     el.querySelector('.tt-source').textContent = sourceLabel;
-    const rows = getTooltipRows(item);
+    const rows = getArtworkFields(item);
     el.querySelector('.tt-fields').innerHTML = rows.map(([l, v]) => `
       <div style="display:grid;grid-template-columns:88px 1fr;gap:0 10px;padding:4px 16px;align-items:baseline">
         <span style="font-family:var(--font-mono);font-size:7px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dark-faint);white-space:nowrap">${l}</span>
@@ -498,12 +165,18 @@ function GalleryInner() {
       .catch(() => { setLoading(false); setLoadingMore(false); loadingRef.current = false; });
   }, [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, page]);
 
-  const subs = SUB_MAP[typeParam] || [];
+  const sidebarProps = {
+    typeParam, subParam, onSubChange: handleSubChange,
+    availableSources, selectedSources, onSourceToggle: handleSourceToggle,
+    yearRange, yearValue, onYearChange: handleYearChange,
+    noDate: noDParam, onNoDateChange: handleNoDate,
+    onBack: () => router.push('/wander'), itemCount: items.length,
+  };
 
   // ── Loading state ─────────────────────────────────────────────
   if (loading && items.length === 0) return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)' }}>
-      <Sidebar><GallerySidebar typeParam={typeParam} subParam={subParam} onSubChange={handleSubChange} onBack={() => router.push('/wander')} itemCount={items.length} availableSources={availableSources} selectedSources={selectedSources} onSourceToggle={handleSourceToggle} yearRange={yearRange} yearValue={yearValue} onYearChange={handleYearChange} noDate={noDParam} onNoDateChange={handleNoDate} /></Sidebar>
+      <Sidebar><GallerySidebar {...sidebarProps} /></Sidebar>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 12 }}>Loading</p>
@@ -515,7 +188,7 @@ function GalleryInner() {
 
   if (!loading && items.length === 0) return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)' }}>
-      <Sidebar><GallerySidebar typeParam={typeParam} subParam={subParam} onSubChange={handleSubChange} onBack={() => router.push('/wander')} itemCount={items.length} availableSources={availableSources} selectedSources={selectedSources} onSourceToggle={handleSourceToggle} yearRange={yearRange} yearValue={yearValue} onYearChange={handleYearChange} noDate={noDParam} onNoDateChange={handleNoDate} /></Sidebar>
+      <Sidebar><GallerySidebar {...sidebarProps} /></Sidebar>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
         <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 300, color: 'var(--fg-muted)' }}>No results for "{displayTitle}"</p>
         <button onClick={() => router.push('/wander')} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -530,7 +203,7 @@ function GalleryInner() {
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)', background: 'var(--bg)' }}>
 
         <Sidebar>
-          <GallerySidebar typeParam={typeParam} subParam={subParam} onSubChange={handleSubChange} onBack={() => router.push('/wander')} itemCount={items.length} availableSources={availableSources} selectedSources={selectedSources} onSourceToggle={handleSourceToggle} yearRange={yearRange} yearValue={yearValue} onYearChange={handleYearChange} noDate={noDParam} onNoDateChange={handleNoDate} />
+          <GallerySidebar {...sidebarProps} />
         </Sidebar>
 
         <main style={{ flex: 1, minWidth: 0, padding: '32px 48px 80px 48px', background: 'var(--bg)' }}>
@@ -543,7 +216,6 @@ function GalleryInner() {
               fontWeight:    300,
               letterSpacing: '-0.02em',
               color:         'var(--fg)',
-              opacity:       1,
               margin:        0,
               lineHeight:    1,
               userSelect:    'none',

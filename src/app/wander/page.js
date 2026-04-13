@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SUB_MAP, SOURCE_LABELS } from '@/lib/constants';
+import { hqUrl } from '@/lib/images';
 
 const CATS = [
   { id: 'Graphic Design'    },
@@ -18,11 +19,6 @@ const SOURCES = [
   'met', 'artic', 'cooperhewitt', 'va',
   'rijks', 'smithsonian', 'designarchive',
 ].map(id => ({ id, label: SOURCE_LABELS[id] || id }));
-
-function hqUrl(url) {
-  if (!url) return '';
-  return `/api/img?url=${encodeURIComponent(url)}&size=1200`;
-}
 
 function generateSlots() {
   const slots = [];

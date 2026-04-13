@@ -7,19 +7,16 @@
 //   node scripts/backfill-dimensions.mjs
 // Until then the formation engine falls back to its bucket defaults.
 
-import Database from 'better-sqlite3';
-import path from 'path';
 import { requireAuth } from '@/lib/auth';
+import { withDb } from '@/lib/db';
 
-const DB_PATH = path.join(process.cwd(), 'artworks.db');
-
-// Check once whether the dimension columns exist
+// Check once whether the dimension columns exist (cached for process lifetime)
 let _hasDimensions = null;
 function hasDimensionColumns(db) {
   if (_hasDimensions !== null) return _hasDimensions;
   try {
-    const info = db.prepare(`PRAGMA table_info(artworks)`).all();
-    const cols  = new Set(info.map(c => c.name));
+    const info = db.prepare('PRAGMA table_info(artworks)').all();
+    const cols = new Set(info.map(c => c.name));
     _hasDimensions = cols.has('imageWidth') && cols.has('imageHeight');
   } catch {
     _hasDimensions = false;
@@ -27,58 +24,56 @@ function hasDimensionColumns(db) {
   return _hasDimensions;
 }
 
-// GET /api/exhibits — list current user's exhibits
+// GET /api/exhibits — list current user's exhibits with preview images
 export async function GET(request) {
   try {
     const user = await requireAuth();
-    const db = new Database(DB_PATH, { readonly: true });
-    const withDims = hasDimensionColumns(db);
 
-    const exhibits = db.prepare(`
-      SELECT
-        e.id, e.title, e.description, e.isPublic, e.createdAt, e.updatedAt,
-        COUNT(ei.id) as itemCount,
-        (SELECT a.imageUrl FROM exhibit_items ei2
-         JOIN artworks a ON a.id = ei2.artworkId
-         WHERE ei2.exhibitId = e.id AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-         ORDER BY ei2.addedAt ASC LIMIT 1) as coverImageUrl
-      FROM exhibits e
-      LEFT JOIN exhibit_items ei ON ei.exhibitId = e.id
-      WHERE e.userId = ?
-      GROUP BY e.id
-      ORDER BY e.updatedAt DESC
-    `).all(user.id);
+    return withDb(db => {
+      const withDims = hasDimensionColumns(db);
 
-    // Attach preview images with dimension metadata when available
-    const previewStmt = withDims
-      ? db.prepare(`
-          SELECT a.imageUrl, a.imageWidth as width, a.imageHeight as height
-          FROM exhibit_items ei
-          JOIN artworks a ON a.id = ei.artworkId
-          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-          ORDER BY ei.addedAt ASC
-        `)
-      : db.prepare(`
-          SELECT a.imageUrl, NULL as width, NULL as height
-          FROM exhibit_items ei
-          JOIN artworks a ON a.id = ei.artworkId
-          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-          ORDER BY ei.addedAt ASC
-        `);
+      const exhibits = db.prepare(`
+        SELECT
+          e.id, e.title, e.description, e.isPublic, e.createdAt, e.updatedAt,
+          COUNT(ei.id) as itemCount,
+          (SELECT a.imageUrl FROM exhibit_items ei2
+           JOIN artworks a ON a.id = ei2.artworkId
+           WHERE ei2.exhibitId = e.id AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+           ORDER BY ei2.addedAt ASC LIMIT 1) as coverImageUrl
+        FROM exhibits e
+        LEFT JOIN exhibit_items ei ON ei.exhibitId = e.id
+        WHERE e.userId = ?
+        GROUP BY e.id
+        ORDER BY e.updatedAt DESC
+      `).all(user.id);
 
-    const result = exhibits.map(ex => ({
-      ...ex,
-      // previewImages: array of { url, width, height }
-      // width/height may be null if backfill hasn't been run yet
-      previewImages: previewStmt.all(ex.id).map(r => ({
-        url:    r.imageUrl,
-        width:  r.width  || null,
-        height: r.height || null,
-      })),
-    }));
+      const previewStmt = withDims
+        ? db.prepare(`
+            SELECT a.imageUrl, a.imageWidth as width, a.imageHeight as height
+            FROM exhibit_items ei
+            JOIN artworks a ON a.id = ei.artworkId
+            WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+            ORDER BY ei.addedAt ASC
+          `)
+        : db.prepare(`
+            SELECT a.imageUrl, NULL as width, NULL as height
+            FROM exhibit_items ei
+            JOIN artworks a ON a.id = ei.artworkId
+            WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+            ORDER BY ei.addedAt ASC
+          `);
 
-    db.close();
-    return Response.json({ exhibits: result });
+      const result = exhibits.map(ex => ({
+        ...ex,
+        previewImages: previewStmt.all(ex.id).map(r => ({
+          url:    r.imageUrl,
+          width:  r.width  || null,
+          height: r.height || null,
+        })),
+      }));
+
+      return Response.json({ exhibits: result });
+    }, { readonly: true });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ error: err.message }, { status: 500 });
@@ -91,17 +86,15 @@ export async function POST(request) {
     const user = await requireAuth();
     const { title, description } = await request.json();
 
-    const db = new Database(DB_PATH);
-    db.pragma('foreign_keys = ON');
+    return withDb(db => {
+      const exhibit = db.prepare(`
+        INSERT INTO exhibits (userId, title, description)
+        VALUES (?, ?, ?)
+        RETURNING id, title, description, isPublic, createdAt, updatedAt
+      `).get(user.id, title?.trim() || 'Untitled Exhibit', description?.trim() || '');
 
-    const exhibit = db.prepare(`
-      INSERT INTO exhibits (userId, title, description)
-      VALUES (?, ?, ?)
-      RETURNING id, title, description, isPublic, createdAt, updatedAt
-    `).get(user.id, title?.trim() || 'Untitled Exhibit', description?.trim() || '');
-
-    db.close();
-    return Response.json({ exhibit });
+      return Response.json({ exhibit });
+    });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ error: err.message }, { status: 500 });

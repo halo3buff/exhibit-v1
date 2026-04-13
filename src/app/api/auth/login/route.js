@@ -1,11 +1,8 @@
 // src/app/api/auth/login/route.js
-import Database  from 'better-sqlite3';
-import bcrypt    from 'bcryptjs';
-import path      from 'path';
+import bcrypt from 'bcryptjs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { createSession } from '@/lib/auth';
-
-const DB_PATH = path.join(process.cwd(), 'artworks.db');
+import { withDb } from '@/lib/db';
 
 // 10 attempts per IP per 15 minutes
 const rateLimiter = new RateLimiterMemory({
@@ -34,10 +31,12 @@ export async function POST(request) {
       return Response.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    const db   = new Database(DB_PATH);
-    const user = db.prepare(`SELECT id, email, password, displayName FROM users WHERE email = ?`)
-      .get(email.toLowerCase().trim());
-    db.close();
+    // Fetch user (DB closed before async bcrypt)
+    const user = withDb(db =>
+      db.prepare('SELECT id, email, password, displayName FROM users WHERE email = ?')
+        .get(email.toLowerCase().trim()),
+      { readonly: true }
+    );
 
     if (!user) {
       return Response.json({ error: 'Invalid email or password.' }, { status: 401 });
