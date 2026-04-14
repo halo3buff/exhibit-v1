@@ -419,7 +419,7 @@ export default function ExhibitPage() {
     : cursor;
 
   if (loading) return (
-    <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ height: 'calc(100vh - 44px)', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading</p>
     </div>
   );
@@ -428,7 +428,7 @@ export default function ExhibitPage() {
   const worldTransform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
 
   return (
-    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', background: 'var(--bg)' }}>
+    <div style={{ height: 'calc(100vh - 44px)', overflow: 'hidden', display: 'flex', background: 'var(--bg)' }}>
 
       {/* ── Left Sidebar ── */}
       <CanvasSidebar

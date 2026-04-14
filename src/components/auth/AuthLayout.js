@@ -52,8 +52,8 @@ export default function AuthLayout({ children }) {
         position: 'relative',
         zIndex: 10,
         background: 'var(--bg-card)',
+        border: '1px solid var(--border-md)',
         padding: '44px 48px 40px',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)',
         width: 400,
         animation: 'fade-up 0.6s ease both',
       }}>
@@ -76,7 +76,7 @@ export function Field({ label, type, value, onChange }) {
         fontSize: 8,
         letterSpacing: '0.22em',
         textTransform: 'uppercase',
-        color: 'rgba(0,0,0,0.4)',
+        color: 'var(--fg-faint)',
       }}>
         {label}
       </label>
@@ -91,7 +91,7 @@ export function Field({ label, type, value, onChange }) {
           fontWeight: 400,
           background: 'transparent',
           border: 'none',
-          borderBottom: '1px solid rgba(0,0,0,0.15)',
+          borderBottom: '1px solid var(--border-md)',
           padding: '7px 0',
           color: 'var(--fg)',
           outline: 'none',

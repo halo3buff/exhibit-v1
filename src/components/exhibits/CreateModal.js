@@ -9,7 +9,7 @@ export default function CreateModal({ onSubmit, onCancel, creating }) {
   const [desc,  setDesc]  = useState('');
 
   return (
-    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(240,237,232,0.94)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div onClick={onCancel} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(232,229,222,0.94)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg)', border: '1px solid var(--border-md)', padding: '52px 56px', width: 440, display: 'flex', flexDirection: 'column', gap: 18 }}>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'var(--fg-faint)', margin: 0, marginBottom: 24 }}>New Exhibit</p>
         <input className="create-modal-title-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" autoFocus

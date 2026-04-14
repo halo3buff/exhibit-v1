@@ -1,5 +1,5 @@
 // src/app/layout.js
-import { Cormorant_Garamond, DM_Sans, DM_Mono } from 'next/font/google';
+import { Cormorant_Garamond, DM_Sans, DM_Mono, Barlow_Condensed } from 'next/font/google';
 import AppShell from '@/components/layout/AppShell';
 import './globals.css';
 
@@ -24,6 +24,13 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
+const barlowCondensed = Barlow_Condensed({
+  subsets: ['latin'],
+  variable: '--font-barlow',
+  display: 'swap',
+  weight: ['600', '700', '800'],
+});
+
 export const metadata = {
   title: 'Exhibit',
   description: 'A place to keep the work that shapes your taste.',
@@ -33,7 +40,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable}`}
+      className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable} ${barlowCondensed.variable}`}
     >
       <body>
         <AppShell>{children}</AppShell>

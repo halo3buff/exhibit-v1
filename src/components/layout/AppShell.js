@@ -1,62 +1,29 @@
 'use client';
 // src/components/layout/AppShell.js
-// Universal app shell — persistent 240px sidebar + main content area.
-// Pages push contextual sidebar content via SidebarContentCtx.
+// Universal app shell — fixed top nav + full-width content area.
+// SidebarContentCtx kept as a no-op so legacy useSidebarContent calls are harmless.
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext } from 'react';
 import { usePathname } from 'next/navigation';
-import Sidebar from './Sidebar';
+import TopNav from './TopNav';
 
 export const SidebarContentCtx = createContext({ setSidebarContent: () => {} });
 
-export function useSidebarContent(content) {
-  const { setSidebarContent } = useContext(SidebarContentCtx);
-  // Caller is responsible for stabilising `content` (useMemo / useCallback).
-  // We use a layout-effect pattern via regular effect so SSR is safe.
-  const [, forceUpdate] = useState(0);
-  // Register on first render + whenever content reference changes
-  // (useLayoutEffect unavailable in server; guard with typeof)
-  if (typeof window !== 'undefined') {
-    // Will be called synchronously by the browser on first paint
-  }
-  return setSidebarContent;
-}
-
-// Routes where the sidebar should be hidden entirely (auth pages)
-const NO_SIDEBAR_ROUTES = ['/login', '/register'];
-
-// Routes where the sidebar collapses to 56px rail (canvas editor)
-function isEditorRoute(pathname) {
-  return pathname?.startsWith('/exhibits/') && pathname !== '/exhibits';
-}
+const NO_NAV_ROUTES = ['/login', '/register'];
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
-  const [sidebarContent, setSidebarContent] = useState(null);
-
-  const setContent = useCallback((node) => {
-    setSidebarContent(node);
-  }, []);
-
-  const noSidebar  = NO_SIDEBAR_ROUTES.includes(pathname);
-  const collapsed  = isEditorRoute(pathname);
+  const noNav    = NO_NAV_ROUTES.includes(pathname);
 
   return (
-    <SidebarContentCtx.Provider value={{ setSidebarContent: setContent }}>
-      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-        {!noSidebar && (
-          <Sidebar collapsed={collapsed} contextContent={sidebarContent} />
-        )}
-        <div style={{
-          flex:       1,
-          minWidth:   0,
-          height:     '100vh',
-          overflowY:  'auto',
-          overflowX:  'hidden',
-          background: 'var(--bg)',
-        }}>
-          {children}
-        </div>
+    <SidebarContentCtx.Provider value={{ setSidebarContent: () => {} }}>
+      {!noNav && <TopNav />}
+      <div style={{
+        paddingTop: noNav ? 0 : 44,
+        minHeight:  '100vh',
+        background: 'var(--bg)',
+      }}>
+        {children}
       </div>
     </SidebarContentCtx.Provider>
   );

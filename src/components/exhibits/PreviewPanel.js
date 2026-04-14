@@ -162,11 +162,12 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
               }}
             >
               <div style={{
-                fontFamily:    'var(--font-sans)',
-                fontSize:      'clamp(2.8rem, 4.5vw, 5rem)',
-                fontWeight:    400,
-                letterSpacing: '-0.03em',
-                lineHeight:    0.92,
+                fontFamily:    'var(--font-condensed)',
+                fontSize:      'clamp(3.5rem, 6vw, 8rem)',
+                fontWeight:    700,
+                textTransform: 'uppercase',
+                letterSpacing: '-0.01em',
+                lineHeight:    0.88,
                 color:         'var(--fg)',
               }}>
                 {exhibit.title}
@@ -174,14 +175,15 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
               {exhibit.description && (
                 <div style={{
                   fontFamily:    'var(--font-sans)',
-                  fontSize:      11,
-                  fontWeight:    400,
+                  fontSize:      10,
+                  fontWeight:    300,
                   color:         'var(--fg-muted)',
-                  marginTop:     12,
+                  marginTop:     16,
                   lineHeight:    1.7,
                   letterSpacing: '0.01em',
-                  maxWidth:      480,
+                  maxWidth:      400,
                   marginLeft:    'auto',
+                  textAlign:     'justify',
                 }}>
                   {exhibit.description}
                 </div>
@@ -205,8 +207,8 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
             transition={{ duration: 0.25 }}
             style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
           >
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--fg-faint)', fontWeight: 400, margin: 0, userSelect: 'none' }}>
-              Hover an exhibit
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', fontWeight: 400, margin: 0, userSelect: 'none' }}>
+              H O V E R  A N  E X H I B I T
             </p>
           </motion.div>
         )}

@@ -8,12 +8,135 @@ import { imgUrl } from '@/lib/images';
 import { getArtworkFields } from '@/lib/artwork-fields';
 import ScatterGrid from '@/components/gallery/ScatterGrid';
 import TooltipPortal from '@/components/gallery/TooltipPortal';
-import GallerySidebar from '@/components/gallery/GallerySidebar';
-import { useSidebarContent } from '@/hooks/useSidebarContent';
 
 const PAGE_SIZE = 50;
 
-// ── Gallery inner ─────────────────────────────────────────────────
+const CATS = [
+  'Graphic Design',
+  'Painting',
+  'Prints & Drawings',
+  'Photography',
+  'Decorative Arts',
+];
+
+// ── Horizontal category strip (sticky below nav) ─────────────────────────────
+function CategoryStrip({ counts, activeType, onSelect }) {
+  return (
+    <div style={{
+      position:   'sticky',
+      top:        44,
+      zIndex:     90,
+      display:    'flex',
+      alignItems: 'center',
+      gap:        36,
+      padding:    '0 36px',
+      height:     32,
+      background: 'var(--bg)',
+    }}>
+      {CATS.map(cat => {
+        const active = activeType === cat;
+        return (
+          <button
+            key={cat}
+            onClick={() => onSelect(cat)}
+            style={{
+              display:    'flex',
+              alignItems: 'baseline',
+              gap:        6,
+              background: 'none',
+              border:     'none',
+              cursor:     'pointer',
+              padding:    0,
+              opacity:    activeType && !active ? 0.28 : active ? 1 : 0.55,
+              transition: 'opacity 0.12s',
+            }}
+          >
+            <span style={{
+              fontFamily:    'var(--font-mono)',
+              fontSize:      8.5,
+              fontWeight:    400,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color:         'var(--fg)',
+            }}>
+              {cat}
+            </span>
+            {counts[cat] > 0 && (
+              <span style={{
+                fontFamily:    'var(--font-mono)',
+                fontSize:      7.5,
+                letterSpacing: '0.06em',
+                color:         'var(--fg-faint)',
+              }}>
+                {counts[cat].toLocaleString()}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Collections / source filter row ──────────────────────────────────────────
+function SourceStrip({ sources, selected, onToggle }) {
+  if (!sources.length) return null;
+  return (
+    <div style={{
+      position:   'sticky',
+      top:        76,
+      zIndex:     89,
+      display:    'flex',
+      alignItems: 'center',
+      gap:        28,
+      padding:    '0 36px',
+      height:     28,
+      background: 'var(--bg)',
+    }}>
+      {sources.map(({ source, n }) => {
+        const active = selected.includes(source);
+        const label  = SOURCE_LABELS[source] || source;
+        return (
+          <button
+            key={source}
+            onClick={() => onToggle(source)}
+            style={{
+              display:    'flex',
+              alignItems: 'baseline',
+              gap:        5,
+              background: 'none',
+              border:     'none',
+              cursor:     'pointer',
+              padding:    0,
+              opacity:    selected.length && !active ? 0.22 : active ? 1 : 0.45,
+              transition: 'opacity 0.12s',
+            }}
+          >
+            <span style={{
+              fontFamily:    'var(--font-mono)',
+              fontSize:      7.5,
+              fontWeight:    400,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color:         'var(--fg)',
+            }}>
+              {label}
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize:   7,
+              color:      'var(--fg-faint)',
+            }}>
+              {n.toLocaleString()}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Gallery inner ─────────────────────────────────────────────────────────────
 function GalleryInner() {
   const searchParams = useSearchParams();
   const router       = useRouter();
@@ -24,16 +147,15 @@ function GalleryInner() {
   const yearMinParam = searchParams.get('yearMin');
   const yearMaxParam = searchParams.get('yearMax');
   const noDParam     = searchParams.get('noDate') === '1';
-  const displayTitle = subParam ? `${typeParam} — ${subParam}` : typeParam || 'Gallery';
 
-  const [items,       setItems]       = useState([]);
-  const [page,        setPage]        = useState(1);
-  const [hasMore,     setHasMore]     = useState(true);
-  const [loading,     setLoading]     = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [selectedIdx, setSelectedIdx] = useState(null);
+  const [items,            setItems]            = useState([]);
+  const [page,             setPage]             = useState(1);
+  const [hasMore,          setHasMore]          = useState(true);
+  const [loading,          setLoading]          = useState(true);
+  const [loadingMore,      setLoadingMore]      = useState(false);
+  const [selectedIdx,      setSelectedIdx]      = useState(null);
   const [availableSources, setAvailableSources] = useState([]);
-  const [yearRange,        setYearRange]        = useState(null);
+  const [globalCounts,     setGlobalCounts]     = useState({});
 
   const tooltipRef  = useRef(null);
   const loadingRef  = useRef(false);
@@ -42,9 +164,6 @@ function GalleryInner() {
 
   const selected        = selectedIdx !== null ? items[selectedIdx] : null;
   const selectedSources = sourceParam ? sourceParam.split(',').filter(Boolean) : [];
-  const yearValue       = yearRange
-    ? [yearMinParam ? parseInt(yearMinParam) : yearRange[0], yearMaxParam ? parseInt(yearMaxParam) : yearRange[1]]
-    : [1000, 2025];
 
   const updateParams = useCallback((updates) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -55,28 +174,32 @@ function GalleryInner() {
     router.replace(`/gallery?${p.toString()}`, { scroll: false });
   }, [searchParams, router]);
 
-  const handleSubChange    = useCallback((sub)    => updateParams({ sub: sub || null }), [updateParams]);
+  const handleCatSelect    = useCallback((cat) => {
+    router.push(`/gallery?type=${encodeURIComponent(cat)}`, { scroll: false });
+  }, [router]);
+
   const handleSourceToggle = useCallback((source) => {
     const next = selectedSources.includes(source)
       ? selectedSources.filter(s => s !== source)
       : [...selectedSources, source];
     updateParams({ source: next.length ? next.join(',') : null });
   }, [selectedSources, updateParams]);
-  const handleYearChange   = useCallback(([lo, hi]) => {
-    updateParams({ yearMin: lo <= (yearRange?.[0] ?? lo) ? null : lo, yearMax: hi >= (yearRange?.[1] ?? hi) ? null : hi });
-  }, [yearRange, updateParams]);
-  const handleNoDate       = useCallback((v) => updateParams({ noDate: v ? '1' : null }), [updateParams]);
 
-  // Fetch source + year metadata when category changes
+  // Global category counts
   useEffect(() => {
-    if (!typeParam) return;
-    Promise.all([
-      fetch(`/api/search?sources=1&type=${encodeURIComponent(typeParam)}`).then(r => r.json()).catch(() => ({})),
-      fetch(`/api/search?yearRange=1&type=${encodeURIComponent(typeParam)}`).then(r => r.json()).catch(() => ({})),
-    ]).then(([s, y]) => {
-      setAvailableSources(s.sources || []);
-      if (y.minYear && y.maxYear) setYearRange([y.minYear, y.maxYear]);
-    });
+    fetch('/api/search?counts=1')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.counts) setGlobalCounts(d.counts); })
+      .catch(() => {});
+  }, []);
+
+  // Fetch available sources when category changes
+  useEffect(() => {
+    if (!typeParam) { setAvailableSources([]); return; }
+    fetch(`/api/search?sources=1&type=${encodeURIComponent(typeParam)}`)
+      .then(r => r.json())
+      .then(s => setAvailableSources(s.sources || []))
+      .catch(() => {});
   }, [typeParam]);
 
   // ── Tooltip ───────────────────────────────────────────────────
@@ -134,7 +257,7 @@ function GalleryInner() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedIdx, items.length]);
 
-  // ── Data fetching ────────────────────────────────────────────
+  // ── Data fetching ─────────────────────────────────────────────
   useEffect(() => {
     setItems([]); setPage(1); setHasMore(true); setLoading(true);
   }, [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam]);
@@ -165,97 +288,114 @@ function GalleryInner() {
       .catch(() => { setLoading(false); setLoadingMore(false); loadingRef.current = false; });
   }, [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, page]);
 
-  // ── Sidebar content ───────────────────────────────────────────
-  const sidebarProps = {
-    typeParam, subParam, onSubChange: handleSubChange,
-    availableSources, selectedSources, onSourceToggle: handleSourceToggle,
-    yearRange, yearValue, onYearChange: handleYearChange,
-    noDate: noDParam, onNoDateChange: handleNoDate,
-    onBack: () => router.push('/'), itemCount: items.length,
-  };
+  const stripsHeight = 32 + (typeParam && availableSources.length ? 28 : 0);
 
-  const sidebarContent = useMemo(
-    () => <GallerySidebar {...sidebarProps} />,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, availableSources, selectedSources, yearRange, items.length],
-  );
-
-  useSidebarContent(sidebarContent);
-
-  // ── Loading state ─────────────────────────────────────────────
-  if (loading && items.length === 0) return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 12 }}>Loading</p>
-        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--fg)' }}>{displayTitle}</h2>
-      </div>
-    </div>
-  );
-
-  if (!loading && items.length === 0) return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '1rem' }}>
-      <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 300, color: 'var(--fg-muted)' }}>No results for "{displayTitle}"</p>
-      <button onClick={() => router.push('/')} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', background: 'none', border: 'none', cursor: 'pointer' }}>
-        ← Return to Index
-      </button>
-    </div>
-  );
+  // ── Empty / no-category states ────────────────────────────────
+  const noCategory = !typeParam;
+  const noResults  = !loading && items.length === 0 && typeParam;
 
   return (
     <>
-      <main style={{ padding: '48px var(--gutter) 80px', background: 'var(--bg)' }}>
+      <CategoryStrip
+        counts={globalCounts}
+        activeType={typeParam}
+        onSelect={handleCatSelect}
+      />
 
-        {/* ── Category title ── */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24, pointerEvents: 'none' }}>
-          <p style={{
-            fontFamily:    'var(--font-display)',
-            fontSize:      'clamp(1.6rem, 2.8vw, 2.8rem)',
-            fontWeight:    300,
-            letterSpacing: '-0.02em',
-            color:         'var(--fg)',
-            margin:        0,
-            lineHeight:    1,
-            userSelect:    'none',
-          }}>
-            {displayTitle}
-          </p>
-        </div>
-
-        {/* ── Scatter canvas grid ── */}
-        <ScatterGrid
-          items={items}
-          onOpen={(item) => { hideTooltip(); setSelectedIdx(items.indexOf(item)); }}
-          showTooltip={showTooltip}
-          hideTooltip={hideTooltip}
+      {typeParam && (
+        <SourceStrip
+          sources={availableSources}
+          selected={selectedSources}
+          onToggle={handleSourceToggle}
         />
+      )}
 
-        {/* ── Load more ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 0 2rem', gap: '1rem' }}>
-          {loadingMore && (
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading…</p>
-          )}
-          {!loadingMore && hasMore && (
-            <button
-              onClick={() => setPage(p => p + 1)}
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', border: '1px solid var(--border-md)', padding: '0.75rem 2.5rem', background: 'transparent', color: 'var(--fg-muted)', cursor: 'pointer', transition: 'all 0.15s ease' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}
-            >
-              Load More
-            </button>
-          )}
-          {!hasMore && items.length > 0 && (
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
-              — {items.length.toLocaleString()} items —
-            </p>
-          )}
+      <main style={{ padding: `40px 64px 80px`, background: 'var(--bg)', minHeight: `calc(100vh - 44px - ${stripsHeight}px)` }}>
+
+        {/* ── Page header — small, top right ── */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 52, pointerEvents: 'none' }}>
+          <div style={{ textAlign: 'right' }}>
+            <h1 style={{
+              fontFamily:    'var(--font-condensed)',
+              fontSize:      'clamp(2rem, 4vw, 5rem)',
+              fontWeight:    700,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.01em',
+              lineHeight:    0.88,
+              color:         'var(--fg)',
+              margin:        0,
+              userSelect:    'none',
+            }}>
+              COLLECTION
+            </h1>
+            {typeParam && (
+              <p style={{
+                fontFamily:    'var(--font-mono)',
+                fontSize:      8,
+                letterSpacing: '0.28em',
+                textTransform: 'uppercase',
+                color:         'var(--fg-faint)',
+                margin:        '8px 0 0',
+              }}>
+                {typeParam.toUpperCase()}
+                {items.length > 0 && ` — ${items.length.toLocaleString()}`}
+              </p>
+            )}
+          </div>
         </div>
 
+        {noCategory && (
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
+            Select a category above
+          </p>
+        )}
+
+        {loading && items.length === 0 && (
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading</p>
+        )}
+
+        {noResults && (
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
+            No results
+          </p>
+        )}
+
+        {items.length > 0 && (
+          <>
+            <ScatterGrid
+              items={items}
+              onOpen={(item) => { hideTooltip(); setSelectedIdx(items.indexOf(item)); }}
+              showTooltip={showTooltip}
+              hideTooltip={hideTooltip}
+            />
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '4rem 0 2rem', gap: '1rem' }}>
+              {loadingMore && (
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading…</p>
+              )}
+              {!loadingMore && hasMore && (
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.28em', textTransform: 'uppercase', border: '1px solid var(--border-md)', padding: '12px 36px', background: 'transparent', color: 'var(--fg-muted)', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}
+                >
+                  Load More
+                </button>
+              )}
+              {!hasMore && items.length > 0 && (
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
+                  {items.length.toLocaleString()} works
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       <TooltipPortal tooltipRef={tooltipRef} />
 
-      {/* ── Expanded view ── */}
+      {/* ── Expanded artwork view ── */}
       <AnimatePresence>
         {selected && (
           <>
@@ -267,13 +407,13 @@ function GalleryInner() {
               transition={{ duration: 0.3 }}
               onClick={() => setSelectedIdx(null)}
               style={{
-                position:   'fixed',
-                inset:      0,
-                zIndex:     50,
-                background: 'rgba(240,237,232,0.45)',
+                position:             'fixed',
+                inset:                0,
+                zIndex:               50,
+                background:           'rgba(232,229,222,0.5)',
                 backdropFilter:       'blur(22px) brightness(1.04) saturate(0.85)',
                 WebkitBackdropFilter: 'blur(22px) brightness(1.04) saturate(0.85)',
-                cursor:     'default',
+                cursor:               'default',
               }}
             />
 
@@ -295,7 +435,6 @@ function GalleryInner() {
                 gap:            '5vw',
               }}
             >
-              {/* Image */}
               <div
                 onClick={e => e.stopPropagation()}
                 style={{ flexShrink: 0, maxWidth: '50vw', maxHeight: '84vh', pointerEvents: 'all', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}
@@ -304,20 +443,19 @@ function GalleryInner() {
                   key={selected.id}
                   src={imgUrl(selected.imageUrl, 1200)}
                   alt={selected.title}
-                  style={{ maxWidth: '100%', maxHeight: '84vh', objectFit: 'contain', display: 'block', boxShadow: '0 12px 60px rgba(0,0,0,0.12)' }}
+                  style={{ maxWidth: '100%', maxHeight: '84vh', objectFit: 'contain', display: 'block' }}
                 />
               </div>
 
-              {/* Floating metadata */}
               <div
                 onClick={e => e.stopPropagation()}
                 style={{ flexShrink: 0, width: '22rem', maxHeight: '84vh', overflowY: 'auto', pointerEvents: 'all', display: 'flex', flexDirection: 'column', gap: 0 }}
               >
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg-muted)', margin: '0 0 10px' }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--fg-faint)', margin: '0 0 12px' }}>
                   {SOURCE_LABELS[selected.source?.toLowerCase()] || selected.source}
                 </p>
 
-                <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '1.25rem', fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1.3, color: 'var(--fg)', margin: '0 0 2.5rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-condensed)', fontSize: 'clamp(1.8rem, 3.5vw, 3rem)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.01em', lineHeight: 0.92, color: 'var(--fg)', margin: '0 0 2rem' }}>
                   {selected.title}
                 </h2>
 
@@ -363,7 +501,6 @@ function GalleryInner() {
               </div>
             </motion.div>
 
-            {/* ── Prev / Next ── */}
             <motion.div
               key="prevnext"
               initial={{ opacity: 0 }}
@@ -375,7 +512,7 @@ function GalleryInner() {
               <button
                 onClick={() => setSelectedIdx(i => Math.max(i - 1, 0))}
                 disabled={selectedIdx === 0}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === 0 ? 'default' : 'pointer', opacity: selectedIdx === 0 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === 0 ? 'default' : 'pointer', opacity: selectedIdx === 0 ? 0.3 : 1, pointerEvents: 'all', padding: 0 }}
               >
                 ← Prev
               </button>
@@ -385,7 +522,7 @@ function GalleryInner() {
               <button
                 onClick={() => setSelectedIdx(i => Math.min(i + 1, items.length - 1))}
                 disabled={selectedIdx === items.length - 1}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === items.length - 1 ? 'default' : 'pointer', opacity: selectedIdx === items.length - 1 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === items.length - 1 ? 'default' : 'pointer', opacity: selectedIdx === items.length - 1 ? 0.3 : 1, pointerEvents: 'all', padding: 0 }}
               >
                 Next →
               </button>

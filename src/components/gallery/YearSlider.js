@@ -27,11 +27,11 @@ export default function YearSlider({ min, max, value, onChange }) {
   return (
     <div style={{ padding: '4px 20px 16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.06em' }}>{lo}</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(0,0,0,0.5)', letterSpacing: '0.06em' }}>{hi}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-muted)', letterSpacing: '0.06em' }}>{lo}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-muted)', letterSpacing: '0.06em' }}>{hi}</span>
       </div>
-      <div ref={trackRef} style={{ position: 'relative', height: 2, background: 'rgba(0,0,0,0.1)', cursor: 'pointer' }}>
-        <div style={{ position: 'absolute', top: 0, height: '100%', left: `${pct(lo)}%`, right: `${100 - pct(hi)}%`, background: 'rgba(0,0,0,0.45)' }} />
+      <div ref={trackRef} style={{ position: 'relative', height: 2, background: 'var(--border-md)', cursor: 'pointer' }}>
+        <div style={{ position: 'absolute', top: 0, height: '100%', left: `${pct(lo)}%`, right: `${100 - pct(hi)}%`, background: 'var(--fg-muted)' }} />
         {[['lo', lo], ['hi', hi]].map(([which, val]) => (
           <div key={which} onMouseDown={(e) => dragHandle(which, e)}
             style={{ position: 'absolute', top: '50%', left: `${pct(val)}%`, transform: 'translate(-50%,-50%)', width: 10, height: 10, background: 'var(--bg)', border: '1.5px solid var(--border-md)', cursor: 'grab', zIndex: 2 }}

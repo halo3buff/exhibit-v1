@@ -4,17 +4,18 @@
 
 /* ── Design Tokens ─────────────────────────────────────────────── */
 :root {
-  /* Museum wall — warm, slightly chalky off-white */
-  --bg:           #f0ede8;
-  --bg-card:      #e8e5df;
-  --bg-hover:     #e2ded7;
-  --fg:           #0d0c0a;
-  --fg-muted:     rgba(13, 12, 10, 0.50);
-  --fg-faint:     rgba(13, 12, 10, 0.25);
-  --border:       rgba(13, 12, 10, 0.08);
-  --border-md:    rgba(13, 12, 10, 0.16);
+  /* Warm linen — Japanese wabi-sabi palette */
+  --bg:           #e8e5de;
+  --bg-card:      #dedad2;
+  --bg-hover:     #d4d0c8;
+  --fg:           #1a1916;
+  --fg-muted:     rgba(26, 25, 22, 0.52);
+  --fg-faint:     rgba(26, 25, 22, 0.28);
+  --border:       rgba(26, 25, 22, 0.07);
+  --border-md:    rgba(26, 25, 22, 0.14);
+  --accent:       #e8312a;
 
-  /* Dark surface (modals, archive page) */
+  /* Dark surface (canvas editor, modals) */
   --dark-bg:      #0a0908;
   --dark-surface: #111009;
   --dark-border:  rgba(247, 246, 241, 0.07);
@@ -23,15 +24,14 @@
   --dark-faint:   rgba(247, 246, 241, 0.18);
 
   /* Typography */
-  --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
-  --font-sans:    var(--font-dm-sans), system-ui, -apple-system, sans-serif;
-  --font-mono:    var(--font-dm-mono), 'Courier New', monospace;
+  --font-display:    var(--font-cormorant), Georgia, 'Times New Roman', serif;
+  --font-sans:       var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  --font-mono:       var(--font-dm-mono), 'Courier New', monospace;
+  --font-condensed:  var(--font-barlow), 'Arial Narrow', Impact, sans-serif;
 
   /* Layout */
-  --sidebar-w:           240px;
-  --sidebar-w-collapsed: 56px;
-  --gutter:              64px;
-  --folio-h:             32px;
+  --nav-h:  44px;
+  --gutter: 64px;
 
   /* Semantic */
   --danger: #8b1c1c;
@@ -119,7 +119,7 @@ body {
 .exhibits-root {
   min-height: 100vh;
   background: var(--bg);
-  padding: 52px 56px 80px;
+  padding: 48px 56px 80px;
 }
 .exhibits-header {
   display: flex; align-items: flex-end;
@@ -127,45 +127,42 @@ body {
 }
 .header-eyebrow {
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.3em;
-  text-transform: uppercase; color: rgba(0,0,0,0.25); margin: 0 0 10px;
+  text-transform: uppercase; color: var(--fg-faint); margin: 0 0 10px;
 }
 .header-title {
-  font-family: var(--font-sans); font-size: clamp(2rem, 3vw, 2.75rem);
-  font-weight: 300; letter-spacing: -0.03em; color: rgba(0,0,0,0.82);
-  line-height: 1; margin: 0 0 8px;
+  font-family: var(--font-condensed); font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 700; letter-spacing: -0.01em; text-transform: uppercase;
+  color: var(--fg); line-height: 0.9; margin: 0 0 8px;
 }
 .header-count {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: rgba(0,0,0,0.25); margin: 0;
+  text-transform: uppercase; color: var(--fg-faint); margin: 0;
 }
 .new-btn {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em;
   text-transform: uppercase; background: transparent;
-  color: rgba(0,0,0,0.55); border: 1px solid rgba(0,0,0,0.18);
+  color: var(--fg-muted); border: 1px solid var(--border-md);
   padding: 10px 22px; cursor: pointer; transition: all 0.15s;
 }
 .new-btn:hover {
   background: var(--fg); color: var(--bg);
   border-color: var(--fg);
 }
-.header-rule {
-  height: 1px; background: rgba(0,0,0,0.07); margin-bottom: 52px;
-}
 .empty-state {
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column; align-items: flex-start;
   justify-content: center; padding: 100px 0; gap: 10px;
 }
 .empty-title {
   font-family: var(--font-sans); font-size: 15px; font-weight: 300;
-  color: rgba(0,0,0,0.4); margin: 0;
+  color: var(--fg-muted); margin: 0;
 }
 .empty-sub {
   font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
-  color: rgba(0,0,0,0.25); margin: 0;
+  color: var(--fg-faint); margin: 0;
 }
 .empty-link {
-  color: rgba(0,0,0,0.4); text-decoration: none;
-  border-bottom: 1px solid rgba(0,0,0,0.15); padding-bottom: 1px;
+  color: var(--fg-faint); text-decoration: none;
+  border-bottom: 1px solid var(--border-md); padding-bottom: 1px;
 }
 .exhibits-grid {
   display: flex; flex-wrap: wrap; gap: 52px 36px; align-items: flex-start;
@@ -184,19 +181,16 @@ body {
   position: absolute; bottom: 0; left: 0; right: 0; aspect-ratio: 4/3;
 }
 .stack-back {
-  background: rgba(0,0,0,0.06);
+  background: var(--border-md);
   transform: rotate(3deg) translate(5px, 0);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .stack-mid {
-  background: rgba(0,0,0,0.04);
+  background: var(--border);
   transform: rotate(1.2deg) translate(2px, 0);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .stack-front {
   position: relative; aspect-ratio: 4/3;
-  background: rgba(0,0,0,0.03); overflow: hidden;
-  box-shadow: 0 3px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
+  background: var(--bg-card); overflow: hidden;
 }
 .cover-img {
   width: 100%; height: 100%; object-fit: cover; display: block;
@@ -219,42 +213,41 @@ body {
 }
 .caption-top {}
 .caption-title {
-  font-family: var(--font-sans); font-size: 14px; font-weight: 400;
-  color: rgba(0,0,0,0.72); margin: 0 0 4px; line-height: 1.3;
+  font-family: var(--font-condensed); font-size: 16px; font-weight: 700;
+  text-transform: uppercase; color: var(--fg); margin: 0 0 4px; line-height: 1.1;
 }
 .caption-desc {
-  font-family: var(--font-sans); font-size: 11px; font-style: italic;
-  font-weight: 300; color: rgba(0,0,0,0.4); margin: 0; line-height: 1.4;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 300;
+  color: var(--fg-muted); margin: 0; line-height: 1.4;
 }
 .caption-meta {
   display: flex; justify-content: space-between; align-items: center;
-  padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.07);
+  padding-top: 8px;
 }
 .caption-count {
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em;
-  color: rgba(0,0,0,0.28);
+  color: var(--fg-faint);
 }
 .caption-year {
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em;
-  color: rgba(0,0,0,0.22);
+  color: var(--fg-faint);
 }
 
 /* ── Create exhibit modal ───────────────────────────────────────── */
 .create-overlay {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(240,237,232,0.85);
+  background: rgba(232, 229, 222, 0.88);
   backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center;
 }
 .create-modal {
   background: var(--bg); border: 1px solid var(--border-md);
   padding: 36px 40px; width: 380px;
-  box-shadow: 0 8px 48px rgba(0,0,0,0.1);
   display: flex; flex-direction: column; gap: 16px;
 }
 .create-eyebrow {
   font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.3em;
-  text-transform: uppercase; color: rgba(0,0,0,0.3); margin: 0;
+  text-transform: uppercase; color: var(--fg-faint); margin: 0;
 }
 
 /* ── Hide Vercel dev UI chrome ──────────────────────────────────── */

@@ -1,27 +1,19 @@
 'use client';
 // src/app/page.js
-// Wander-home: randomised scatter field + category sidebar content.
-// The scatter motif is the landing experience — no interstitial hero.
+// Archive index: full-viewport scatter field with floating category filter strip.
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SUB_MAP, SOURCE_LABELS } from '@/lib/constants';
 import { hqUrl } from '@/lib/images';
-import { useSidebarContent } from '@/hooks/useSidebarContent';
 
 const CATS = [
-  { id: 'Graphic Design'    },
-  { id: 'Painting'          },
-  { id: 'Prints & Drawings' },
-  { id: 'Photography'       },
-  { id: 'Decorative Arts'   },
+  'Graphic Design',
+  'Painting',
+  'Prints & Drawings',
+  'Photography',
+  'Decorative Arts',
 ];
-
-const SOURCES = [
-  'met', 'artic', 'cooperhewitt', 'va',
-  'rijks', 'smithsonian', 'designarchive',
-].map(id => ({ id, label: SOURCE_LABELS[id] || id }));
 
 function generateSlots() {
   const slots = [];
@@ -32,7 +24,7 @@ function generateSlots() {
     let left, top, placed = false;
     for (let a = 0; a < 200; a++) {
       left = 2 + Math.random() * (94 - w);
-      top  = 3 + Math.random() * (84 - h);
+      top  = 8 + Math.random() * (82 - h);
       const overlap = slots.some(s => {
         const dx = Math.abs(left - s.left);
         const dy = Math.abs(top  - s.top);
@@ -40,109 +32,72 @@ function generateSlots() {
       });
       if (!overlap) { placed = true; break; }
     }
-    if (!placed) { left = 2 + Math.random() * (94 - w); top = 3 + Math.random() * (84 - h); }
+    if (!placed) { left = 2 + Math.random() * (94 - w); top = 8 + Math.random() * (82 - h); }
     slots.push({ left, top, w, h });
   }
   return slots;
 }
 
-// ── Sidebar content for the Index route ─────────────────────────────────────
-function IndexSidebarContent({ counts, totalCount, expandedCat, setExpandedCat, hoveredCat, setHoveredCat, loadImages, router }) {
+// ── Category filter strip (fixed, below nav) ─────────────────────────────────
+function CategoryStrip({ counts, activeCat, hoveredCat, onHover, onLeave, onClick }) {
   return (
-    <div style={{ padding: '20px 0 24px' }}>
-
-      {/* Total count */}
-      {totalCount > 0 && (
-        <div style={{ padding: '0 24px', marginBottom: 24 }}>
-          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 32, fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1, color: 'var(--fg)', marginBottom: 4 }}>
-            {totalCount.toLocaleString()}
-          </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
-            works catalogued
-          </div>
-        </div>
-      )}
-
-      {/* Categories */}
-      <div>
-        {CATS.map(cat => {
-          const subs   = SUB_MAP[cat.id] || [];
-          const count  = counts[cat.id];
-          const isOpen = expandedCat === cat.id;
-          const dimmed = hoveredCat && hoveredCat !== cat.id;
-
-          return (
-            <div key={cat.id}>
-              <div
-                onMouseEnter={() => { setHoveredCat(cat.id); loadImages(`cat:${cat.id}`, `/api/search?type=${encodeURIComponent(cat.id)}&limit=12`); }}
-                onMouseLeave={() => setHoveredCat(null)}
-                onClick={() => setExpandedCat(isOpen ? null : cat.id)}
-                style={{
-                  display:        'flex',
-                  alignItems:     'baseline',
-                  justifyContent: 'space-between',
-                  padding:        '9px 24px',
-                  cursor:         'pointer',
-                  userSelect:     'none',
-                  opacity:        dimmed ? 0.22 : 1,
-                  transition:     'opacity 0.12s ease',
-                }}
-              >
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 400, color: 'var(--fg)', letterSpacing: '0.01em' }}>
-                  {cat.id}
-                </span>
-                {count > 0 && (
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--fg-faint)', letterSpacing: '0.04em' }}>
-                    {count.toLocaleString()}
-                  </span>
-                )}
-              </div>
-
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div
-                    key="subs"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    style={{ overflow: 'hidden', paddingBottom: 4 }}
-                  >
-                    <div
-                      onClick={() => router.push(`/gallery?type=${encodeURIComponent(cat.id)}`)}
-                      style={{ padding: '5px 0 5px 40px', cursor: 'pointer', opacity: 0.4 }}
-                    >
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg)' }}>All</span>
-                    </div>
-                    {subs.map(sub => (
-                      <div
-                        key={sub}
-                        onMouseEnter={() => loadImages(`sub:${cat.id}:${sub}`, `/api/search?type=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sub)}&limit=12`)}
-                        onClick={() => router.push(`/gallery?type=${encodeURIComponent(cat.id)}&sub=${encodeURIComponent(sub)}`)}
-                        style={{ padding: '5px 0 5px 40px', cursor: 'pointer' }}
-                      >
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 300, color: 'var(--fg-muted)', letterSpacing: '0.01em' }}>{sub}</span>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Collections */}
-      <div style={{ padding: '24px 24px 0', marginTop: 8, borderTop: '1px solid var(--border)' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 10 }}>
-          Collections
-        </div>
-        {SOURCES.map(src => (
-          <div key={src.id} style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 300, color: 'var(--fg-faint)', lineHeight: 2, letterSpacing: '0.01em' }}>
-            {src.label}
-          </div>
-        ))}
-      </div>
+    <div style={{
+      position:   'fixed',
+      top:        44,
+      left:       0,
+      right:      0,
+      height:     32,
+      zIndex:     90,
+      display:    'flex',
+      alignItems: 'center',
+      gap:        36,
+      padding:    '0 36px',
+      background: 'var(--bg)',
+    }}>
+      {CATS.map(cat => {
+        const active = activeCat === cat;
+        const dimmed = hoveredCat && hoveredCat !== cat;
+        return (
+          <button
+            key={cat}
+            onMouseEnter={() => onHover(cat)}
+            onMouseLeave={onLeave}
+            onClick={() => onClick(cat)}
+            style={{
+              display:    'flex',
+              alignItems: 'baseline',
+              gap:        6,
+              background: 'none',
+              border:     'none',
+              cursor:     'pointer',
+              padding:    0,
+              opacity:    dimmed ? 0.2 : active ? 1 : 0.45,
+              transition: 'opacity 0.12s',
+            }}
+          >
+            <span style={{
+              fontFamily:    'var(--font-mono)',
+              fontSize:      8.5,
+              fontWeight:    400,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color:         'var(--fg)',
+            }}>
+              {cat}
+            </span>
+            {counts[cat] > 0 && (
+              <span style={{
+                fontFamily:    'var(--font-mono)',
+                fontSize:      7.5,
+                letterSpacing: '0.06em',
+                color:         'var(--fg-faint)',
+              }}>
+                {counts[cat].toLocaleString()}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -153,10 +108,10 @@ export default function HomePage() {
 
   const [counts,      setCounts]      = useState({});
   const [totalCount,  setTotalCount]  = useState(0);
-  const [expandedCat, setExpandedCat] = useState(null);
   const [panelImgs,   setPanelImgs]   = useState([]);
   const [slots,       setSlots]       = useState(() => generateSlots());
   const [activeKey,   setActiveKey]   = useState(null);
+  const [activeCat,   setActiveCat]   = useState(null);
   const [hoveredCat,  setHoveredCat]  = useState(null);
 
   const imgCacheRef   = useRef({});
@@ -219,87 +174,151 @@ export default function HomePage() {
       .catch(() => {});
   }, [activeKey]);
 
-  // Sidebar content — memoised so hook effect only re-runs on real changes
-  const sidebarContent = useMemo(() => (
-    <IndexSidebarContent
-      counts={counts}
-      totalCount={totalCount}
-      expandedCat={expandedCat}
-      setExpandedCat={setExpandedCat}
-      hoveredCat={hoveredCat}
-      setHoveredCat={setHoveredCat}
-      loadImages={loadImages}
-      router={router}
-    />
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [counts, totalCount, expandedCat, hoveredCat, loadImages]);
+  function handleCatHover(cat) {
+    setHoveredCat(cat);
+    loadImages(`cat:${cat}`, `/api/search?type=${encodeURIComponent(cat)}&limit=12`);
+  }
 
-  useSidebarContent(sidebarContent);
+  function handleCatClick(cat) {
+    setActiveCat(cat === activeCat ? null : cat);
+    loadImages(`cat:${cat}`, `/api/search?type=${encodeURIComponent(cat)}&limit=12`);
+  }
 
   return (
-    <div style={{ position: 'relative', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
+    <>
+      <CategoryStrip
+        counts={counts}
+        activeCat={activeCat}
+        hoveredCat={hoveredCat}
+        onHover={handleCatHover}
+        onLeave={() => setHoveredCat(null)}
+        onClick={handleCatClick}
+      />
 
-      {/* ── Scattered artworks ── */}
-      <AnimatePresence mode="sync">
-        {panelImgs.map((img, i) => {
-          const slot = slots[i];
-          if (!slot || !img) return null;
-          return (
-            <motion.div
-              key={`${activeKey}-${i}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut', delay: i * 0.05 }}
-              style={{
-                position: 'absolute',
-                top:  `${slot.top}vh`,
-                left: `${slot.left}%`,
-                width:`${slot.w}%`,
-              }}
-            >
-              <img
-                src={hqUrl(img.url)}
-                alt={img.title || ''}
-                style={{ width: '100%', height: 'auto', display: 'block' }}
-                onError={e => { e.target.style.opacity = '0'; }}
-              />
-              {img.title && (
-                <div style={{ marginTop: 6 }}>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 300, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
-                    {img.title}
-                  </div>
-                  {img.author && img.author !== 'Unknown' && (
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, letterSpacing: '0.02em' }}>
-                      {img.author}{img.year && img.year !== 'n.d.' ? `, ${img.year}` : ''}
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-
-      {/* ── Folio watermark ── */}
+      {/* ── Scatter field: full remaining viewport ── */}
       <div style={{
-        position:   'absolute',
-        bottom:     28,
-        right:      36,
-        fontFamily: 'var(--font-mono)',
-        fontSize:   8,
-        letterSpacing: '0.22em',
-        textTransform: 'uppercase',
-        color:      'var(--fg-faint)',
-        userSelect: 'none',
-        pointerEvents: 'none',
+        position:   'relative',
+        height:     'calc(100vh - 44px)',
+        overflow:   'hidden',
+        background: 'var(--bg)',
       }}>
-        {(() => {
-          const d = new Date();
-          const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][d.getMonth()];
-          return `Index · ${roman} · ${d.getFullYear()}`;
-        })()}
+
+        {/* ── ARCHIVE header — small, top right ── */}
+        <div style={{
+          position:      'absolute',
+          top:           44,
+          right:         36,
+          zIndex:        2,
+          pointerEvents: 'none',
+          userSelect:    'none',
+          textAlign:     'right',
+        }}>
+          <div style={{
+            fontFamily:    'var(--font-condensed)',
+            fontSize:      'clamp(1.8rem, 3.2vw, 4rem)',
+            fontWeight:    700,
+            textTransform: 'uppercase',
+            letterSpacing: '-0.01em',
+            lineHeight:    0.88,
+            color:         'var(--fg)',
+          }}>
+            ARCHIVE
+          </div>
+        </div>
+
+        {/* ── Scattered artworks ── */}
+        <AnimatePresence mode="sync">
+          {panelImgs.map((img, i) => {
+            const slot = slots[i];
+            if (!slot || !img) return null;
+            return (
+              <motion.div
+                key={`${activeKey}-${i}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeOut', delay: i * 0.05 }}
+                style={{
+                  position: 'absolute',
+                  top:      `${slot.top}%`,
+                  left:     `${slot.left}%`,
+                  width:    `${slot.w}%`,
+                }}
+              >
+                <img
+                  src={hqUrl(img.url)}
+                  alt={img.title || ''}
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  onError={e => { e.target.style.opacity = '0'; }}
+                />
+                {img.title && (
+                  <div style={{ marginTop: 6 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, fontWeight: 300, color: 'var(--fg-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '0.01em' }}>
+                      {img.title}
+                    </div>
+                    {img.author && img.author !== 'Unknown' && (
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2, letterSpacing: '0.02em' }}>
+                        {img.author}{img.year && img.year !== 'n.d.' ? `, ${img.year}` : ''}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+
+        {/* ── Artwork count — bottom left ── */}
+        {totalCount > 0 && (
+          <div style={{
+            position:      'absolute',
+            bottom:        28,
+            left:          36,
+            pointerEvents: 'none',
+            userSelect:    'none',
+          }}>
+            <span style={{
+              fontFamily:    'var(--font-sans)',
+              fontSize:      13,
+              fontWeight:    300,
+              letterSpacing: '-0.01em',
+              color:         'var(--fg-faint)',
+            }}>
+              {totalCount.toLocaleString()}
+            </span>
+            <span style={{
+              fontFamily:    'var(--font-mono)',
+              fontSize:      7.5,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color:         'var(--fg-faint)',
+              marginLeft:    8,
+            }}>
+              Works Catalogued
+            </span>
+          </div>
+        )}
+
+        {/* ── Folio watermark — bottom right ── */}
+        <div style={{
+          position:      'absolute',
+          bottom:        28,
+          right:         36,
+          fontFamily:    'var(--font-mono)',
+          fontSize:      7,
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
+          color:         'var(--fg-faint)',
+          userSelect:    'none',
+          pointerEvents: 'none',
+        }}>
+          {(() => {
+            const d = new Date();
+            const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][d.getMonth()];
+            return `${roman} · ${d.getFullYear()}`;
+          })()}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

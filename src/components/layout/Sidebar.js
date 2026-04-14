@@ -7,6 +7,20 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/* Red pinwheel mark — 4 squares rotated to form pinwheel, red accent only here */
+function PinwheelMark({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+      <g transform="rotate(20, 8, 8)">
+        <rect x="0.5" y="0.5" width="6.5" height="6.5" fill="#e8312a"/>
+        <rect x="9" y="0.5" width="6.5" height="6.5" fill="#e8312a"/>
+        <rect x="9" y="9" width="6.5" height="6.5" fill="#e8312a"/>
+        <rect x="0.5" y="9" width="6.5" height="6.5" fill="#e8312a"/>
+      </g>
+    </svg>
+  );
+}
+
 const SECTIONS = [
   { n: '01', label: 'INDEX',    href: '/'         },
   { n: '02', label: 'GALLERY',  href: '/gallery'  },
@@ -59,7 +73,7 @@ export default function Sidebar({ collapsed = false, contextContent = null }) {
     >
       {/* ── Wordmark ── */}
       <div style={{
-        padding:       collapsed ? '28px 0' : '28px 24px 20px',
+        padding:       collapsed ? '24px 0' : '22px 24px 18px',
         borderBottom:  '1px solid var(--border)',
         flexShrink:    0,
         display:       'flex',
@@ -69,38 +83,21 @@ export default function Sidebar({ collapsed = false, contextContent = null }) {
       }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
           {collapsed ? (
-            <span style={{
-              fontFamily:    'var(--font-display)',
-              fontSize:      16,
-              fontWeight:    300,
-              letterSpacing: '0.06em',
-              color:         'var(--fg)',
-              fontStyle:     'italic',
-            }}>
-              E
-            </span>
+            /* Collapsed: show only the pinwheel mark */
+            <PinwheelMark size={16} />
           ) : (
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <PinwheelMark size={16} />
               <div style={{
-                fontFamily:    'var(--font-display)',
-                fontSize:      13,
-                fontWeight:    300,
-                letterSpacing: '0.32em',
+                fontFamily:    'var(--font-mono)',
+                fontSize:      11,
+                fontWeight:    400,
+                letterSpacing: '0.28em',
                 textTransform: 'uppercase',
                 color:         'var(--fg)',
                 lineHeight:    1,
-                marginBottom:  5,
               }}>
                 EXHIBIT
-              </div>
-              <div style={{
-                fontFamily:    'var(--font-mono)',
-                fontSize:      8,
-                letterSpacing: '0.22em',
-                textTransform: 'uppercase',
-                color:         'var(--fg-faint)',
-              }}>
-                Private Archive
               </div>
             </div>
           )}
@@ -276,14 +273,15 @@ export default function Sidebar({ collapsed = false, contextContent = null }) {
           <div style={{
             fontFamily:    'var(--font-mono)',
             fontSize:      7,
-            letterSpacing: '0.2em',
+            letterSpacing: '0.25em',
             textTransform: 'uppercase',
             color:         'var(--fg-faint)',
           }}>
             {(() => {
               const d = new Date();
               const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][d.getMonth()];
-              return `EXHIBIT · ${roman} · ${d.getFullYear()}`;
+              const yr = String(d.getFullYear());
+              return `${roman} · ${yr}`;
             })()}
           </div>
         </div>

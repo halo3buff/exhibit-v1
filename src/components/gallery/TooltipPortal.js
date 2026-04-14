@@ -24,7 +24,7 @@ export default function TooltipPortal({ tooltipRef }) {
           <span className="tt-source" style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dark-faint)' }} />
         </div>
       </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, rgba(247,246,241,0.3) 0%, rgba(247,246,241,0.06) 100%)' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'var(--dark-border)' }} />
     </div>
   );
 }
