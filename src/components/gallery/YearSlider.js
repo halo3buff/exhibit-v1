@@ -34,7 +34,7 @@ export default function YearSlider({ min, max, value, onChange }) {
         <div style={{ position: 'absolute', top: 0, height: '100%', left: `${pct(lo)}%`, right: `${100 - pct(hi)}%`, background: 'rgba(0,0,0,0.45)' }} />
         {[['lo', lo], ['hi', hi]].map(([which, val]) => (
           <div key={which} onMouseDown={(e) => dragHandle(which, e)}
-            style={{ position: 'absolute', top: '50%', left: `${pct(val)}%`, transform: 'translate(-50%,-50%)', width: 12, height: 12, borderRadius: '50%', background: '#fafaf8', border: '1.5px solid rgba(0,0,0,0.4)', cursor: 'grab', zIndex: 2 }}
+            style={{ position: 'absolute', top: '50%', left: `${pct(val)}%`, transform: 'translate(-50%,-50%)', width: 10, height: 10, background: 'var(--bg)', border: '1.5px solid var(--border-md)', cursor: 'grab', zIndex: 2 }}
           />
         ))}
       </div>

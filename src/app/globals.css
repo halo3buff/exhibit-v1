@@ -26,6 +26,15 @@
   --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
   --font-sans:    var(--font-dm-sans), system-ui, -apple-system, sans-serif;
   --font-mono:    var(--font-dm-mono), 'Courier New', monospace;
+
+  /* Layout */
+  --sidebar-w:           240px;
+  --sidebar-w-collapsed: 56px;
+  --gutter:              64px;
+  --folio-h:             32px;
+
+  /* Semantic */
+  --danger: #8b1c1c;
 }
 
 /* ── Reset ─────────────────────────────────────────────────────── */
@@ -108,8 +117,8 @@ body {
 /* ── Exhibits list page classes ─────────────────────────────────── */
 /* Pulled from exhibits/page.js inline <style> block */
 .exhibits-root {
-  min-height: calc(100vh - 44px);
-  background: #fafaf8;
+  min-height: 100vh;
+  background: var(--bg);
   padding: 52px 56px 80px;
 }
 .exhibits-header {
@@ -136,8 +145,8 @@ body {
   padding: 10px 22px; cursor: pointer; transition: all 0.15s;
 }
 .new-btn:hover {
-  background: rgba(0,0,0,0.82); color: #fafaf8;
-  border-color: rgba(0,0,0,0.82);
+  background: var(--fg); color: var(--bg);
+  border-color: var(--fg);
 }
 .header-rule {
   height: 1px; background: rgba(0,0,0,0.07); margin-bottom: 52px;
@@ -233,12 +242,12 @@ body {
 /* ── Create exhibit modal ───────────────────────────────────────── */
 .create-overlay {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(250,250,248,0.85);
+  background: rgba(240,237,232,0.85);
   backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center;
 }
 .create-modal {
-  background: #fafaf8; border: 1px solid rgba(0,0,0,0.1);
+  background: var(--bg); border: 1px solid var(--border-md);
   padding: 36px 40px; width: 380px;
   box-shadow: 0 8px 48px rgba(0,0,0,0.1);
   display: flex; flex-direction: column; gap: 16px;

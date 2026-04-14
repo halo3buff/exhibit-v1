@@ -419,8 +419,8 @@ export default function ExhibitPage() {
     : cursor;
 
   if (loading) return (
-    <div style={{ height: 'calc(100vh - 44px)', background: '#fafaf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.25)' }}>Loading</p>
+    <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading</p>
     </div>
   );
 
@@ -428,7 +428,7 @@ export default function ExhibitPage() {
   const worldTransform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`;
 
   return (
-    <div style={{ height: 'calc(100vh - 44px)', overflow: 'hidden', display: 'flex', background: '#fafaf8' }}>
+    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', background: 'var(--bg)' }}>
 
       {/* ── Left Sidebar ── */}
       <CanvasSidebar
@@ -451,19 +451,19 @@ export default function ExhibitPage() {
 
         {/* ── Mode HUDs ── */}
         <ModeHUD mode={qMode && view === 'spread'}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(100,210,130,0.9)', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ width: 5, height: 5, background: 'rgba(100,210,130,0.9)', display: 'inline-block', flexShrink: 0 }} />
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', margin: 0 }}>
             Pen mode — draw anywhere · release Q or click toolbar to exit
           </p>
         </ModeHUD>
         <ModeHUD mode={xMode && view === 'spread'}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(220,80,60,0.9)', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ width: 5, height: 5, background: 'rgba(220,80,60,0.9)', display: 'inline-block', flexShrink: 0 }} />
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', margin: 0 }}>
             Delete mode — click a line or text to remove · release X or click toolbar to exit
           </p>
         </ModeHUD>
         <ModeHUD mode={spaceDown && view === 'spread'}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(120,160,240,0.9)', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ width: 5, height: 5, background: 'rgba(120,160,240,0.9)', display: 'inline-block', flexShrink: 0 }} />
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', margin: 0 }}>
             Pan mode — drag to move canvas
           </p>
@@ -476,7 +476,7 @@ export default function ExhibitPage() {
             onMouseDown={onCanvasMouseDown}
             onDoubleClick={onCanvasDblClick}
             onClick={onCanvasClick}
-            style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#fafaf8', cursor: spreadCursor }}
+            style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--bg)', cursor: spreadCursor }}
           >
             {/* Grain overlay */}
             <div className="canvas-bg-inner" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
@@ -540,7 +540,7 @@ export default function ExhibitPage() {
                       {!qMode && !xMode && !spaceDown && (
                         <div onMouseDown={e => { e.stopPropagation(); onRotateStart(e, item.id); }}
                           className="rot-handle"
-                          style={{ position: 'absolute', top: -9, right: -9, width: 18, height: 18, borderRadius: '50%', background: '#fafaf8', border: '1px solid rgba(0,0,0,0.15)', cursor: 'crosshair', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s', color: 'rgba(0,0,0,0.4)' }}>
+                          style={{ position: 'absolute', top: -9, right: -9, width: 18, height: 18, background: 'var(--bg)', border: '1px solid var(--border-md)', cursor: 'crosshair', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s', color: 'var(--fg-muted)' }}>
                           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
                             <path d="M1 5C1 2.79 2.79 1 5 1C6.47 1 7.75 1.79 8.4 2.97" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                             <polyline points="7,2.5 8.5,2.8 8.2,4.3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>

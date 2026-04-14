@@ -30,7 +30,7 @@ export default function ArtifactPage({ params }) {
         letterSpacing: '0.35em', textTransform: 'uppercase',
         color: 'var(--dark-faint)',
       }}>Artifact Not Found</p>
-      <Link href="/wander" style={{
+      <Link href="/" style={{
         fontFamily: 'var(--font-mono)', fontSize: '0.45rem',
         letterSpacing: '0.25em', textTransform: 'uppercase',
         color: 'var(--dark-faint)', textDecoration: 'none',
@@ -78,7 +78,7 @@ export default function ArtifactPage({ params }) {
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <Link href="/wander" style={{
+        <Link href="/" style={{
           fontFamily: 'var(--font-mono)',
           fontSize: '0.44rem',
           letterSpacing: '0.28em',

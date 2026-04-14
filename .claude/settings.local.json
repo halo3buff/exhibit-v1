@@ -5,7 +5,9 @@
       "Bash(rm -rf src/pipeline/x_archive_m tmp)",
       "Bash(ls C:/Users/ameen/Desktop/exhibit/*.ts C:/Users/ameen/Desktop/exhibit/*.js C:/Users/ameen/Desktop/exhibit/*.mjs C:/Users/ameen/Desktop/exhibit/*.bat)",
       "Bash(pnpm build:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(timeout 12 tail -f \"C:/Users/ameen/AppData/Local/Temp/claude/C--Users-ameen-Desktop-exhibit/f7c2de5f-bc7f-418c-93ec-6a798cfca7d4/tasks/bavwf8fex.output\")",
+      "Bash(timeout 8 tail:*)"
     ]
   }
 }

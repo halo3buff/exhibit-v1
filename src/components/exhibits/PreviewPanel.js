@@ -167,7 +167,7 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
                 fontWeight:    400,
                 letterSpacing: '-0.03em',
                 lineHeight:    0.92,
-                color:         '#0d0d0d',
+                color:         'var(--fg)',
               }}>
                 {exhibit.title}
               </div>
@@ -176,7 +176,7 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
                   fontFamily:    'var(--font-sans)',
                   fontSize:      11,
                   fontWeight:    400,
-                  color:         '#888888',
+                  color:         'var(--fg-muted)',
                   marginTop:     12,
                   lineHeight:    1.7,
                   letterSpacing: '0.01em',
@@ -192,7 +192,7 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', width: '100%', paddingTop: 'clamp(104px, 13vh, 168px)', minHeight: 0 }}>
               {pickedImages.length > 0
                 ? <PreviewScatter images={pickedImages} layoutSeed={layoutSeed} />
-                : <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 400, color: '#cccccc', margin: 0 }}>Empty exhibit</p>
+                : <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 400, color: 'var(--fg-faint)', margin: 0 }}>Empty exhibit</p>
               }
             </div>
           </motion.div>
@@ -205,7 +205,7 @@ export default function PreviewPanel({ exhibit, hoverTick }) {
             transition={{ duration: 0.25 }}
             style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}
           >
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#cccccc', fontWeight: 400, margin: 0, userSelect: 'none' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--fg-faint)', fontWeight: 400, margin: 0, userSelect: 'none' }}>
               Hover an exhibit
             </p>
           </motion.div>

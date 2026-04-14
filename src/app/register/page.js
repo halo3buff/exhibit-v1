@@ -35,10 +35,10 @@ export default function RegisterPage() {
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 10 }}>
           EXHIBIT — Personal Archive
         </div>
-        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 400, color: '#1a1a1a', lineHeight: 1.2, marginBottom: 2 }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 400, color: 'var(--fg)', lineHeight: 1.2, marginBottom: 2 }}>
           Create account
         </div>
-        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 400, fontStyle: 'italic', color: '#1a1a1a' }}>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 400, fontStyle: 'italic', color: 'var(--fg)' }}>
           Begin building your archive
         </div>
       </div>
@@ -51,10 +51,10 @@ export default function RegisterPage() {
         <Field label="Password"     type="password" value={password}    onChange={setPassword} />
 
         {error && (
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#c0392b', marginTop: -8 }}>{error}</p>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--danger)', marginTop: -8 }}>{error}</p>
         )}
 
-        <button type="submit" disabled={loading} style={{ marginTop: 4, fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', background: '#1a1a1a', color: '#f9f9f8', border: 'none', padding: '13px 0', cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1, width: '100%', transition: 'opacity 0.15s' }}>
+        <button type="submit" disabled={loading} style={{ marginTop: 4, fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', background: 'var(--fg)', color: 'var(--bg)', border: 'none', padding: '13px 0', cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1, width: '100%', transition: 'opacity 0.15s' }}>
           {loading ? 'Creating…' : 'Open Account'}
         </button>
       </form>

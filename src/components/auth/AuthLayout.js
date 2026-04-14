@@ -51,7 +51,7 @@ export default function AuthLayout({ children }) {
       <div style={{
         position: 'relative',
         zIndex: 10,
-        background: '#f9f9f8',
+        background: 'var(--bg-card)',
         padding: '44px 48px 40px',
         boxShadow: '0 4px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)',
         width: 400,
@@ -93,7 +93,7 @@ export function Field({ label, type, value, onChange }) {
           border: 'none',
           borderBottom: '1px solid rgba(0,0,0,0.15)',
           padding: '7px 0',
-          color: '#1a1a1a',
+          color: 'var(--fg)',
           outline: 'none',
           width: '100%',
         }}

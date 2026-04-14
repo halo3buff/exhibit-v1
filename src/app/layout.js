@@ -1,6 +1,6 @@
 // src/app/layout.js
 import { Cormorant_Garamond, DM_Sans, DM_Mono } from 'next/font/google';
-import Nav from '@/components/Nav';
+import AppShell from '@/components/layout/AppShell';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({
@@ -36,8 +36,7 @@ export default function RootLayout({ children }) {
       className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable}`}
     >
       <body>
-        <Nav />
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

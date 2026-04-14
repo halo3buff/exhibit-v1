@@ -1,15 +1,15 @@
 'use client';
-import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import SaveToExhibit from '@/components/SaveToExhibit';
-import Sidebar from '@/components/Sidebar';
 import { SOURCE_LABELS } from '@/lib/constants';
 import { imgUrl } from '@/lib/images';
 import { getArtworkFields } from '@/lib/artwork-fields';
 import ScatterGrid from '@/components/gallery/ScatterGrid';
 import TooltipPortal from '@/components/gallery/TooltipPortal';
 import GallerySidebar from '@/components/gallery/GallerySidebar';
+import { useSidebarContent } from '@/hooks/useSidebarContent';
 
 const PAGE_SIZE = 50;
 
@@ -165,101 +165,97 @@ function GalleryInner() {
       .catch(() => { setLoading(false); setLoadingMore(false); loadingRef.current = false; });
   }, [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, page]);
 
+  // ── Sidebar content ───────────────────────────────────────────
   const sidebarProps = {
     typeParam, subParam, onSubChange: handleSubChange,
     availableSources, selectedSources, onSourceToggle: handleSourceToggle,
     yearRange, yearValue, onYearChange: handleYearChange,
     noDate: noDParam, onNoDateChange: handleNoDate,
-    onBack: () => router.push('/wander'), itemCount: items.length,
+    onBack: () => router.push('/'), itemCount: items.length,
   };
+
+  const sidebarContent = useMemo(
+    () => <GallerySidebar {...sidebarProps} />,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [typeParam, subParam, sourceParam, yearMinParam, yearMaxParam, noDParam, availableSources, selectedSources, yearRange, items.length],
+  );
+
+  useSidebarContent(sidebarContent);
 
   // ── Loading state ─────────────────────────────────────────────
   if (loading && items.length === 0) return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)' }}>
-      <Sidebar><GallerySidebar {...sidebarProps} /></Sidebar>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 12 }}>Loading</p>
-          <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--fg)' }}>{displayTitle}</h2>
-        </div>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 12 }}>Loading</p>
+        <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--fg)' }}>{displayTitle}</h2>
       </div>
     </div>
   );
 
   if (!loading && items.length === 0) return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)' }}>
-      <Sidebar><GallerySidebar {...sidebarProps} /></Sidebar>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 300, color: 'var(--fg-muted)' }}>No results for "{displayTitle}"</p>
-        <button onClick={() => router.push('/wander')} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', background: 'none', border: 'none', cursor: 'pointer' }}>
-          ← Return to Index
-        </button>
-      </div>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '1rem' }}>
+      <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 300, color: 'var(--fg-muted)' }}>No results for "{displayTitle}"</p>
+      <button onClick={() => router.push('/')} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)', background: 'none', border: 'none', cursor: 'pointer' }}>
+        ← Return to Index
+      </button>
     </div>
   );
 
   return (
     <>
-      <div style={{ display: 'flex', minHeight: 'calc(100vh - 44px)', background: 'var(--bg)' }}>
+      <main style={{ padding: '48px var(--gutter) 80px', background: 'var(--bg)' }}>
 
-        <Sidebar>
-          <GallerySidebar {...sidebarProps} />
-        </Sidebar>
+        {/* ── Category title ── */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24, pointerEvents: 'none' }}>
+          <p style={{
+            fontFamily:    'var(--font-display)',
+            fontSize:      'clamp(1.6rem, 2.8vw, 2.8rem)',
+            fontWeight:    300,
+            letterSpacing: '-0.02em',
+            color:         'var(--fg)',
+            margin:        0,
+            lineHeight:    1,
+            userSelect:    'none',
+          }}>
+            {displayTitle}
+          </p>
+        </div>
 
-        <main style={{ flex: 1, minWidth: 0, padding: '32px 48px 80px 48px', background: 'var(--bg)' }}>
+        {/* ── Scatter canvas grid ── */}
+        <ScatterGrid
+          items={items}
+          onOpen={(item) => { hideTooltip(); setSelectedIdx(items.indexOf(item)); }}
+          showTooltip={showTooltip}
+          hideTooltip={hideTooltip}
+        />
 
-          {/* ── Category title — top right ── */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24, pointerEvents: 'none' }}>
-            <p style={{
-              fontFamily:    'var(--font-display)',
-              fontSize:      'clamp(1.6rem, 2.8vw, 2.8rem)',
-              fontWeight:    300,
-              letterSpacing: '-0.02em',
-              color:         'var(--fg)',
-              margin:        0,
-              lineHeight:    1,
-              userSelect:    'none',
-            }}>
-              {displayTitle}
+        {/* ── Load more ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 0 2rem', gap: '1rem' }}>
+          {loadingMore && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading…</p>
+          )}
+          {!loadingMore && hasMore && (
+            <button
+              onClick={() => setPage(p => p + 1)}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', border: '1px solid var(--border-md)', padding: '0.75rem 2.5rem', background: 'transparent', color: 'var(--fg-muted)', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}
+            >
+              Load More
+            </button>
+          )}
+          {!hasMore && items.length > 0 && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
+              — {items.length.toLocaleString()} items —
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* ── Scatter canvas grid ── */}
-          <ScatterGrid
-            items={items}
-            onOpen={(item) => { hideTooltip(); setSelectedIdx(items.indexOf(item)); }}
-            showTooltip={showTooltip}
-            hideTooltip={hideTooltip}
-          />
-
-          {/* ── Load more ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 0 2rem', gap: '1rem' }}>
-            {loadingMore && (
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>Loading…</p>
-            )}
-            {!loadingMore && hasMore && (
-              <button
-                onClick={() => setPage(p => p + 1)}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', border: '1px solid var(--border-md)', padding: '0.75rem 2.5rem', background: 'transparent', color: 'var(--fg-muted)', cursor: 'pointer', transition: 'all 0.15s ease' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-muted)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}
-              >
-                Load More
-              </button>
-            )}
-            {!hasMore && items.length > 0 && (
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--fg-faint)' }}>
-                — {items.length.toLocaleString()} items —
-              </p>
-            )}
-          </div>
-
-        </main>
-      </div>
+      </main>
 
       <TooltipPortal tooltipRef={tooltipRef} />
 
-      {/* ── Expanded view — floating metadata, warm blur backdrop ── */}
+      {/* ── Expanded view ── */}
       <AnimatePresence>
         {selected && (
           <>
@@ -302,66 +298,26 @@ function GalleryInner() {
               {/* Image */}
               <div
                 onClick={e => e.stopPropagation()}
-                style={{
-                  flexShrink:     0,
-                  maxWidth:       '50vw',
-                  maxHeight:      '84vh',
-                  pointerEvents:  'all',
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'flex-end',
-                }}
+                style={{ flexShrink: 0, maxWidth: '50vw', maxHeight: '84vh', pointerEvents: 'all', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}
               >
                 <img
                   key={selected.id}
                   src={imgUrl(selected.imageUrl, 1200)}
                   alt={selected.title}
-                  style={{
-                    maxWidth:   '100%',
-                    maxHeight:  '84vh',
-                    objectFit:  'contain',
-                    display:    'block',
-                    boxShadow:  '0 12px 60px rgba(0,0,0,0.12)',
-                  }}
+                  style={{ maxWidth: '100%', maxHeight: '84vh', objectFit: 'contain', display: 'block', boxShadow: '0 12px 60px rgba(0,0,0,0.12)' }}
                 />
               </div>
 
               {/* Floating metadata */}
               <div
                 onClick={e => e.stopPropagation()}
-                style={{
-                  flexShrink:    0,
-                  width:         '22rem',
-                  maxHeight:     '84vh',
-                  overflowY:     'auto',
-                  pointerEvents: 'all',
-                  display:       'flex',
-                  flexDirection: 'column',
-                  gap:           0,
-                }}
+                style={{ flexShrink: 0, width: '22rem', maxHeight: '84vh', overflowY: 'auto', pointerEvents: 'all', display: 'flex', flexDirection: 'column', gap: 0 }}
               >
-                <p style={{
-                  fontFamily:    'var(--font-mono)',
-                  fontSize:      8,
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color:         'rgba(0,0,0,0.35)',
-                  margin:        0,
-                  marginBottom:  10,
-                }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg-muted)', margin: '0 0 10px' }}>
                   {SOURCE_LABELS[selected.source?.toLowerCase()] || selected.source}
                 </p>
 
-                <h2 style={{
-                  fontFamily:    'var(--font-sans)',
-                  fontSize:      '1.25rem',
-                  fontWeight:    300,
-                  letterSpacing: '-0.02em',
-                  lineHeight:    1.3,
-                  color:         'rgba(0,0,0,0.82)',
-                  margin:        0,
-                  marginBottom:  '2.5rem',
-                }}>
+                <h2 style={{ fontFamily: 'var(--font-sans)', fontSize: '1.25rem', fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1.3, color: 'var(--fg)', margin: '0 0 2.5rem' }}>
                   {selected.title}
                 </h2>
 
@@ -377,25 +333,10 @@ function GalleryInner() {
                     .filter(([, v]) => v?.toString().trim() && v !== 'Unknown' && v !== 'n.d.' && v !== 'Uncategorized')
                     .map(([label, value]) => (
                       <div key={label}>
-                        <p style={{
-                          fontFamily:    'var(--font-mono)',
-                          fontSize:      7.5,
-                          letterSpacing: '0.22em',
-                          textTransform: 'uppercase',
-                          color:         'rgba(0,0,0,0.3)',
-                          margin:        0,
-                          marginBottom:  4,
-                        }}>
+                        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg-faint)', margin: '0 0 4px' }}>
                           {label}
                         </p>
-                        <p style={{
-                          fontFamily: 'var(--font-sans)',
-                          fontSize:   12,
-                          fontWeight: 300,
-                          color:      'rgba(0,0,0,0.72)',
-                          lineHeight: 1.5,
-                          margin:     0,
-                        }}>
+                        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 300, color: 'var(--fg)', lineHeight: 1.5, margin: 0 }}>
                           {value}
                         </p>
                       </div>
@@ -408,19 +349,9 @@ function GalleryInner() {
                     href={selected.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      fontFamily:    'var(--font-mono)',
-                      fontSize:      8,
-                      letterSpacing: '0.2em',
-                      textTransform: 'uppercase',
-                      color:         'rgba(0,0,0,0.3)',
-                      textDecoration:'none',
-                      transition:    'color 0.15s',
-                      marginBottom:  '1.5rem',
-                      display:       'block',
-                    }}
-                    onMouseEnter={e => e.target.style.color = 'rgba(0,0,0,0.65)'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.3)'}
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--fg-faint)', textDecoration: 'none', transition: 'color 0.15s', marginBottom: '1.5rem', display: 'block' }}
+                    onMouseEnter={e => e.target.style.color = 'var(--fg)'}
+                    onMouseLeave={e => e.target.style.color = 'var(--fg-faint)'}
                   >
                     View at source →
                   </a>
@@ -429,8 +360,6 @@ function GalleryInner() {
                 <div style={{ marginBottom: '2.5rem' }}>
                   <SaveToExhibit artworkId={selected.id} />
                 </div>
-
-                <div style={{ paddingBottom: '1rem' }} />
               </div>
             </motion.div>
 
@@ -441,26 +370,22 @@ function GalleryInner() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, delay: 0.1 }}
-              style={{ position: 'fixed', bottom: 36, left: 180, right: 0, zIndex: 52, pointerEvents: 'none', display: 'flex', justifyContent: 'space-between', padding: '0 52px' }}
+              style={{ position: 'fixed', bottom: 36, left: 0, right: 0, zIndex: 52, pointerEvents: 'none', display: 'flex', justifyContent: 'space-between', padding: '0 52px' }}
             >
               <button
                 onClick={() => setSelectedIdx(i => Math.max(i - 1, 0))}
                 disabled={selectedIdx === 0}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.72)', background: 'none', border: 'none', cursor: selectedIdx === 0 ? 'default' : 'pointer', opacity: selectedIdx === 0 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
-                onMouseEnter={e => { if (selectedIdx > 0) e.target.style.color = 'rgba(0,0,0,0.9)'; }}
-                onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.72)'}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === 0 ? 'default' : 'pointer', opacity: selectedIdx === 0 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
               >
                 ← Prev
               </button>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'rgba(0,0,0,0.25)', letterSpacing: '0.1em', pointerEvents: 'none' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--fg-faint)', letterSpacing: '0.1em', pointerEvents: 'none' }}>
                 {selectedIdx + 1} / {items.length}
               </span>
               <button
                 onClick={() => setSelectedIdx(i => Math.min(i + 1, items.length - 1))}
                 disabled={selectedIdx === items.length - 1}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.72)', background: 'none', border: 'none', cursor: selectedIdx === items.length - 1 ? 'default' : 'pointer', opacity: selectedIdx === items.length - 1 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
-                onMouseEnter={e => { if (selectedIdx < items.length - 1) e.target.style.color = 'rgba(0,0,0,0.9)'; }}
-                onMouseLeave={e => e.target.style.color = 'rgba(0,0,0,0.72)'}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--fg)', background: 'none', border: 'none', cursor: selectedIdx === items.length - 1 ? 'default' : 'pointer', opacity: selectedIdx === items.length - 1 ? 0.3 : 1, pointerEvents: 'all', padding: 0, transition: 'color 0.15s' }}
               >
                 Next →
               </button>
