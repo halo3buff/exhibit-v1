@@ -33,6 +33,7 @@ create "exhibits" (curated collections), and explore via wander mode.
 - Build: `pnpm build`
 - Check types (pipeline): `tsc --noEmit`
 - Image proxy always: `/api/img?url=ENCODED_URL&size=N` (sizes: 400, 800, 1200)
+- Image cache location: `IMG_CACHE_DIR` env var (default: `../` relative to project root)
 
 ## Navigation Structure
 - **TopNav** (`src/components/layout/TopNav.js`) — fixed 44px bar, floats above all content, no border-bottom
@@ -129,7 +130,7 @@ caching pragmas. Do not convert it to `withDb()`.
 ## Key Tables
 - `artworks` — id, title, author, year, imageUrl, source, mainCategory, subCategory
 - `exhibits` — id, userId, title, description, isPublic, updatedAt
-- `exhibit_items` — exhibitId, artworkId, x, y, w, h, note
+- `exhibit_items` — exhibitId, artworkId, note, position, wallTransform, addedAt
 - `exhibit_notes` — id, exhibitId, content, x, y, fontSize, bold, italic
 - `exhibit_strokes` — id, exhibitId, pathData, color, width
 - `users`, `sessions` — auth tables
