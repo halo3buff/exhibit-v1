@@ -132,7 +132,6 @@ caching pragmas. Do not convert it to `withDb()`.
 - `exhibit_items` — exhibitId, artworkId, x, y, w, h, note
 - `exhibit_notes` — id, exhibitId, content, x, y, fontSize, bold, italic
 - `exhibit_strokes` — id, exhibitId, pathData, color, width
-- `exhibit_edges` — fromId, toId, exhibitId
 - `users`, `sessions` — auth tables
 
 ## What Claude Gets Wrong (fix these immediately if seen)

@@ -160,7 +160,7 @@ export function requireExhibitAccess(db, exhibitId, userId) {
 
 /**
  * Bump the updatedAt timestamp on an exhibit.
- * Call this after any mutation to exhibit_items, exhibit_notes, exhibit_strokes, exhibit_edges.
+ * Call this after any mutation to exhibit_items, exhibit_notes, exhibit_strokes.
  *
  * @param {Database} db
  * @param {string} exhibitId
