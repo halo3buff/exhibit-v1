@@ -6,7 +6,7 @@ import https  from 'https';
 
 const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 
-const CACHE_DIR = path.join(process.cwd(), '..', '.img-cache');
+const CACHE_DIR = process.env.IMG_CACHE_DIR ?? path.join(process.cwd(), '..', '.img-cache');
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 // ── SSRF allowlist — only domains we actually serve images from ────────────────

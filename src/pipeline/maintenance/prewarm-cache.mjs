@@ -21,7 +21,7 @@ const insecureAgent = new https.Agent({ rejectUnauthorized: false });
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const ROOT       = path.join(__dirname, '..', '..', '..');
 const DB_PATH    = path.join(ROOT, 'artworks.db');
-const CACHE_DIR  = 'C:\\Users\\ameen\\Desktop\\.img-cache';
+const CACHE_DIR  = process.env.IMG_CACHE_DIR ?? path.join(ROOT, '..', '.img-cache');
 const MAX_RETRIES = 3;
 
 const DOMAIN_CONCURRENCY = {
