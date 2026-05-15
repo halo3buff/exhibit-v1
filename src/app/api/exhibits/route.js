@@ -15,7 +15,7 @@ let _hasDimensions = null;
 function hasDimensionColumns(db) {
   if (_hasDimensions !== null) return _hasDimensions;
   try {
-    const info = db.prepare('PRAGMA table_info(artworks)').all();
+    const info = db.prepare('PRAGMA catalog.table_info(artworks)').all();
     const cols = new Set(info.map(c => c.name));
     _hasDimensions = cols.has('imageWidth') && cols.has('imageHeight');
   } catch {

@@ -4,7 +4,7 @@
 
 import Database from 'better-sqlite3';
 
-const db = new Database('artworks.db');
+const db = new Database('app.db');
 
 try {
   // Check if already migrated (id column already TEXT type)

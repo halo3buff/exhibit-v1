@@ -94,3 +94,6 @@ repomix-output.xml
 
 # Temp directory
 tmp/
+
+# Working notes / audit drafts (personal scratch space)
+/work/

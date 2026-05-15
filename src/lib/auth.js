@@ -1,19 +1,21 @@
 // src/lib/auth.js
 // Session-based auth utilities — no external auth library needed.
-// Uses httpOnly cookies + sessions table in artworks.db.
+// Uses httpOnly cookies + sessions table in app.db.
 // Session tokens are cryptographically random hex strings (not sequential IDs).
 
 import Database from 'better-sqlite3';
 import crypto   from 'crypto';
 import path     from 'path';
 import { cookies } from 'next/headers';
+import { ensureSchema } from '@/lib/db';
 
-const DB_PATH        = path.join(process.cwd(), 'artworks.db');
+const APP_DB_PATH    = path.join(process.cwd(), 'app.db');
 const SESSION_COOKIE = 'exhibit_session';
 const SESSION_DAYS   = 30;
 
 function getDb() {
-  const db = new Database(DB_PATH);
+  ensureSchema();
+  const db = new Database(APP_DB_PATH);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   return db;

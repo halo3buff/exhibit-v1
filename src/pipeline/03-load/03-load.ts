@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // LOAD PHASE: Import processed ArchiveItems into SQLite
 // Reads: /data/processed/*.json (individual item files)
-// Writes: artworks.db (overrides old database)
+// Writes: artworks.db (drops + recreates artworks table only — app.db is never touched)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as fs from 'fs';
@@ -48,14 +48,18 @@ async function main() {
 
   console.log(`📦 Found ${files.length} processed item files\n`);
 
-  // DELETE old database and create fresh
-  if (fs.existsSync(DB_PATH)) {
-    fs.unlinkSync(DB_PATH);
-    console.log('🗑️  Deleted old artworks.db\n');
-  }
-
+  // Drop and recreate only the artworks table — leaves app.db (user data) untouched
   const db = new Database(DB_PATH);
   db.pragma('journal_mode = WAL');
+
+  db.exec(`
+    DROP INDEX IF EXISTS idx_mainCategory;
+    DROP INDEX IF EXISTS idx_subCategory;
+    DROP INDEX IF EXISTS idx_source;
+    DROP INDEX IF EXISTS idx_year_sort;
+    DROP TABLE IF EXISTS artworks;
+  `);
+  console.log('🗑️  Cleared artworks table\n');
 
   // Create schema matching processed data structure
   db.exec(`

@@ -8,7 +8,7 @@ create "exhibits" (curated collections), and explore via wander mode.
 - Framework: Next.js 16 (App Router, `src/app/`)
 - Styling: TailwindCSS v4 + CSS custom properties exclusively
 - Animation: Framer Motion 12
-- Database: better-sqlite3, SQLite WAL mode, file: `artworks.db`
+- Database: better-sqlite3, SQLite WAL mode, two files: `artworks.db` (catalog, pipeline-owned) + `app.db` (user data, app-owned)
 - Auth: Custom session-based (httpOnly cookies, `src/lib/auth.js`)
 - Fonts: Cormorant Garamond (display), DM Sans (body), DM Mono (labels)
 - Language: JS for app layer (.js), TypeScript for pipeline scripts (.ts)
@@ -81,6 +81,12 @@ This is a Japanese-minimalist (wabi-sabi/Swiss) design. EVERY pixel must follow 
 ```
 
 ## Database Pattern
+Two SQLite files:
+- **`artworks.db`** — artwork catalog only. Owned by the pipeline (`pnpm load`). Never touch from app code.
+- **`app.db`** — user data (users, sessions, exhibits, exhibit_items, exhibit_notes, exhibit_strokes). Owned by the app.
+
+`withDb()` opens `app.db` and ATTACHes `artworks.db` as `catalog`. Unqualified `artworks` table references resolve automatically to `catalog.artworks`.
+
 All API routes use `withDb()` from `@/lib/db`. Never open `new Database()` directly in a route.
 
 ```js

@@ -20,7 +20,8 @@ function getDb() {
 }
 
 export async function GET(request, { params }) {
-  const id = decodeURIComponent(params.id);
+  const { id: rawId } = await params;
+  const id = decodeURIComponent(rawId);
   const db = getDb();
   if (!db) return Response.json({ error: 'Database unavailable' }, { status: 500 });
 
