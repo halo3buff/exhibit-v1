@@ -8,7 +8,7 @@
 // Until then the formation engine falls back to its bucket defaults.
 
 import { requireAuth } from '@/lib/auth';
-import { withDb } from '@/lib/db';
+import { getReadDb, withDb } from '@/lib/db';
 
 // Check once whether the dimension columns exist (cached for process lifetime)
 let _hasDimensions = null;
@@ -28,52 +28,50 @@ function hasDimensionColumns(db) {
 export async function GET(request) {
   try {
     const user = await requireAuth();
+    const db = getReadDb();
+    const withDims = hasDimensionColumns(db);
 
-    return withDb(db => {
-      const withDims = hasDimensionColumns(db);
+    const exhibits = db.prepare(`
+      SELECT
+        e.id, e.title, e.description, e.isPublic, e.createdAt, e.updatedAt,
+        COUNT(ei.id) as itemCount,
+        (SELECT a.imageUrl FROM exhibit_items ei2
+         JOIN artworks a ON a.id = ei2.artworkId
+         WHERE ei2.exhibitId = e.id AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+         ORDER BY ei2.addedAt ASC LIMIT 1) as coverImageUrl
+      FROM exhibits e
+      LEFT JOIN exhibit_items ei ON ei.exhibitId = e.id
+      WHERE e.userId = ?
+      GROUP BY e.id
+      ORDER BY e.updatedAt DESC
+    `).all(user.id);
 
-      const exhibits = db.prepare(`
-        SELECT
-          e.id, e.title, e.description, e.isPublic, e.createdAt, e.updatedAt,
-          COUNT(ei.id) as itemCount,
-          (SELECT a.imageUrl FROM exhibit_items ei2
-           JOIN artworks a ON a.id = ei2.artworkId
-           WHERE ei2.exhibitId = e.id AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-           ORDER BY ei2.addedAt ASC LIMIT 1) as coverImageUrl
-        FROM exhibits e
-        LEFT JOIN exhibit_items ei ON ei.exhibitId = e.id
-        WHERE e.userId = ?
-        GROUP BY e.id
-        ORDER BY e.updatedAt DESC
-      `).all(user.id);
+    const previewStmt = withDims
+      ? db.prepare(`
+          SELECT a.imageUrl, a.imageWidth as width, a.imageHeight as height
+          FROM exhibit_items ei
+          JOIN artworks a ON a.id = ei.artworkId
+          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+          ORDER BY ei.addedAt ASC
+        `)
+      : db.prepare(`
+          SELECT a.imageUrl, NULL as width, NULL as height
+          FROM exhibit_items ei
+          JOIN artworks a ON a.id = ei.artworkId
+          WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
+          ORDER BY ei.addedAt ASC
+        `);
 
-      const previewStmt = withDims
-        ? db.prepare(`
-            SELECT a.imageUrl, a.imageWidth as width, a.imageHeight as height
-            FROM exhibit_items ei
-            JOIN artworks a ON a.id = ei.artworkId
-            WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-            ORDER BY ei.addedAt ASC
-          `)
-        : db.prepare(`
-            SELECT a.imageUrl, NULL as width, NULL as height
-            FROM exhibit_items ei
-            JOIN artworks a ON a.id = ei.artworkId
-            WHERE ei.exhibitId = ? AND a.imageUrl IS NOT NULL AND a.imageUrl != ''
-            ORDER BY ei.addedAt ASC
-          `);
+    const result = exhibits.map(ex => ({
+      ...ex,
+      previewImages: previewStmt.all(ex.id).map(r => ({
+        url:    r.imageUrl,
+        width:  r.width  || null,
+        height: r.height || null,
+      })),
+    }));
 
-      const result = exhibits.map(ex => ({
-        ...ex,
-        previewImages: previewStmt.all(ex.id).map(r => ({
-          url:    r.imageUrl,
-          width:  r.width  || null,
-          height: r.height || null,
-        })),
-      }));
-
-      return Response.json({ exhibits: result });
-    }, { readonly: true });
+    return Response.json({ exhibits: result });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ error: err.message }, { status: 500 });

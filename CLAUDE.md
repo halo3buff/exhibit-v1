@@ -112,13 +112,14 @@ export async function POST(request, { params }) {
 ```
 
 **Helpers in `src/lib/db.js`:**
-- `withDb(fn, { readonly })` — always closes DB in finally; sets WAL + foreign_keys on write connections
+- `getReadDb()` — persistent read-only singleton (app.db + catalog attached); use for all GET-only routes
+- `withDb(fn, { readonly })` — opens a fresh connection, runs fn, always closes; use for writes only
 - `requireExhibitOwner(db, exhibitId, userId)` — throws 404/403 Response if check fails
 - `requireExhibitAccess(db, exhibitId, userId)` — same but allows public exhibits
 - `touchExhibit(db, exhibitId)` — bumps `updatedAt = datetime('now')`
 
-**Exception:** `api/search/route.js` uses an intentional module-level singleton DB with aggressive
-caching pragmas. Do not convert it to `withDb()`.
+**Exception:** `api/search/route.js` uses its own module-level singleton that connects directly to
+`artworks.db` with aggressive caching pragmas. Do not convert it to `getReadDb()` or `withDb()`.
 
 ## Shared Utilities
 - **Images:** `import { imgUrl, hqUrl } from '@/lib/images'` — never call external image URLs directly

@@ -1,11 +1,15 @@
 // src/lib/db.js
 // Shared database helpers for API routes.
-// All exhibit and auth routes should use withDb() instead of opening connections
-// directly, so that db.close() is always guaranteed by the finally block.
+//
+// Connection strategy:
+//   getReadDb()  — persistent read-only singleton for hot GET endpoints (exhibits list,
+//                  exhibit detail). Opened once per process, never closed. Use this for
+//                  any GET route that does not mutate data.
+//   withDb(fn)   — opens a fresh connection, runs fn, always closes. Use for writes.
 //
 // NOTE: /api/search/route.js and /api/search/artwork/[id]/route.js intentionally
-// use a persistent singleton DB connection with aggressive read-optimization pragmas
-// (cache_size, mmap_size, temp_store). Do NOT migrate those routes to withDb().
+// use their own persistent singleton that connects directly to artworks.db with
+// aggressive caching pragmas. Do NOT migrate those routes to getReadDb() or withDb().
 //
 // DATABASE SPLIT:
 //   app.db     — user data: users, sessions, exhibits, exhibit_items, exhibit_notes, exhibit_strokes
@@ -95,10 +99,30 @@ export function ensureSchema() {
   _schemaReady = true;
 }
 
+// ── Read-only singleton ───────────────────────────────────────────────────────
+// One persistent read-only connection for hot GET routes.  WAL mode allows
+// unlimited concurrent readers so this is always safe alongside write connections.
+let _readDb = null;
+
+export function getReadDb() {
+  if (_readDb) return _readDb;
+  ensureSchema();
+  _readDb = new Database(APP_DB_PATH, { readonly: true });
+  _readDb.pragma('cache_size = -32000');
+  _readDb.pragma('temp_store = memory');
+  try {
+    _readDb.exec(`ATTACH DATABASE '${ARTWORKS_DB_SQL}' AS catalog`);
+  } catch (_) {
+    // artworks.db may not exist before the pipeline has run
+  }
+  return _readDb;
+}
+
 /**
  * Open app.db, attach artworks.db as "catalog", run fn(db), always close.
  * fn must be synchronous (better-sqlite3 is sync).
  * Async work (requireAuth, request.json, bcrypt) must happen BEFORE calling withDb.
+ * Use getReadDb() instead for GET-only routes.
  *
  * @param {(db: Database) => T} fn
  * @param {{ readonly?: boolean }} options

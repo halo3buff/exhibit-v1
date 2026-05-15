@@ -1,36 +1,35 @@
 // src/app/api/exhibits/[id]/route.js
 import { requireAuth } from '@/lib/auth';
-import { withDb, requireExhibitOwner, requireExhibitAccess } from '@/lib/db';
+import { getReadDb, withDb, requireExhibitOwner, requireExhibitAccess } from '@/lib/db';
 
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const user = await requireAuth();
+    const db = getReadDb();
 
-    return withDb(db => {
-      const exhibit = requireExhibitAccess(db, id, user.id);
+    requireExhibitAccess(db, id, user.id);
 
-      // wallTransform MUST be in this SELECT or canvas positions are lost on reload
-      const items = db.prepare(`
-        SELECT
-          ei.id, ei.artworkId, ei.note, ei.position, ei.addedAt,
-          ei.wallTransform,
-          a.title, a.author, a.year, a.imageUrl, a.source,
-          a.mainCategory as type, a.subCategory, a.medium, a.link
-        FROM exhibit_items ei
-        JOIN artworks a ON a.id = ei.artworkId
-        WHERE ei.exhibitId = ?
-        ORDER BY ei.position ASC, ei.addedAt ASC
-      `).all(id);
+    // wallTransform MUST be in this SELECT or canvas positions are lost on reload
+    const items = db.prepare(`
+      SELECT
+        ei.id, ei.artworkId, ei.note, ei.position, ei.addedAt,
+        ei.wallTransform,
+        a.title, a.author, a.year, a.imageUrl, a.source,
+        a.mainCategory as type, a.subCategory, a.medium, a.link
+      FROM exhibit_items ei
+      JOIN artworks a ON a.id = ei.artworkId
+      WHERE ei.exhibitId = ?
+      ORDER BY ei.position ASC, ei.addedAt ASC
+    `).all(id);
 
-      // Re-fetch exhibit with full fields (requireExhibitAccess returns minimal row)
-      const exhibitFull = db.prepare(`
-        SELECT id, userId, title, description, isPublic, createdAt, updatedAt
-        FROM exhibits WHERE id = ?
-      `).get(id);
+    // Re-fetch exhibit with full fields (requireExhibitAccess returns minimal row)
+    const exhibitFull = db.prepare(`
+      SELECT id, userId, title, description, isPublic, createdAt, updatedAt
+      FROM exhibits WHERE id = ?
+    `).get(id);
 
-      return Response.json({ exhibit: exhibitFull, items });
-    }, { readonly: true });
+    return Response.json({ exhibit: exhibitFull, items });
   } catch (err) {
     if (err instanceof Response) return err;
     return Response.json({ error: err.message }, { status: 500 });
