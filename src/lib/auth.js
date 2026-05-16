@@ -2,34 +2,30 @@
 // Session-based auth utilities — no external auth library needed.
 // Uses httpOnly cookies + sessions table in app.db.
 // Session tokens are cryptographically random hex strings (not sequential IDs).
+//
+// Connection strategy:
+//   getSession()   → getReadDb() singleton (no extra connection alongside withDb)
+//   createSession(), destroySession(), pruneExpiredSessions() → withDb() (writes)
+//
+// Unauthenticated requests to /api/exhibits/** are rejected early by middleware.js
+// before reaching these helpers.
 
-import Database from 'better-sqlite3';
-import crypto   from 'crypto';
-import path     from 'path';
+import crypto from 'crypto';
 import { cookies } from 'next/headers';
-import { ensureSchema } from '@/lib/db';
+import { getReadDb, withDb } from '@/lib/db';
 
-const APP_DB_PATH    = path.join(process.cwd(), 'app.db');
 const SESSION_COOKIE = 'exhibit_session';
 const SESSION_DAYS   = 30;
 
-function getDb() {
-  ensureSchema();
-  const db = new Database(APP_DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  return db;
-}
-
 // ── Create a new session and set the cookie ───────────────────────
 export async function createSession(userId) {
-  const db        = getDb();
   const token     = crypto.randomBytes(32).toString('hex'); // 64-char random hex
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  db.prepare(`INSERT INTO sessions (id, userId, expiresAt) VALUES (?, ?, ?)`)
-    .run(token, userId, expiresAt);
-  db.close();
+  withDb(db => {
+    db.prepare(`INSERT INTO sessions (id, userId, expiresAt) VALUES (?, ?, ?)`)
+      .run(token, userId, expiresAt);
+  });
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
@@ -44,13 +40,13 @@ export async function createSession(userId) {
 }
 
 // ── Get the current user from the session cookie ──────────────────
-// Returns user object or null
+// Uses getReadDb() singleton — no extra connection on top of any withDb() in the route.
 export async function getSession() {
   const cookieStore = await cookies();
   const token       = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const db  = getDb();
+  const db  = getReadDb();
   const row = db.prepare(`
     SELECT u.id, u.email, u.displayName, u.createdAt, s.expiresAt
     FROM sessions s
@@ -58,7 +54,6 @@ export async function getSession() {
     WHERE s.id = ?
       AND s.expiresAt > datetime('now')
   `).get(token);
-  db.close();
 
   return row || null;
 }
@@ -69,9 +64,9 @@ export async function destroySession() {
   const token       = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (token) {
-    const db = getDb();
-    db.prepare(`DELETE FROM sessions WHERE id = ?`).run(token);
-    db.close();
+    withDb(db => {
+      db.prepare(`DELETE FROM sessions WHERE id = ?`).run(token);
+    });
   }
 
   cookieStore.delete(SESSION_COOKIE);
@@ -91,8 +86,8 @@ export async function requireAuth() {
 
 // ── Prune expired sessions (call this occasionally) ───────────────
 export function pruneExpiredSessions() {
-  const db = getDb();
-  const { changes } = db.prepare(`DELETE FROM sessions WHERE expiresAt <= datetime('now')`).run();
-  db.close();
-  return changes;
+  return withDb(db => {
+    const { changes } = db.prepare(`DELETE FROM sessions WHERE expiresAt <= datetime('now')`).run();
+    return changes;
+  });
 }
