@@ -17,6 +17,11 @@ import { getReadDb, withDb } from '@/lib/db';
 const SESSION_COOKIE = 'exhibit_session';
 const SESSION_DAYS   = 30;
 
+// Prune expired sessions once every 100 getSession() calls (probabilistic cleanup).
+// Keeps the sessions table bounded without a background timer or cron job.
+let _pruneCounter = 0;
+const PRUNE_EVERY  = 100;
+
 // ── Create a new session and set the cookie ───────────────────────
 export async function createSession(userId) {
   const token     = crypto.randomBytes(32).toString('hex'); // 64-char random hex
@@ -45,6 +50,11 @@ export async function getSession() {
   const cookieStore = await cookies();
   const token       = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
+
+  if (++_pruneCounter >= PRUNE_EVERY) {
+    _pruneCounter = 0;
+    pruneExpiredSessions();
+  }
 
   const db  = getReadDb();
   const row = db.prepare(`
