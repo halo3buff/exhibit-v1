@@ -32,6 +32,9 @@ create "exhibits" (curated collections), and explore via wander mode.
 - Start dev: `pnpm dev` (or `npm run dev`)
 - Build: `pnpm build`
 - Check types (pipeline): `tsc --noEmit`
+- Run tests: `pnpm test` (Vitest — unit tests for `src/lib/`)
+- Run migrations: `pnpm migrate` (applies any unapplied SQL files from `db/migrations/`)
+- Run pipeline: `pnpm pipeline:run [--source <id>] [--stage harvest|transform|validate|load]`
 - Image proxy always: `/api/img?url=ENCODED_URL&size=N` (sizes: 400, 800, 1200)
 - Image cache location: `IMG_CACHE_DIR` env var (default: `../` relative to project root)
 
@@ -127,6 +130,7 @@ export async function POST(request, { params }) {
 - **Artwork metadata rows:** `import { getArtworkFields } from '@/lib/artwork-fields'`
 - **Debounce:** `import { debounce } from '@/hooks/useDebounce'`
 - **Canvas utils:** `import { defaultTransform, pointsToPath, pathHitTest, screenToWorld } from '@/lib/canvas'`
+- **API validation:** `import { parseBody, SomeSchema } from '@/lib/schemas'` — call before `withDb()` in every write route
 
 ## Key Tables
 - `artworks` — id, title, author, year, imageUrl, source, mainCategory, subCategory
@@ -149,3 +153,5 @@ export async function POST(request, { params }) {
 - Centering page headers — they go top-right
 - Using `var(--font-display)` (Cormorant) for page headers — use `var(--font-condensed)` (Barlow) instead
 - Using `--sidebar-w` or `--sidebar-w-collapsed` — these vars no longer exist
+- Writing POST/PATCH routes without calling `parseBody(Schema, body)` first — always validate before opening a DB connection
+- Placing components at the root of `src/components/` — use the feature subfolders (canvas/, gallery/, exhibits/, auth/, layout/)

@@ -43,22 +43,24 @@ src/
 │   ├── archive/[id]/page.js    # Artwork detail page
 │   ├── wander/page.js          # Wander mode
 │   ├── login/ & register/      # Auth pages
+│   ├── error.js                # Root error boundary (per-segment error.js in each route)
 │   └── api/                    # API routes
 │       ├── exhibits/[id]/      # CRUD for items, notes, strokes, edges
 │       ├── search/             # Full-text artwork search
 │       └── img/                # Image proxy (sizes: 400, 800, 1200)
 │
 ├── components/
-│   ├── layout/                 # TopNav, AppShell
+│   ├── layout/                 # TopNav, AppShell, ErrorFallback
 │   ├── canvas/                 # Infinite canvas primitives
 │   ├── gallery/                # Grid layouts, filters, tooltips
-│   ├── exhibits/               # Create modal, preview panel
+│   ├── exhibits/               # Create modal, preview panel, SaveToExhibit
 │   └── auth/                   # Auth layout wrapper
 │
-├── hooks/                      # useDebounce, useScatterLayout, useSidebarContent
+├── hooks/                      # useDebounce, useScatterLayout
 ├── lib/                        # Shared logic
 │   ├── db.js                   # withDb(), requireExhibitOwner(), touchExhibit()
 │   ├── auth.js                 # Session helpers
+│   ├── schemas.js              # Zod schemas + parseBody() for all write routes
 │   ├── images.js               # imgUrl(), hqUrl() — always proxy external images
 │   ├── canvas.js               # Transform math, hit testing, path utilities
 │   └── random.js               # Seeded PRNG (mulberry32, Fisher-Yates)
@@ -67,11 +69,14 @@ src/
 │   └── adapters/               # artic, met, rijks, smithsonian, va, …
 │
 └── pipeline/                   # ETL scripts (TypeScript)
+    ├── run.ts                  # Unified runner: pnpm pipeline:run [--source] [--stage]
     ├── 01-harvest/             # Pull raw JSON from each institution API
     ├── 02-transform/           # Normalize to internal schema
-    └── 03-load/                # Insert into SQLite, deduplicate
+    ├── 03-load/                # Insert into SQLite, deduplicate
+    └── maintenance/            # Operational scripts (reclassify, prewarm, etc.)
 
-scripts/                        # One-off maintenance scripts (not imported by app)
+db/migrations/                  # Ordered SQL migration files (applied via: pnpm migrate)
+scripts/                        # One-off utility scripts (not imported by app)
 data/                           # Pipeline workspace (gitignored)
 public/manifests/               # Generated source manifests (gitignored)
 ```
@@ -122,6 +127,16 @@ npx tsx src/pipeline/01-harvest/harvest-met.ts
 npx tsx src/pipeline/02-transform/02-transform.ts
 npx tsx src/pipeline/03-load/03-load.ts
 ```
+
+### Database migrations
+
+Schema changes are tracked in `db/migrations/`. Apply any unapplied migrations with:
+
+```bash
+pnpm migrate
+```
+
+The app also bootstraps the schema automatically on first start via `ensureSchema()`, so this step is optional for new local setups.
 
 ### Run
 
