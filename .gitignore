@@ -79,8 +79,28 @@ public/nsfw-review.html
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # LOCAL TOOLING
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Claude Code local IDE settings (personal, machine-specific)
+# Claude Code local IDE settings and AI context (personal, machine-specific)
 .claude/
+CLAUDE.md
+
+# Personal design references (mood board, internal briefs)
+references/
+
+# Deprecated one-off scripts superseded by scripts/migrate.js
+scripts/migrate.mjs
+scripts/migrate-canvas.mjs
+scripts/migrate-canvas-v2.mjs
+scripts/migrate-sessions.mjs
+scripts/migrate-to-app-db.mjs
+scripts/migrate-v2.mjs
+
+# Local-only operational/debug scripts
+scripts/test-fetch.mjs
+scripts/prewarm-loop.bat
+scripts/probe-lfa.ts
+scripts/nsfw-scan.mjs
+scripts/nsfw-purge.mjs
+scripts/nsfw_scan.py
 
 # Image cache — moved outside public for performance
 .img-cache/
