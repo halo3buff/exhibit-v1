@@ -1,6 +1,7 @@
 // src/app/api/exhibits/[id]/strokes/route.js
 import { requireAuth } from '@/lib/auth';
 import { withDb, requireExhibitOwner, requireExhibitAccess, touchExhibit } from '@/lib/db';
+import { StrokeCreateSchema, parseBody } from '@/lib/schemas';
 
 export async function GET(request, { params }) {
   try {
@@ -22,9 +23,7 @@ export async function POST(request, { params }) {
   try {
     const { id } = await params;
     const user = await requireAuth();
-    const { pathData, color, width } = await request.json();
-
-    if (!pathData) return Response.json({ error: 'pathData required' }, { status: 400 });
+    const { pathData, color, width } = parseBody(StrokeCreateSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);
@@ -32,7 +31,7 @@ export async function POST(request, { params }) {
         INSERT INTO exhibit_strokes (exhibitId, pathData, color, width)
         VALUES (?, ?, ?, ?)
         RETURNING *
-      `).get(id, pathData, color ?? 'rgba(0,0,0,0.55)', width ?? 1.5);
+      `).get(id, pathData, color, width);
       touchExhibit(db, id);
       return Response.json({ stroke });
     });

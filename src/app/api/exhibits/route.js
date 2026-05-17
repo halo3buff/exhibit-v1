@@ -9,6 +9,7 @@
 
 import { requireAuth } from '@/lib/auth';
 import { getReadDb, withDb } from '@/lib/db';
+import { ExhibitCreateSchema, parseBody } from '@/lib/schemas';
 
 // Check once whether the dimension columns exist (cached for process lifetime)
 let _hasDimensions = null;
@@ -82,7 +83,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = await requireAuth();
-    const { title, description } = await request.json();
+    const { title, description } = parseBody(ExhibitCreateSchema, await request.json());
 
     return withDb(db => {
       const exhibit = db.prepare(`

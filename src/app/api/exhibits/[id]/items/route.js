@@ -1,15 +1,14 @@
 // src/app/api/exhibits/[id]/items/route.js
 import { requireAuth } from '@/lib/auth';
 import { withDb, requireExhibitOwner, touchExhibit } from '@/lib/db';
+import { ItemCreateSchema, parseBody } from '@/lib/schemas';
 
 // POST /api/exhibits/[id]/items — add an artwork to an exhibit
 export async function POST(request, { params }) {
   try {
     const { id } = await params;
     const user = await requireAuth();
-    const { artworkId, note } = await request.json();
-
-    if (!artworkId) return Response.json({ error: 'artworkId required' }, { status: 400 });
+    const { artworkId, note } = parseBody(ItemCreateSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);

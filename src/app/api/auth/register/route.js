@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { createSession } from '@/lib/auth';
 import { withDb } from '@/lib/db';
+import { RegisterSchema, parseBody } from '@/lib/schemas';
 
 // 5 registrations per IP per hour
 const rateLimiter = new RateLimiterMemory({
@@ -25,14 +26,7 @@ export async function POST(request) {
   }
 
   try {
-    const { email, password, displayName } = await request.json();
-
-    if (!email || !password) {
-      return Response.json({ error: 'Email and password are required.' }, { status: 400 });
-    }
-    if (password.length < 8) {
-      return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
-    }
+    const { email, password, displayName } = parseBody(RegisterSchema, await request.json());
 
     const normalizedEmail = email.toLowerCase().trim();
     const name = displayName?.trim() || email.split('@')[0];

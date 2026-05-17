@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { createSession } from '@/lib/auth';
 import { withDb } from '@/lib/db';
+import { LoginSchema, parseBody } from '@/lib/schemas';
 
 // 10 attempts per IP per 15 minutes
 const rateLimiter = new RateLimiterMemory({
@@ -25,11 +26,7 @@ export async function POST(request) {
   }
 
   try {
-    const { email, password } = await request.json();
-
-    if (!email || !password) {
-      return Response.json({ error: 'Email and password are required.' }, { status: 400 });
-    }
+    const { email, password } = parseBody(LoginSchema, await request.json());
 
     // Fetch user (DB closed before async bcrypt)
     const user = withDb(db =>

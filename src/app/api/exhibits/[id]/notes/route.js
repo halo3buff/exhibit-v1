@@ -1,6 +1,7 @@
 // src/app/api/exhibits/[id]/notes/route.js
 import { requireAuth } from '@/lib/auth';
 import { withDb, requireExhibitOwner, requireExhibitAccess, touchExhibit } from '@/lib/db';
+import { NoteCreateSchema, parseBody } from '@/lib/schemas';
 
 export async function GET(request, { params }) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request, { params }) {
   try {
     const { id } = await params;
     const user = await requireAuth();
-    const { x = 100, y = 100, content = '', fontSize = 13, bold = 0, italic = 0 } = await request.json();
+    const { x, y, content, fontSize, bold, italic } = parseBody(NoteCreateSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);

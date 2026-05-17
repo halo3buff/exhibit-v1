@@ -1,6 +1,7 @@
 // src/app/api/exhibits/[id]/items/[itemId]/route.js
 import { requireAuth } from '@/lib/auth';
 import { withDb, requireExhibitOwner, touchExhibit } from '@/lib/db';
+import { ItemPatchSchema, parseBody } from '@/lib/schemas';
 
 // PATCH — update note and/or wallTransform for an item
 export async function PATCH(request, { params }) {
@@ -8,7 +9,7 @@ export async function PATCH(request, { params }) {
     const { id, itemId, items } = await params;
     const resolvedItemId = itemId || items; // support both folder naming conventions
     const user = await requireAuth();
-    const body = await request.json();
+    const body = parseBody(ItemPatchSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);

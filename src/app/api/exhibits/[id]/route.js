@@ -1,6 +1,7 @@
 // src/app/api/exhibits/[id]/route.js
 import { requireAuth } from '@/lib/auth';
 import { getReadDb, withDb, requireExhibitOwner, requireExhibitAccess } from '@/lib/db';
+import { ExhibitPatchSchema, parseBody } from '@/lib/schemas';
 
 export async function GET(request, { params }) {
   try {
@@ -40,7 +41,7 @@ export async function PATCH(request, { params }) {
   try {
     const { id } = await params;
     const user = await requireAuth();
-    const body = await request.json();
+    const body = parseBody(ExhibitPatchSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);

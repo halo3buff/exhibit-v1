@@ -9,6 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "migrate": "node scripts/migrate.js",
+    "pipeline:run": "tsx src/pipeline/run.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "harvest:met": "tsx src/pipeline/01-harvest/harvest-met.ts",
     "harvest:artic": "tsx src/pipeline/01-harvest/harvest-artic.ts",
     "harvest:va": "tsx src/pipeline/01-harvest/harvest-va.ts",
@@ -45,7 +49,8 @@
     "rate-limiter-flexible": "^10.0.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
@@ -55,6 +60,7 @@
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tsx": "^4.19.3",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.6"
   }
 }

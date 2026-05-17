@@ -1,13 +1,14 @@
 // src/app/api/exhibits/[id]/notes/[notesId]/route.js
 import { requireAuth } from '@/lib/auth';
 import { withDb, requireExhibitOwner, touchExhibit } from '@/lib/db';
+import { NotePatchSchema, parseBody } from '@/lib/schemas';
 
 export async function PATCH(request, { params }) {
   try {
     const { id, notesId, noteId } = await params;
     const resolvedNoteId = notesId || noteId;
     const user = await requireAuth();
-    const body = await request.json();
+    const body = parseBody(NotePatchSchema, await request.json());
 
     return withDb(db => {
       requireExhibitOwner(db, id, user.id);
@@ -17,7 +18,7 @@ export async function PATCH(request, { params }) {
       if (body.x        !== undefined) { fields.push('x = ?');        values.push(body.x); }
       if (body.y        !== undefined) { fields.push('y = ?');        values.push(body.y); }
       if (body.content  !== undefined) { fields.push('content = ?');  values.push(body.content); }
-      if (body.fontSize !== undefined) { fields.push('fontSize = ?'); values.push(Math.max(8, Math.min(72, body.fontSize))); }
+      if (body.fontSize !== undefined) { fields.push('fontSize = ?'); values.push(body.fontSize); }
       if (body.bold     !== undefined) { fields.push('bold = ?');     values.push(body.bold ? 1 : 0); }
       if (body.italic   !== undefined) { fields.push('italic = ?');   values.push(body.italic ? 1 : 0); }
 
