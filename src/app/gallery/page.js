@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import SaveToExhibit from '@/components/SaveToExhibit';
+import SaveToExhibit from '@/components/exhibits/SaveToExhibit';
 import { SOURCE_LABELS } from '@/lib/constants';
 import { imgUrl } from '@/lib/images';
 import { getArtworkFields } from '@/lib/artwork-fields';

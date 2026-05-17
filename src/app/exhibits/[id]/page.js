@@ -15,7 +15,7 @@ import { imgUrl } from '@/lib/images';
 import { getArtworkFields } from '@/lib/artwork-fields';
 import { debounce } from '@/hooks/useDebounce';
 import { defaultTransform, pointsToPath, pathHitTest, screenToWorld } from '@/lib/canvas';
-import SaveToExhibit from '@/components/SaveToExhibit';
+import SaveToExhibit from '@/components/exhibits/SaveToExhibit';
 import CanvasSidebar from '@/components/canvas/CanvasSidebar';
 import CanvasNote from '@/components/canvas/CanvasNote';
 import ModeHUD from '@/components/canvas/ModeHUD';
