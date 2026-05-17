@@ -89,8 +89,13 @@ public/img-cache/
 # Aider AI coding assistant
 .aider*
 
-# Repomix output
+# Repomix (AI code summarization tool — personal/local use only)
 repomix-output.xml
+repomix.config.json
+.repomixignore
+
+# npm lock file — this project uses pnpm (pnpm-lock.yaml)
+package-lock.json
 
 # Temp directory
 tmp/
